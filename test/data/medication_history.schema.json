@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "MedicationHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "MedicationName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name of the medication. Can be null."
+          },
+          "Dosage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The dosage of the medication. Can be null."
+          },
+          "Frequency": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "How often the medication is taken. Can be null."
+          },
+          "Purpose": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The purpose for which the medication is prescribed. Can be null."
+          }
+        },
+        "required": [
+          "MedicationName",
+          "Dosage",
+          "Frequency",
+          "Purpose"
+        ],
+        "additionalProperties": false,
+        "description": "An object representing a single medication and its details."
+      },
+      "description": "A list of medications including their names, dosages, frequencies, and purposes."
+    }
+  },
+  "required": [
+    "MedicationHistory"
+  ],
+  "additionalProperties": false,
+  "description": "Schema for a patient's medication history record."
+}

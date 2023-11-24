@@ -1,0 +1,22 @@
+{
+  "MedicationHistory": [
+    {
+      "MedicationName": "Lisinopril",
+      "Dosage": "10mg",
+      "Frequency": "daily",
+      "Purpose": "hypertension"
+    },
+    {
+      "MedicationName": "Metformin",
+      "Dosage": "500mg",
+      "Frequency": "twice daily",
+      "Purpose": "type 2 diabetes"
+    },
+    {
+      "MedicationName": "Atorvastatin",
+      "Dosage": "20mg",
+      "Frequency": "at bedtime",
+      "Purpose": "high cholesterol"
+    }
+  ]
+}

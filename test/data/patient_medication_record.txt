@@ -1,0 +1,38 @@
+# Patient Medication Record
+
+Patient Information:
+
+- Name: John Doe
+- Age: 45
+- Gender: Male
+- Date: November 22, 2023
+
+Medication History:
+
+- Lisinopril 10mg daily for hypertension
+- Metformin 500mg twice daily for type 2 diabetes
+- Atorvastatin 20mg at bedtime for high cholesterol
+
+Allergies:
+
+- Penicillin (rash)
+
+Current Complaint:
+
+- Recent blood pressure readings have been slightly higher than usual.
+
+Pharmacist's Assessment:
+
+- Patient has been compliant with medications.
+- Advised to monitor blood pressure more frequently and follow up with primary care physician if readings remain high.
+
+Counseling Points:
+
+- Explained the importance of taking Lisinopril at the same time each day to maintain consistent blood pressure control.
+- Discussed potential side effects of medications, including dizziness from Lisinopril, gastrointestinal discomfort from Metformin, and muscle aches from Atorvastatin.
+- Emphasized the importance of lifestyle modifications such as a balanced diet, regular exercise, and smoking cessation.
+
+Follow-Up Plan:
+
+- Schedule next medication review in 3 months.
+- Encourage patient to contact the pharmacy if any issues or questions arise regarding his medications.
