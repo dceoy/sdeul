@@ -1,0 +1,18 @@
+---
+version: '3'
+
+services:
+  sdeul:
+    container_name: sdeul
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dceoy/sdeul:latest
+    volumes:
+      - ${PWD}:/wd
+    working_dir: /wd
+    entrypoint:
+      - /usr/bin/python
+    command:
+      - -c
+      - 'import llama_cpp; print(llama_cpp.__version__);'
