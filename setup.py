@@ -18,7 +18,9 @@ setup(
     url='https://github.com/dceoy/sdeul.git',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['docopt'],
+    install_requires=[
+        'docopt', 'jsonschema', 'langchain', 'llama-cpp-python', 'pydantic'
+    ],
     entry_points={
         'console_scripts': ['sdeul=sdeul.cli:main']
     },

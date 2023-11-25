@@ -26,7 +26,7 @@ RUN set -e \
       && /usr/bin/python3 /tmp/get-pip.py \
       && pip install -U --no-cache-dir pip \
       && pip install -U --no-cache-dir \
-        docopt jsonschema langchain llama-cpp-python
+        docopt jsonschema langchain llama-cpp-python pydantic
 
 ENTRYPOINT ["/usr/bin/python"]
 CMD ["-c", "import llama_cpp; print(llama_cpp.__version__);"]
