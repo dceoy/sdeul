@@ -28,5 +28,11 @@ RUN set -e \
       && pip install -U --no-cache-dir \
         docopt jsonschema langchain llama-cpp-python pydantic
 
-ENTRYPOINT ["/usr/bin/python"]
-CMD ["-c", "import llama_cpp; print(llama_cpp.__version__);"]
+ADD . /tmp/sdeul
+
+RUN set -e \
+      && /usr/bin/python3 /tmp/get-pip.py \
+      && pip install -U --no-cache-dir /tmp/sdeul \
+      && rm -rf /tmp/get-pip.py /tmp/sdeul
+
+ENTRYPOINT ["/usr/local/bin/sdeul"]

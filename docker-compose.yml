@@ -12,7 +12,6 @@ services:
       - ${PWD}:/wd
     working_dir: /wd
     entrypoint:
-      - /usr/bin/python
+      - /usr/local/bin/sdeul
     command:
-      - -c
-      - 'import llama_cpp; print(llama_cpp.__version__);'
+      - --version
