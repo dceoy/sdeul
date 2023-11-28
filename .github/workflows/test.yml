@@ -19,12 +19,21 @@ jobs:
           python-version: '3.x'
       - name: Install packages
         run: |
-          pip install -U \
-            autopep8 flake8 flake8-bugbear flake8-isort pep8-naming .
+          pip install -U --no-cache-dir \
+            autopep8 flake8 flake8-bugbear flake8-isort pep8-naming \
+            mypy types-docopt types-jsonschema types-setuptools .
       - name: Validate the codes using flake8
         run: |
-          find . -type f -name '*.py' | xargs flake8
+          find . -path build -prune -o -type f -name '*.py' | xargs flake8
+      - name: Validate the codes using Mypy
+        run: |
+          mypy --exclude=build .
       - name: Test commands
         run: |
           sdeul --version
           sdeul --help
+      - name: Test validate command
+        run: |
+          sdeul validate \
+            test/data/medication_history.schema.json \
+            test/data/medication_history.json

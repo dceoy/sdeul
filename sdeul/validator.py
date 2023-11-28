@@ -2,7 +2,9 @@
 
 import json
 import logging
-from typing import Dict, List, Union
+from json.decoder import JSONDecodeError
+from pathlib import Path
+from typing import Any, Dict, List, Union
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -17,8 +19,10 @@ def validate_json_files_using_json_schema(
     schema = _read_json_file(path=json_schema_file_path)
     n_input = len(json_file_paths)
     logger.info(f'Start validating {n_input} JSON files.')
+    for p in json_file_paths:
+        assert Path(p).is_file(), f'File not found: {p}'
     n_invalid = sum(
-        int(_validate_json_file(path=p, json_schema=schema) is not None)
+        (_validate_json_file(path=p, json_schema=schema) is not None)
         for p in json_file_paths
     )
     if n_invalid:
@@ -27,21 +31,25 @@ def validate_json_files_using_json_schema(
 
 
 def _validate_json_file(
-    path: str, json_schema: dict
-) -> Union[None, ValidationError]:
+    path: str, json_schema: Dict[str, Any]
+) -> Union[None, str]:
     logger = logging.getLogger(__name__)
     logger.info(f'Read a JSON file: {path}')
-    data = _read_json_file(path=path)
     try:
-        validate(instance=data, schema=json_schema)
+        validate(instance=_read_json_file(path=path), schema=json_schema)
+    except JSONDecodeError as e:
+        print(f'{path}:\tJSONDecodeError ({e.msg})', flush=True)
+        logger.info(e)
+        return e.msg
     except ValidationError as e:
-        print(f'{path}:\t{e.message}', flush=True)
-        return e
+        print(f'{path}:\tValidationError ({e.message})', flush=True)
+        logger.info(e)
+        return e.message
     else:
         print(f'{path}:\tvalid', flush=True)
         return None
 
 
-def _read_json_file(path: str) -> Union[List, Dict]:
+def _read_json_file(path: str):
     with open(path, 'r') as f:
         return json.load(f)
