@@ -16,7 +16,7 @@ def validate_json_files_using_json_schema(
     '''Validate JSON files using JSON Schema.'''
     logger = logging.getLogger(__name__)
     logger.info(f'Read a JSON Schema file: {json_schema_file_path}')
-    schema = _read_json_file(path=json_schema_file_path)
+    schema = read_json_schema_file(path=json_schema_file_path)
     n_input = len(json_file_paths)
     logger.info(f'Start validating {n_input} JSON files.')
     for p in json_file_paths:
@@ -48,6 +48,10 @@ def _validate_json_file(
     else:
         print(f'{path}:\tvalid', flush=True)
         return None
+
+
+def read_json_schema_file(path: str) -> Dict[str, Any]:
+    return _read_json_file(path=path)
 
 
 def _read_json_file(path: str):
