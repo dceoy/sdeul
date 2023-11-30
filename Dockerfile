@@ -12,21 +12,17 @@ RUN set -e \
       && apt-get -y update \
       && apt-get -y dist-upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        apt-transport-https ca-certificates curl g++ jq npm python3 \
+        apt-transport-https ca-certificates curl g++ jq python3 \
         python3-distutils \
       && apt-get -y autoremove \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
 
 RUN set -e \
-      && npm update -g \
-      && npm install -g ajv-cli jsonlint
-
-RUN set -e \
       && /usr/bin/python3 /tmp/get-pip.py \
       && pip install -U --no-cache-dir pip \
       && pip install -U --no-cache-dir \
-        docopt jsonschema langchain llama-cpp-python pydantic
+        docopt jsonschema langchain llama-cpp-python
 
 ADD . /tmp/sdeul
 
