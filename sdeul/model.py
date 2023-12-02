@@ -16,16 +16,16 @@ from .validator import read_json_schema_file
 
 _EXTRACTION_TEMPLATE = '''\
 Instructions:
-- Extract and save the relevant entities mentioned in the provided input text together with their properties.
-- Only extract the properties defined by the provided JSON schema, and generate them in JSON format.
-- If a property is not present and is not required in the schema, do not include it in the output.
+- Extract only the relevant entities defined by the provided JSON schema from the input text.
+- Generate the extracted entities in JSON format according to the schema.
+- If a property is not present in the schema, DO NOT include it in the output.
 
 Provided JSON schema:
 ```json
 {schema}
 ```
 
-Provided input text:
+Input text:
 ```
 {input_text}
 ```
@@ -34,7 +34,8 @@ Provided input text:
 
 def extract_json_from_text(
     text_file_path: str, json_schema_file_path: str,
-    llama_model_file_path: str, output_json_file_path: Optional[str] = None
+    llama_model_file_path: str, output_json_file_path: Optional[str] = None,
+    pretty_json: bool = False
 ) -> None:
     '''Extract JSON from input text.'''
     logger = logging.getLogger(__name__)
@@ -46,20 +47,21 @@ def extract_json_from_text(
     output_string = llm_chain.invoke({'input_text': input_text})
     logger.info(f'LLM output: {output_string}')
 
-    output_data = _parse_llm_output(output_string=str(output_string))
+    output_json_string = json.dumps(
+        _parse_llm_output(output_string=str(output_string)),
+        indent=(2 if pretty_json else None)
+    )
     if output_json_file_path:
-        _write_json_file(path=output_json_file_path, data=output_data)
+        _write_file(path=output_json_file_path, data=output_json_string)
     else:
-        print(output_data)
+        print(output_json_string)
 
 
-def _write_json_file(
-    path: str, data: Union[List[Any], Dict[Any, Any]]
-) -> None:
+def _write_file(path: str, data: str) -> None:
     logger = logging.getLogger(__name__)
-    logger.info(f'Write a JSON file: {path}')
+    logger.info(f'Write data in a file: {path}')
     with open(path, 'w') as f:
-        json.dump(data, f, indent=2)
+        f.write(data)
 
 
 def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
@@ -80,7 +82,7 @@ def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
     try:
         output_data = json.loads(json_string or output_string)
     except JSONDecodeError as e:
-        logger.error(f'Failed to parse the LLM output: {json_string}')
+        logger.error(f'Failed to parse the LLM output: {output_string}')
         raise e
     else:
         logger.debug(f'output_data: {output_data}')
@@ -111,10 +113,10 @@ def _read_llm_file(path: str, token_wise_streaming: bool = False) -> LlamaCpp:
     logger = logging.getLogger(__name__)
     logger.info(f'Read a Llama 2 model file: {path}')
     llm = LlamaCpp(
-        model_path=path, temperature=0.75, max_tokens=8192, top_p=1,
+        model_path=path, temperature=0.75, max_tokens=16384, top_p=1,
         n_ctx=1024,
         verbose=(
-            token_wise_streaming or logging.getLogger().level <= logging.INFO
+            token_wise_streaming or logging.getLogger().level <= logging.DEBUG
         ),
         callback_manager=(
             CallbackManager([StreamingStdOutCallbackHandler()])

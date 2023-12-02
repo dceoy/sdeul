@@ -3,8 +3,8 @@
 Structural Data Extractor using LLMs
 
 Usage:
-    sdeul extract [--debug|--info] [--output-json=<path>] <llama_model_path>
-        <json_schema_path> <text_path>
+    sdeul extract [--debug|--info] [--output-json=<path>] [--pretty-json]
+        <llama_model_path> <json_schema_path> <text_path>
     sdeul validate [--debug|--info] <json_schema_path> <json_path>...
     sdeul -h|--help
     sdeul --version
@@ -17,6 +17,7 @@ Options:
     --debug, --info         Execute a command with debug|info messages
     --few-shot-json=<path>  Specify JSON file paths for few-shot learning
     --output-json=<path>    Output JSON file path
+    --pretty-json           Output JSON data with pretty format
     -h, --help              Print help and exit
     --version               Print version and exit
 
@@ -47,7 +48,8 @@ def main():
             text_file_path=args['<text_path>'],
             json_schema_file_path=args['<json_schema_path>'],
             llama_model_file_path=args['<llama_model_path>'],
-            output_json_file_path=args['--output-json']
+            output_json_file_path=args['--output-json'],
+            pretty_json=args['--pretty-json']
         )
     elif args['validate']:
         validate_json_files_using_json_schema(
