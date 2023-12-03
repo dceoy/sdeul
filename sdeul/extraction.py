@@ -5,6 +5,8 @@ import logging
 from json.decoder import JSONDecodeError
 from typing import Any, Dict, List, Optional, Union
 
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import LLMChain
@@ -35,7 +37,7 @@ Input text:
 def extract_json_from_text(
     text_file_path: str, json_schema_file_path: str,
     llama_model_file_path: str, output_json_file_path: Optional[str] = None,
-    pretty_json: bool = False
+    pretty_json: bool = False, validate_output: bool = False
 ) -> None:
     '''Extract JSON from input text.'''
     logger = logging.getLogger(__name__)
@@ -47,10 +49,17 @@ def extract_json_from_text(
     output_string = llm_chain.invoke({'input_text': input_text})
     logger.info(f'LLM output: {output_string}')
 
+    output_data = _parse_llm_output(output_string=str(output_string))
+    logger.debug(f'output_data: {output_data}')
     output_json_string = json.dumps(
-        _parse_llm_output(output_string=str(output_string)),
-        indent=(2 if pretty_json else None)
+        obj=output_data, indent=(2 if pretty_json else None)
     )
+    if validate_output:
+        try:
+            validate(instance=output_data, schema=schema)
+        except ValidationError as e:
+            logger.error(f'Failed to validate the output: {output_json_string}')
+            raise e
     if output_json_file_path:
         _write_file(path=output_json_file_path, data=output_json_string)
     else:
@@ -93,7 +102,7 @@ def _create_llm_chain(schema: Dict[str, Any], llm: LlamaCpp) -> LLMChain:
     logger = logging.getLogger(__name__)
     prompt = PromptTemplate(
         template=_EXTRACTION_TEMPLATE, input_variables=['input_text'],
-        partial_variables={'schema': json.dumps(schema)}
+        partial_variables={'schema': json.dumps(obj=schema)}
     )
     chain = prompt | llm | StrOutputParser()
     logger.info(f'LLM chain: {chain}')
