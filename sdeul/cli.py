@@ -34,8 +34,8 @@ import os
 from docopt import docopt
 
 from . import __version__
-from .model import extract_json_from_text
-from .validator import validate_json_files_using_json_schema
+from .extraction import extract_json_from_text
+from .validation import validate_json_files_using_json_schema
 
 
 def main():

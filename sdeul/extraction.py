@@ -12,7 +12,7 @@ from langchain.llms import LlamaCpp
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
 
-from .validator import read_json_schema_file
+from .validation import read_json_schema_file
 
 _EXTRACTION_TEMPLATE = '''\
 Instructions:
