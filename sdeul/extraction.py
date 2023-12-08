@@ -22,6 +22,9 @@ Instructions:
 - Generate the extracted entities in JSON format according to the schema.
 - If a property is not present in the schema, DO NOT include it in the output.
 
+Output format:
+- Markdown code block with JSON syntax highlighting.
+
 Provided JSON schema:
 ```json
 {schema}
@@ -54,6 +57,7 @@ def extract_json_from_text(
 
     output_string = llm_chain.invoke({'input_text': input_text})
     logger.info(f'LLM output: {output_string}')
+    assert output_string, 'LLM output is empty.'
 
     output_data = _parse_llm_output(output_string=str(output_string))
     logger.debug(f'output_data: {output_data}')
@@ -82,7 +86,6 @@ def _write_file(path: str, data: str) -> None:
 
 
 def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
-    assert output_string, 'LLM output is empty.'
     logger = logging.getLogger(__name__)
     json_string = None
     for r in output_string.splitlines(keepends=True):

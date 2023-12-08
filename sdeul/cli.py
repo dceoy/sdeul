@@ -20,10 +20,10 @@ Options:
     --output-json=<path>    Output JSON file path
     --pretty-json           Output JSON data with pretty format
     --validate-output       Validate output JSON using JSON Schema
-    --temperature=<float>   Specify the temperature for sampling [default: 0.5]
-    --top-p=<float>         Specify the top-p value for sampling [default: 0.8]
+    --temperature=<float>   Specify the temperature for sampling [default: 0.2]
+    --top-p=<float>         Specify the top-p value for sampling [default: 0.2]
     --max-tokens=<int>      Specify the max tokens to generate [default: 8192]
-    --n-ctx=<int>           Specify the token context window [default: 2048]
+    --n-ctx=<int>           Specify the token context window [default: 1024]
     --seed=<int>            Specify the random seed [default: -1]
     -h, --help              Print help and exit
     --version               Print version and exit
