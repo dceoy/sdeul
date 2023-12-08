@@ -37,11 +37,17 @@ Input text:
 def extract_json_from_text(
     text_file_path: str, json_schema_file_path: str,
     llama_model_file_path: str, output_json_file_path: Optional[str] = None,
-    pretty_json: bool = False, validate_output: bool = False
+    pretty_json: bool = False, validate_output: bool = False,
+    temperature: float = 0.8, top_p: float = 0.95, max_tokens: int = 256,
+    n_ctx: int = 512, seed: int = -1, token_wise_streaming: bool = False
 ) -> None:
     '''Extract JSON from input text.'''
     logger = logging.getLogger(__name__)
-    llm = _read_llm_file(path=llama_model_file_path)
+    llm = _read_llm_file(
+        path=llama_model_file_path, temperature=temperature, top_p=top_p,
+        max_tokens=max_tokens, n_ctx=n_ctx, seed=-1,
+        token_wise_streaming=token_wise_streaming
+    )
     schema = read_json_schema_file(path=json_schema_file_path)
     input_text = _read_text_file(path=text_file_path)
     llm_chain = _create_llm_chain(schema=schema, llm=llm)
@@ -58,7 +64,9 @@ def extract_json_from_text(
         try:
             validate(instance=output_data, schema=schema)
         except ValidationError as e:
-            logger.error(f'Failed to validate the output: {output_json_string}')
+            logger.error(
+                f'Failed to validate the output: {output_json_string}'
+            )
             raise e
     if output_json_file_path:
         _write_file(path=output_json_file_path, data=output_json_string)
@@ -118,12 +126,16 @@ def _read_text_file(path: str) -> str:
     return data
 
 
-def _read_llm_file(path: str, token_wise_streaming: bool = False) -> LlamaCpp:
+def _read_llm_file(
+    path: str, temperature: float = 0.8, top_p: float = 0.95,
+    max_tokens: int = 256, n_ctx: int = 512, seed: int = -1,
+    token_wise_streaming: bool = False
+) -> LlamaCpp:
     logger = logging.getLogger(__name__)
     logger.info(f'Read a Llama 2 model file: {path}')
     llm = LlamaCpp(
-        model_path=path, temperature=0.75, max_tokens=16384, top_p=1,
-        n_ctx=1024,
+        model_path=path, temperature=temperature, top_p=top_p,
+        max_tokens=max_tokens, n_ctx=n_ctx, seed=seed,
         verbose=(
             token_wise_streaming or logging.getLogger().level <= logging.DEBUG
         ),
