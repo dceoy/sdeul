@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from json.decoder import JSONDecodeError
 from typing import Any, Dict, List, Optional, Union
 
@@ -88,19 +89,24 @@ def _write_file(path: str, data: str) -> None:
 def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
     logger = logging.getLogger(__name__)
     json_string = None
-    for r in output_string.splitlines(keepends=True):
+    markdown = True
+    for r in output_string.splitlines(keepends=False):
         if json_string is None:
-            if r.startswith('```json'):
+            if r == '```json':
                 json_string = ''
+            elif r in ('[', '{'):
+                markdown = False
+                json_string = r + os.linesep
             else:
                 pass
-        elif not r.startswith('```'):
-            json_string += r
+        elif (markdown and r != '```') or (not markdown and r):
+            json_string += r + os.linesep
         else:
             break
     logger.debug(f'json_string: {json_string}')
+    assert json_string, f'JSON code block is not found: {output_string}'
     try:
-        output_data = json.loads(json_string or output_string)
+        output_data = json.loads(json_string)
     except JSONDecodeError as e:
         logger.error(f'Failed to parse the LLM output: {output_string}')
         raise e
