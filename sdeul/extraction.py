@@ -49,7 +49,7 @@ def extract_json_from_text(
     logger = logging.getLogger(__name__)
     llm = _read_llm_file(
         path=llama_model_file_path, temperature=temperature, top_p=top_p,
-        max_tokens=max_tokens, n_ctx=n_ctx, seed=-1,
+        max_tokens=max_tokens, n_ctx=n_ctx, seed=seed,
         token_wise_streaming=token_wise_streaming
     )
     schema = read_json_schema_file(path=json_schema_file_path)
