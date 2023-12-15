@@ -37,6 +37,7 @@ Arguments:
 
 import logging
 import os
+import signal
 
 from docopt import docopt
 
@@ -50,6 +51,7 @@ def main():
     _set_log_config(debug=args['--debug'], info=args['--info'])
     logger = logging.getLogger(__name__)
     logger.debug(f'args:{os.linesep}{args}')
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     if args['extract']:
         extract_json_from_text(
             text_file_path=args['<text_path>'],
