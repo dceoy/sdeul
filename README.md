@@ -10,7 +10,7 @@ Installation
 ------------
 
 ```sh
-$ pip install -U https://github.com/dceoy/sdeul/archive/main.tar.gz
+$ pip install -U sdeul
 ```
 
 Usage

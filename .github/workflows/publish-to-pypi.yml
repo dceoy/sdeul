@@ -38,11 +38,12 @@ jobs:
       - name: Print the package name
         id: print-package-name
         run: |
-          cat << EOF | python
-          import tomllib
-          with open('pyproject.toml', 'rb') as f:
-              print(tomllib.load(f)['project']['name'], end='')
-          EOF
+          sed -ne 's/^name = "\([^"]\+\)"/\1/p' pyproject.toml | head -1
+          # cat << EOF | python
+          # import tomllib
+          # with open('pyproject.toml', 'rb') as f:
+          #     print(tomllib.load(f)['project']['name'], end='')
+          # EOF
       - name: Download all the dists
         uses: actions/download-artifact@v3
         with:
