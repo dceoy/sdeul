@@ -24,7 +24,7 @@ Instructions:
 - If a property is not present in the schema, DO NOT include it in the output.
 
 Output format:
-- Markdown code block with JSON syntax highlighting.
+- Markdown code block of JSON.
 
 Provided JSON schema:
 ```json
@@ -92,7 +92,7 @@ def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
     markdown = True
     for r in output_string.splitlines(keepends=False):
         if json_string is None:
-            if r == '```json':
+            if r in ('```json', '```'):
                 json_string = ''
             elif r in ('[', '{'):
                 markdown = False
