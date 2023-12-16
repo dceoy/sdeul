@@ -5,6 +5,7 @@ Structural Data Extractor using LLMs
 
 [![Test](https://github.com/dceoy/sdeul/actions/workflows/test.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/test.yml)
 [![CI to Docker Hub](https://github.com/dceoy/sdeul/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/docker-publish.yml)
+[![Publish Python 🐍 distribution 📦 to PyPI and TestPyPI](https://github.com/dceoy/sdeul/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/publish-to-pypi.yml)
 
 Installation
 ------------
