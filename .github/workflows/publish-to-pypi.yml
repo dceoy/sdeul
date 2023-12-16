@@ -14,7 +14,16 @@ jobs:
           python-version: 3.x
       - name: Install pypa/build
         run: |
-          python -m pip install --upgrade --no-cache-dir build
+          python3 -m pip install --upgrade --no-cache-dir build
+      - name: Read the project name
+        run: |
+          cat << EOF | python3  >> $GITHUB_OUTPUT
+          import tomllib
+          with open('pyproject.toml', 'rb') as f:
+              name = tomllib.load(f)['project']['name']
+          with open('${GITHUB_OUTPUT}', 'a') as f:
+              print(f'PROJECT_NAME={name}', file=f)
+          EOF
       - name: Build a binary wheel and a source tarball
         run: |
           python3 -m build
@@ -23,42 +32,11 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-  publish-to-pypi:
-    name: Publish Python 🐍 distribution 📦 to PyPI
+  github-release:
+    name: Sign the Python 🐍 distribution 📦 with Sigstore and upload them to GitHub Release
     if: startsWith(github.ref, 'refs/tags/')
     needs:
       - build
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      # url: https://pypi.org/p/<package-name>  # Replace <package-name> with your PyPI project name
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-    steps:
-      - name: Print the package name
-        id: print-package-name
-        run: |
-          sed -ne 's/^name = "\([^"]\+\)"/\1/p' pyproject.toml | head -1
-          # cat << EOF | python
-          # import tomllib
-          # with open('pyproject.toml', 'rb') as f:
-          #     print(tomllib.load(f)['project']['name'], end='')
-          # EOF
-      - name: Download all the dists
-        uses: actions/download-artifact@v3
-        with:
-          name: python-package-distributions
-          path: dist/
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://pypi.org/p/${{ steps.print-package-name.outputs.VALUE }}
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          verbose: true
-  github-release:
-    name: Sign the Python 🐍 distribution 📦 with Sigstore and upload them to GitHub Release
-    needs:
-      - publish-to-pypi
     runs-on: ubuntu-latest
     permissions:
       contents: write  # IMPORTANT: mandatory for making GitHub Releases
@@ -88,8 +66,30 @@ jobs:
         # `dist/` contains the built packages, and the
         # sigstore-produced signatures and certificates.
         run: |
-          gh release upload '${{ github.ref_name }}' dist/**
+          gh release upload '${{ github.ref_name }}' dist/** \
             --repo '${{ github.repository }}'
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - github-release
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/${{ needs.build.outputs.PROJECT_NAME }}
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          verbose: true
 #   publish-to-testpypi:
 #     name: Publish Python 🐍 distribution 📦 to TestPyPI
 #     needs:
