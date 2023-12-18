@@ -32,7 +32,7 @@ Usage
     Example:
 
     ```sh
-    sdeul extract --pretty-json --validate-output \
+    sdeul extract --pretty-json \
         llama-2-13b-chat.Q4_K_M.gguf \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt

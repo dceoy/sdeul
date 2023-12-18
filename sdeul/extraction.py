@@ -41,7 +41,7 @@ Input text:
 def extract_json_from_text(
     text_file_path: str, json_schema_file_path: str,
     llama_model_file_path: str, output_json_file_path: Optional[str] = None,
-    pretty_json: bool = False, validate_output: bool = False,
+    pretty_json: bool = False, skip_validation: bool = False,
     temperature: float = 0.8, top_p: float = 0.95, max_tokens: int = 256,
     n_ctx: int = 512, seed: int = -1, token_wise_streaming: bool = False
 ) -> None:
@@ -65,7 +65,7 @@ def extract_json_from_text(
     output_json_string = json.dumps(
         obj=output_data, indent=(2 if pretty_json else None)
     )
-    if validate_output:
+    if not skip_validation:
         try:
             validate(instance=output_data, schema=schema)
         except ValidationError as e:

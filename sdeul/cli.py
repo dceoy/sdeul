@@ -4,7 +4,7 @@ Structural Data Extractor using LLMs
 
 Usage:
     sdeul extract [--debug|--info] [--output-json=<path>] [--pretty-json]
-        [--validate-output] [--temperature=<float>] [--top-p=<float>]
+        [--skip-validation] [--temperature=<float>] [--top-p=<float>]
         [--max-tokens=<int>] [--n-ctx=<int>] [--seed=<int>] <llama_model_path>
         <json_schema_path> <text_path>
     sdeul validate [--debug|--info] <json_schema_path> <json_path>...
@@ -19,7 +19,7 @@ Options:
     --debug, --info         Execute a command with debug|info messages
     --output-json=<path>    Output JSON file path
     --pretty-json           Output JSON data with pretty format
-    --validate-output       Validate output JSON using JSON Schema
+    --skip-validation       Skip output validation using JSON Schema
     --temperature=<float>   Specify the temperature for sampling [default: 0.2]
     --top-p=<float>         Specify the top-p value for sampling [default: 0.2]
     --max-tokens=<int>      Specify the max tokens to generate [default: 8192]
@@ -59,7 +59,7 @@ def main():
             llama_model_file_path=args['<llama_model_path>'],
             output_json_file_path=args['--output-json'],
             pretty_json=args['--pretty-json'],
-            validate_output=args['--validate-output'],
+            skip_validation=args['--skip-validation'],
             temperature=float(args['--temperature']),
             top_p=float(args['--top-p']), max_tokens=int(args['--max-tokens']),
             n_ctx=int(args['--n-ctx']), seed=int(args['--seed'])
