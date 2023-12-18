@@ -56,23 +56,27 @@ def extract_json_from_text(
     input_text = _read_text_file(path=text_file_path)
     llm_chain = _create_llm_chain(schema=schema, llm=llm)
 
+    logger.info('Start extracting JSON data from the input text.')
     output_string = llm_chain.invoke({'input_text': input_text})
     logger.info(f'LLM output: {output_string}')
     assert output_string, 'LLM output is empty.'
 
-    output_data = _parse_llm_output(output_string=str(output_string))
-    logger.debug(f'output_data: {output_data}')
+    parsed_output_data = _parse_llm_output(output_string=str(output_string))
+    logger.info(f'Parsed output: {parsed_output_data}')
     output_json_string = json.dumps(
-        obj=output_data, indent=(2 if pretty_json else None)
+        obj=parsed_output_data, indent=(2 if pretty_json else None)
     )
-    if not skip_validation:
+    if skip_validation:
+        logger.info('Skip validation using JSON Schema.')
+    else:
+        logger.info('Validate the parsed output using JSON Schema.')
         try:
-            validate(instance=output_data, schema=schema)
+            validate(instance=parsed_output_data, schema=schema)
         except ValidationError as e:
-            logger.error(
-                f'Failed to validate the output: {output_json_string}'
-            )
+            logger.error(f'Validation failed: {output_json_string}')
             raise e
+        else:
+            logger.info('Validation succeeded.')
     if output_json_file_path:
         _write_file(path=output_json_file_path, data=output_json_string)
     else:
