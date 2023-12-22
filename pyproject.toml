@@ -16,6 +16,7 @@ dependencies = [
   "jsonschema >= 4.20.0",
   "langchain >= 0.0.349",
   "llama-cpp-python >= 0.2.22",
+  "openai == 0.28"
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
