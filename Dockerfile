@@ -17,7 +17,8 @@ RUN set -e \
       && /usr/bin/python3 /tmp/get-pip.py \
       && pip install -U --no-cache-dir pip \
       && pip install -U --no-cache-dir \
-        docopt jsonschema langchain llama-cpp-python openai
+        docopt jsonschema langchain langchain-google-genai \
+        llama-cpp-python openai
 
 ADD . /tmp/sdeul
 

@@ -70,7 +70,9 @@ def extract_json_from_text(
                 logger.info(f'Override environment variable: {k}')
                 os.environ[k] = v
         if google_model_name:
-            llm = ChatGoogleGenerativeAI(model=google_model_name)
+            llm = ChatGoogleGenerativeAI(
+                model=google_model_name
+            )   # type: ignore
         else:
             llm = OpenAI(model_name=openai_model_name)
     schema = read_json_schema_file(path=json_schema_file_path)

@@ -40,3 +40,11 @@ jobs:
           sdeul validate \
             test/data/medication_history.schema.json \
             test/data/medication_history.json
+      - name: Test extract command
+        run: |
+          sdeul extract \
+            --pretty-json \
+            --google-model=gemini-pro \
+            --google-api-key=${{ secrets.GOOGLE_API_KEY }} \
+            test/data/medication_history.schema.json \
+            test/data/patient_medication_record.txt
