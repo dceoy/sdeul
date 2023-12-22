@@ -20,7 +20,7 @@ jobs:
       - name: Install packages
         run: |
           pip install -U --no-cache-dir \
-            autopep8 flake8 flake8-bugbear flake8-isort pep8-naming \
+            autopep8 bandit flake8 flake8-bugbear flake8-isort pep8-naming \
             mypy types-docopt types-jsonschema types-setuptools .
       - name: Validate the codes using flake8
         run: |
@@ -28,6 +28,9 @@ jobs:
       - name: Validate the codes using Mypy
         run: |
           mypy --exclude=build .
+      - name: Find security issues using Bandit
+        run: |
+          bandit --exclude=build -r .
       - name: Test commands
         run: |
           sdeul --version
