@@ -6,9 +6,9 @@ Usage:
     sdeul extract [--debug|--info] [--output-json=<path>] [--pretty-json]
         [--skip-validation] [--temperature=<float>] [--top-p=<float>]
         [--max-tokens=<int>] [--n-ctx=<int>] [--seed=<int>]
-        [--openai-model=<name>|--llama-model-gguf=<path>]
+        [--openai-model=<name>|--google-model=<name>|--llama-model-gguf=<path>]
         [--openai-api-key=<str>] [--openai-organization=<str>]
-        <json_schema_path> <text_path>
+        [--google-api-key=<str>] <json_schema_path> <text_path>
     sdeul validate [--debug|--info] <json_schema_path> <json_path>...
     sdeul -h|--help
     sdeul --version
@@ -28,15 +28,19 @@ Options:
     --n-ctx=<int>           Specify the token context window [default: 1024]
     --seed=<int>            Specify the random seed [default: -1]
     --openai-model=<name>   Use the OpenAI model (e.g., gpt-3.5-turbo)
-                            This mode requires the environment variable:
+                            This option requires the environment variables:
                             - OPENAI_API_KEY (OpenAI API key)
                             - OPENAI_ORGANIZATION (OpenAI organization ID)
+    --google-model=<name>   Use the Google model (e.g., gemini-pro)
+                            This option requires the environment variables:
+                            - GOOGLE_API_KEY (Google API key)
     --llama-model-gguf=<path>
                             Use the LLaMA model GGUF file
     --openai-api-key=<str>  Override the OpenAI API key ($OPENAI_API_KEY)
     --openai-organization=<str>
                             Override the OpenAI organization ID
                             ($OPENAI_ORGANIZATION)
+    --google-api-key=<str>  Override the Google API key ($GOOGLE_API_KEY)
     -h, --help              Print help and exit
     --version               Print version and exit
 
@@ -64,15 +68,21 @@ def main():
     logger.debug(f'args:{os.linesep}{args}')
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     if args['extract']:
-        if not (args['--llama-model-gguf'] or args['--openai-model']):
+        either_required_args = [
+            '--openai-model', '--google-model', '--llama-model-gguf'
+        ]
+        if not [s for s in either_required_args if args[s]]:
             raise ValueError(
-                'Either --llama-model-gguf or --openai-model must be specified'
+                'Either one of the following options is required: '
+                + ', '.join(either_required_args)
             )
         else:
             extract_json_from_text(
                 text_file_path=args['<text_path>'],
                 json_schema_file_path=args['<json_schema_path>'],
                 llama_model_file_path=args['--llama-model-gguf'],
+                google_model_name=args['--google-model'],
+                google_api_key=args['--google-api-key'],
                 openai_model_name=args['--openai-model'],
                 openai_api_key=args['--openai-api-key'],
                 openai_organization=args['--openai-organization'],

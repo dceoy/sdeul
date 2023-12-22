@@ -15,6 +15,7 @@ dependencies = [
   "docopt >= 0.6.2",
   "jsonschema >= 4.20.0",
   "langchain >= 0.0.349",
+  "langchain-google-genai >= 0.0.5",
   "llama-cpp-python >= 0.2.22",
   "openai == 0.28"
 ]

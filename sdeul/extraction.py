@@ -14,6 +14,7 @@ from langchain.chains import LLMChain
 from langchain.llms import LlamaCpp, OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .validation import read_json_schema_file
 
@@ -41,6 +42,8 @@ Input text:
 def extract_json_from_text(
     text_file_path: str, json_schema_file_path: str,
     llama_model_file_path: Optional[str] = None,
+    google_model_name: Optional[str] = 'gemini-pro',
+    google_api_key: Optional[str] = None,
     openai_model_name: Optional[str] = 'gpt-3.5-turbo',
     openai_api_key: Optional[str] = None,
     openai_organization: Optional[str] = None,
@@ -58,15 +61,18 @@ def extract_json_from_text(
             token_wise_streaming=token_wise_streaming
         )
     else:
-        llm = OpenAI(
-            **{
-                k: v for k, v in {
-                    'model_name': openai_model_name,
-                    'openai_api_key': openai_api_key,
-                    'openai_organization': openai_organization
-                }.items() if v
-            }
-        )
+        overrided_env_vars = {
+            'GOOGLE_API_KEY': google_api_key, 'OPENAI_API_KEY': openai_api_key,
+            'OPENAI_ORGANIZATION': openai_organization
+        }
+        for k, v in overrided_env_vars.items():
+            if v:
+                logger.info(f'Override environment variable: {k}')
+                os.environ[k] = v
+        if google_model_name:
+            llm = ChatGoogleGenerativeAI(model=google_model_name)
+        else:
+            llm = OpenAI(model_name=openai_model_name)
     schema = read_json_schema_file(path=json_schema_file_path)
     input_text = _read_text_file(path=text_file_path)
     llm_chain = _create_llm_chain(schema=schema, llm=llm)
