@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sdeul"
 description = "Structural Data Extractor using LLMs"
-authors = [{name = "dceoy", email = "dnarsil+github@gmail.com"}]
-maintainers = [{name = "dceoy", email = "dnarsil+github@gmail.com"}]
+authors = [{name = "Daichi Narushima", email = "dnarsil+github@gmail.com"}]
+maintainers = [{name = "Daichi Narushima", email = "dnarsil+github@gmail.com"}]
 license = {file = "LICENSE"}
 readme = "README.md"
 dynamic = ["version"]

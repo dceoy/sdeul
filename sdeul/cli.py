@@ -32,7 +32,7 @@ Options:
                             - OPENAI_API_KEY (OpenAI API key)
                             - OPENAI_ORGANIZATION (OpenAI organization ID)
     --google-model=<name>   Use the Google model (e.g., gemini-pro)
-                            This option requires the environment variables:
+                            This option requires the environment variable:
                             - GOOGLE_API_KEY (Google API key)
     --llama-model-gguf=<path>
                             Use the LLaMA model GGUF file
