@@ -9,7 +9,14 @@ on:
       - main
   workflow_dispatch:
 jobs:
-  test_installation:
+  lint-and-scan:
+    uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-lint-and-scan.yml@main
+    with:
+      package-root-path: .
+      python-version: 3.x
+  test:
+    needs:
+      - lint-and-scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,18 +26,7 @@ jobs:
           python-version: 3.x
       - name: Install packages
         run: |
-          pip install -U --no-cache-dir \
-            autopep8 bandit flake8 flake8-bugbear flake8-isort pep8-naming \
-            mypy types-docopt types-jsonschema types-setuptools .
-      - name: Validate the codes using flake8
-        run: |
-          flake8 --exclude=./build .
-      - name: Validate the codes using Mypy
-        run: |
-          mypy --exclude=build .
-      - name: Find security issues using Bandit
-        run: |
-          bandit --exclude=build -r .
+          pip install -U --no-cache-dir .
       - name: Test commands
         run: |
           sdeul --version

@@ -4,8 +4,8 @@ sdeul
 Structural Data Extractor using LLMs
 
 [![Test](https://github.com/dceoy/sdeul/actions/workflows/test.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/test.yml)
-[![CI to Docker Hub](https://github.com/dceoy/sdeul/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/docker-publish.yml)
-[![Release on PyPI](https://github.com/dceoy/sdeul/actions/workflows/pypi-release.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/pypi-release.yml)
+[![CI to Docker Hub](https://github.com/dceoy/sdeul/actions/workflows/docker-compose-build-and-push.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/docker-compose-build-and-push.yml)
+[![Release on PyPI and GitHub](https://github.com/dceoy/sdeul/actions/workflows/python-package-release-on-pypi-and-github.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/python-package-release-on-pypi-and-github.yml)
 
 Installation
 ------------
