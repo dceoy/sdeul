@@ -12,11 +12,9 @@ jobs:
   lint-and-scan:
     uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-lint-and-scan.yml@main
     with:
-      package-root-path: .
+      package-path: .
       python-version: 3.x
   test:
-    needs:
-      - lint-and-scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
