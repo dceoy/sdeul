@@ -11,9 +11,9 @@ from jsonschema.exceptions import ValidationError
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import LLMChain
-from langchain.llms import LlamaCpp, OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
+from langchain_community.llms import LlamaCpp, OpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .validation import read_json_schema_file

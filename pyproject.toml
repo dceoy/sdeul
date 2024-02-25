@@ -10,13 +10,14 @@ maintainers = [{name = "Daichi Narushima", email = "dnarsil+github@gmail.com"}]
 license = {file = "LICENSE"}
 readme = "README.md"
 dynamic = ["version"]
-requires-python = ">= 3.8"
+requires-python = ">= 3.10"
 dependencies = [
   "docopt >= 0.6.2",
   "jsonschema >= 4.20.0",
-  "langchain >= 0.0.349",
-  "langchain-google-genai >= 0.0.5",
-  "llama-cpp-python >= 0.2.22",
+  "langchain >= 0.1.9",
+  "langchain-community >= 0.0.22",
+  "langchain-google-genai >= 0.0.9",
+  "llama-cpp-python >= 0.2.50",
   "openai ==1.12.0"
 ]
 classifiers = [
