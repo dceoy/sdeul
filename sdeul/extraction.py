@@ -13,8 +13,9 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
-from langchain_community.llms import LlamaCpp, OpenAI
+from langchain_community.llms import LlamaCpp
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 from .validation import read_json_schema_file
 
@@ -74,7 +75,7 @@ def extract_json_from_text(
                 model=google_model_name
             )   # type: ignore
         else:
-            llm = OpenAI(model_name=openai_model_name)
+            llm = ChatOpenAI(model_name=openai_model_name)  # type: ignore
     schema = read_json_schema_file(path=json_schema_file_path)
     input_text = _read_text_file(path=text_file_path)
     llm_chain = _create_llm_chain(schema=schema, llm=llm)
