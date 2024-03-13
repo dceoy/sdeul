@@ -39,6 +39,14 @@ jobs:
     with:
       package-path: .
       python-version: ${{ inputs.python-version || '3.x' }}
+  github-codeql-analysis:
+    uses: dceoy/gh-actions-for-devops/.github/workflows/github-codeql-analysis.yml@main
+    with:
+      language: python
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
   test-cli:
     runs-on: ubuntu-latest
     steps:
