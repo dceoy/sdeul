@@ -1,39 +1,44 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/dceoy/sdeul/main/test/data/medication_history.schema.json",
+  "title": "Medication History",
+  "description": "Schema for a patient's medication history record.",
   "type": "object",
   "properties": {
     "MedicationHistory": {
+      "description": "A list of medications including their names, dosages, frequencies, and purposes.",
       "type": "array",
       "items": {
+        "description": "An object representing a single medication and its details.",
         "type": "object",
         "properties": {
           "MedicationName": {
+            "description": "The name of the medication. Can be null.",
             "type": [
               "string",
               "null"
-            ],
-            "description": "The name of the medication. Can be null."
+            ]
           },
           "Dosage": {
+            "description": "The dosage of the medication. Can be null.",
             "type": [
               "string",
               "null"
-            ],
-            "description": "The dosage of the medication. Can be null."
+            ]
           },
           "Frequency": {
+            "description": "How often the medication is taken. Can be null.",
             "type": [
               "string",
               "null"
-            ],
-            "description": "How often the medication is taken. Can be null."
+            ]
           },
           "Purpose": {
+            "description": "The purpose for which the medication is prescribed. Can be null.",
             "type": [
               "string",
               "null"
-            ],
-            "description": "The purpose for which the medication is prescribed. Can be null."
+            ]
           }
         },
         "required": [
@@ -42,15 +47,12 @@
           "Frequency",
           "Purpose"
         ],
-        "additionalProperties": false,
-        "description": "An object representing a single medication and its details."
-      },
-      "description": "A list of medications including their names, dosages, frequencies, and purposes."
+        "additionalProperties": false
+      }
     }
   },
   "required": [
     "MedicationHistory"
   ],
-  "additionalProperties": false,
-  "description": "Schema for a patient's medication history record."
+  "additionalProperties": false
 }
