@@ -40,7 +40,7 @@ Instructions:
 
 def extract_json_from_text(
     text_file_path: str, json_schema_file_path: str,
-    llama_model_file_path: Optional[str] = None,
+    model_file_path: Optional[str] = None,
     google_model_name: Optional[str] = 'gemini-pro',
     google_api_key: Optional[str] = None,
     openai_model_name: Optional[str] = 'gpt-3.5-turbo',
@@ -49,14 +49,16 @@ def extract_json_from_text(
     output_json_file_path: Optional[str] = None, pretty_json: bool = False,
     skip_validation: bool = False, temperature: float = 0.8,
     top_p: float = 0.95, max_tokens: int = 256, n_ctx: int = 512,
-    seed: int = -1, token_wise_streaming: bool = False
+    seed: int = -1, n_batch: int = 8, n_gpu_layers: int = -1,
+    token_wise_streaming: bool = False
 ) -> None:
     '''Extract JSON from input text.'''
     logger = logging.getLogger(__name__)
-    if llama_model_file_path:
+    if model_file_path:
         llm = _read_llm_file(
-            path=llama_model_file_path, temperature=temperature, top_p=top_p,
-            max_tokens=max_tokens, n_ctx=n_ctx, seed=seed,
+            path=model_file_path, temperature=temperature, top_p=top_p,
+            max_tokens=max_tokens, n_ctx=n_ctx, seed=seed, n_batch=n_batch,
+            n_gpu_layers=n_gpu_layers,
             token_wise_streaming=token_wise_streaming
         )
     else:
@@ -168,14 +170,15 @@ def _read_text_file(path: str) -> str:
 
 def _read_llm_file(
     path: str, temperature: float = 0.8, top_p: float = 0.95,
-    max_tokens: int = 256, n_ctx: int = 512, seed: int = -1,
-    token_wise_streaming: bool = False
+    max_tokens: int = 256, n_ctx: int = 512, seed: int = -1, n_batch: int = 8,
+    n_gpu_layers: int = -1, token_wise_streaming: bool = False
 ) -> LlamaCpp:
     logger = logging.getLogger(__name__)
     logger.info(f'Read a Llama 2 model file: {path}')
     llm = LlamaCpp(
         model_path=path, temperature=temperature, top_p=top_p,
-        max_tokens=max_tokens, n_ctx=n_ctx, seed=seed,
+        max_tokens=max_tokens, n_ctx=n_ctx, seed=seed, n_batch=n_batch,
+        n_gpu_layers=n_gpu_layers,
         verbose=(
             token_wise_streaming or logging.getLogger().level <= logging.DEBUG
         ),

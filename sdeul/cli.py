@@ -5,8 +5,9 @@ Structural Data Extractor using LLMs
 Usage:
     sdeul extract [--debug|--info] [--output-json=<path>] [--pretty-json]
         [--skip-validation] [--temperature=<float>] [--top-p=<float>]
-        [--max-tokens=<int>] [--n-ctx=<int>] [--seed=<int>]
-        [--openai-model=<name>|--google-model=<name>|--llama-model-gguf=<path>]
+        [--max-tokens=<int>] [--n-ctx=<int>] [--seed=<int>] [--n-batch=<int>]
+        [--n-gpu-layers=<int>]
+        [--openai-model=<name>|--google-model=<name>|--model-gguf=<path>]
         [--openai-api-key=<str>] [--openai-organization=<str>]
         [--google-api-key=<str>] <json_schema_path> <text_path>
     sdeul validate [--debug|--info] <json_schema_path> <json_path>...
@@ -27,6 +28,8 @@ Options:
     --max-tokens=<int>      Specify the max tokens to generate [default: 8192]
     --n-ctx=<int>           Specify the token context window [default: 1024]
     --seed=<int>            Specify the random seed [default: -1]
+    --n-batch=<int>         Specify the number of batch tokens [default: 8]
+    --n-gpu-layers=<int>    Specify the number of GPU layers [default: -1]
     --openai-model=<name>   Use the OpenAI model (e.g., gpt-3.5-turbo)
                             This option requires the environment variables:
                             - OPENAI_API_KEY (OpenAI API key)
@@ -34,8 +37,7 @@ Options:
     --google-model=<name>   Use the Google model (e.g., gemini-pro)
                             This option requires the environment variable:
                             - GOOGLE_API_KEY (Google API key)
-    --llama-model-gguf=<path>
-                            Use the LLaMA model GGUF file
+    --model-gguf=<path>     Use the model GGUF file for llama.cpp
     --openai-api-key=<str>  Override the OpenAI API key ($OPENAI_API_KEY)
     --openai-organization=<str>
                             Override the OpenAI organization ID
@@ -69,7 +71,7 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     if args['extract']:
         either_required_args = [
-            '--openai-model', '--google-model', '--llama-model-gguf'
+            '--openai-model', '--google-model', '--model-gguf'
         ]
         if not [s for s in either_required_args if args[s]]:
             raise ValueError(
@@ -80,7 +82,7 @@ def main():
             extract_json_from_text(
                 text_file_path=args['<text_path>'],
                 json_schema_file_path=args['<json_schema_path>'],
-                llama_model_file_path=args['--llama-model-gguf'],
+                model_file_path=args['--model-gguf'],
                 google_model_name=args['--google-model'],
                 google_api_key=args['--google-api-key'],
                 openai_model_name=args['--openai-model'],
@@ -92,7 +94,9 @@ def main():
                 temperature=float(args['--temperature']),
                 top_p=float(args['--top-p']),
                 max_tokens=int(args['--max-tokens']),
-                n_ctx=int(args['--n-ctx']), seed=int(args['--seed'])
+                n_ctx=int(args['--n-ctx']), seed=int(args['--seed']),
+                n_batch=int(args['--n-batch']),
+                n_gpu_layers=int(args['--n-gpu-layers'])
             )
     elif args['validate']:
         validate_json_files_using_json_schema(
