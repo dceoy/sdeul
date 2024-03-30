@@ -20,23 +20,21 @@ from langchain_openai import ChatOpenAI
 from .validation import read_json_schema_file
 
 _EXTRACTION_TEMPLATE = '''\
-Instructions:
-- Extract only the relevant entities defined by the provided JSON schema from the input text.
-- Generate the extracted entities in JSON format according to the schema.
-- If a property is not present in the schema, DO NOT include it in the output.
-
-Output format:
-- Markdown code block of JSON.
+Input text:
+```
+{input_text}
+```
 
 Provided JSON schema:
 ```json
 {schema}
 ```
 
-Input text:
-```
-{input_text}
-```
+Instructions:
+- Extract only the relevant entities defined by the provided JSON schema from the input text.
+- Generate the extracted entities in JSON format according to the schema.
+- If a property is not present in the schema, DO NOT include it in the output.
+- Output the JSON data in a markdown code block.
 '''     # noqa: E501
 
 
