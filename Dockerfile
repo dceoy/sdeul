@@ -1,49 +1,60 @@
-FROM ubuntu:24.04 AS builder
+# syntax=docker/dockerfile:1
+ARG PYTHON_VERSION=3.12
 
-ENV DEBIAN_FRONTEND noninteractive
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-slim AS builder
 
-ADD https://bootstrap.pypa.io/get-pip.py /tmp/get-pip.py
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-RUN set -e \
-      && apt-get -y update \
-      && apt-get -y upgrade \
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+RUN rm -f /etc/apt/apt.conf.d/docker-clean \
+      && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+        > /etc/apt/apt.conf.d/keep-cache
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+      --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      apt-get -y update \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        g++ python3 python3-distutils \
-      && apt-get -y autoremove \
-      && apt-get clean \
-      && rm -rf /var/lib/apt/lists/*
+        g++
 
-RUN set -e \
-      && /usr/bin/python3 /tmp/get-pip.py \
-      && pip install -U --no-cache-dir pip \
-      && pip install -U --no-cache-dir \
-        docopt jsonschema langchain langchain-google-genai \
-        llama-cpp-python openai
-
-ADD . /tmp/sdeul
-
-RUN set -e \
-      && pip install -U --no-cache-dir /tmp/sdeul \
-      && rm -rf /tmp/get-pip.py /tmp/sdeul
+RUN --mount=type=cache,target=/root/.cache/pip \
+      --mount=type=bind,source=.,target=/mnt/sdeul \
+      cp -a /mnt/sdeul /tmp/sdeul \
+      && /usr/local/bin/python -m pip install -U --no-cache-dir \
+        pip /tmp/sdeul
 
 
-FROM ubuntu:24.04
+FROM public.ecr.aws/docker/library/python:${PYTHON_VERSION}-slim AS cli
 
-ENV DEBIAN_FRONTEND noninteractive
+ARG USER_NAME=sdeul
+ARG USER_UID=1000
+ARG USER_GID=1000
 
 COPY --from=builder /usr/local /usr/local
+COPY --from=builder /etc/apt/apt.conf.d/keep-cache /etc/apt/apt.conf.d/keep-cache
 
-RUN set -e \
-      && ln -sf bash /bin/sh \
-      && ln -s python3 /usr/bin/python
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-RUN set -e \
-      && apt-get -y update \
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+RUN rm -f /etc/apt/apt.conf.d/docker-clean
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+      --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      apt-get -y update \
       && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        ca-certificates curl jq python3 python3-distutils \
-      && apt-get -y autoremove \
-      && apt-get clean \
-      && rm -rf /var/lib/apt/lists/*
+        ca-certificates jq
+
+RUN groupadd --gid "${USER_GID}" "${USER_NAME}" \
+      && useradd --uid "${USER_UID}" --gid "${USER_GID}" --shell /bin/bash --create-home "${USER_NAME}"
+
+USER "${USER_NAME}"
+
+HEALTHCHECK NONE
 
 ENTRYPOINT ["/usr/local/bin/sdeul"]
