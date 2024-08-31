@@ -1,12 +1,6 @@
 ---
-name: Test
+name: Test for CLI
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
   workflow_call:
     inputs:
       python-version:
@@ -25,28 +19,11 @@ on:
         type: string
         description: Python version to use
         default: 3.x
-    secrets:
-      GOOGLE_API_KEY:
-        required: true
-        description: Google API key
 defaults:
   run:
     shell: bash -euo pipefail {0}
     working-directory: .
 jobs:
-  lint-and-scan:
-    uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-lint-and-scan.yml@main
-    with:
-      package-path: .
-      python-version: ${{ inputs.python-version || '3.x' }}
-  github-codeql-analysis:
-    uses: dceoy/gh-actions-for-devops/.github/workflows/github-codeql-analysis.yml@main
-    with:
-      language: python
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
   test-cli:
     runs-on: ubuntu-latest
     steps:
