@@ -35,18 +35,42 @@ langchain-openai = "^0.1.23"
 llama-cpp-python = "^0.2.90"
 openai = "^1.43.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 autopep8 = "^2.3.1"
 bandit = "^1.7.9"
 flake8 = "^7.1.1"
 flake8-bugbear = "^24.8.19"
 flake8-isort = "^6.1.1"
 pep8-naming = "^0.14.1"
-mypy = "^1.11.1"
-ruff = "^0.6.2"
+ruff = "^0.6.3"
+isort = "^5.13.2"
+mypy = "^1.11.2"
+flake8-pyproject = "^1.2.3"
 
 [tool.poetry.scripts]
 sdeul = "sdeul.cli:main"
+
+[tool.flake8]
+max-line-length = 88
+exclude = ["build"]
+
+[tool.ruff]
+line-length = 88
+exclude = ["build"]
+
+[tool.isort]
+line_length = 88
+skip = ["build"]
+
+[tool.mypy]
+install_types = true
+non_interactive = true
+ignore_missing_imports = true
+exclude = ["build"]
+
+[tool.bandit]
+recursive = true
+exclude_dirs = ["build"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

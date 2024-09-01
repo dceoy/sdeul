@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''
+"""
 Structural Data Extractor using LLMs
 
 Usage:
@@ -50,7 +50,7 @@ Arguments:
     <json_schema_path>      JSON Schema file path
     <text_path>             Input text file path
     <json_path>             JSON file path
-'''
+"""
 
 import logging
 import os
@@ -65,43 +65,42 @@ from .validation import validate_json_files_using_json_schema
 
 def main():
     args = docopt(__doc__, version=__version__)
-    _set_log_config(debug=args['--debug'], info=args['--info'])
+    _set_log_config(debug=args["--debug"], info=args["--info"])
     logger = logging.getLogger(__name__)
-    logger.debug(f'args:{os.linesep}{args}')
+    logger.debug(f"args:{os.linesep}{args}")
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    if args['extract']:
-        either_required_args = [
-            '--openai-model', '--google-model', '--model-gguf'
-        ]
+    if args["extract"]:
+        either_required_args = ["--openai-model", "--google-model", "--model-gguf"]
         if not [s for s in either_required_args if args[s]]:
             raise ValueError(
-                'Either one of the following options is required: '
-                + ', '.join(either_required_args)
+                "Either one of the following options is required: "
+                + ", ".join(either_required_args)
             )
         else:
             extract_json_from_text(
-                text_file_path=args['<text_path>'],
-                json_schema_file_path=args['<json_schema_path>'],
-                model_file_path=args['--model-gguf'],
-                google_model_name=args['--google-model'],
-                google_api_key=args['--google-api-key'],
-                openai_model_name=args['--openai-model'],
-                openai_api_key=args['--openai-api-key'],
-                openai_organization=args['--openai-organization'],
-                output_json_file_path=args['--output-json'],
-                pretty_json=args['--pretty-json'],
-                skip_validation=args['--skip-validation'],
-                temperature=float(args['--temperature']),
-                top_p=float(args['--top-p']),
-                max_tokens=int(args['--max-tokens']),
-                n_ctx=int(args['--n-ctx']), seed=int(args['--seed']),
-                n_batch=int(args['--n-batch']),
-                n_gpu_layers=int(args['--n-gpu-layers'])
+                text_file_path=args["<text_path>"],
+                json_schema_file_path=args["<json_schema_path>"],
+                model_file_path=args["--model-gguf"],
+                google_model_name=args["--google-model"],
+                google_api_key=args["--google-api-key"],
+                openai_model_name=args["--openai-model"],
+                openai_api_key=args["--openai-api-key"],
+                openai_organization=args["--openai-organization"],
+                output_json_file_path=args["--output-json"],
+                pretty_json=args["--pretty-json"],
+                skip_validation=args["--skip-validation"],
+                temperature=float(args["--temperature"]),
+                top_p=float(args["--top-p"]),
+                max_tokens=int(args["--max-tokens"]),
+                n_ctx=int(args["--n-ctx"]),
+                seed=int(args["--seed"]),
+                n_batch=int(args["--n-batch"]),
+                n_gpu_layers=int(args["--n-gpu-layers"]),
             )
-    elif args['validate']:
+    elif args["validate"]:
         validate_json_files_using_json_schema(
-            json_file_paths=args['<json_path>'],
-            json_schema_file_path=args['<json_schema_path>']
+            json_file_paths=args["<json_path>"],
+            json_schema_file_path=args["<json_schema_path>"],
         )
 
 
@@ -113,6 +112,7 @@ def _set_log_config(debug=None, info=None):
     else:
         lv = logging.WARNING
     logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S', level=lv
+        format="%(asctime)s %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level=lv,
     )

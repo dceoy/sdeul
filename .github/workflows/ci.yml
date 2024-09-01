@@ -83,16 +83,18 @@ jobs:
       DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
   python-package-release:
     if: >
-      github.event_name == 'workflow_dispatch' && inputs.workflow == 'release'
-    needs:
-      - python-lint-and-scan
-      - python-test
-      - github-codeql-analysis
+      github.event_name == 'push'
+      || (
+        github.event_name == 'workflow_dispatch'
+        && (inputs.workflow == 'release' || inputs.workflow == 'lint-and-test')
+      )
     uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-release-on-pypi-and-github.yml@main
     permissions:
       contents: write
       id-token: write
     with:
+      package-path: .
+      create-releases: ${{ github.event_name == 'workflow_dispatch' && inputs.workflow == 'release' }}
       python-version: 3.x
     secrets:
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
