@@ -1,4 +1,5 @@
 #!/usr/bin/env python
 
+from importlib.metadata import version
 
-__version__ = 'v0.1.3'
+__version__ = version(__package__)

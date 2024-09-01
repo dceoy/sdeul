@@ -34,7 +34,9 @@ jobs:
           python-version: ${{ inputs.python-version || '3.x' }}
       - name: Install packages
         run: |
-          pip install -U --no-cache-dir .
+          pip install -U --no-cache-dir pip poetry
+          poetry build --format wheel --no-interaction
+          pip install dist/*.whl
       - name: Test commands
         run: |
           sdeul --version

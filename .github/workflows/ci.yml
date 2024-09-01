@@ -48,7 +48,8 @@ jobs:
       contents: read
       security-events: write
     with:
-      language: python
+      language: >
+        ["python"]
   dependabot-auto-merge:
     if: >
       github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
