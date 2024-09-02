@@ -8,10 +8,20 @@ on:
         type: string
         description: Python version to use
         default: 3.x
+      groq-model:
+        required: false
+        type: string
+        description: Groq model to use
+        default: llama-3.1-70b-versatile
+      max-tokens:
+        required: false
+        type: string
+        description: Maximum number of tokens to use
+        default: 8000
     secrets:
-      GOOGLE_API_KEY:
+      GROQ_API_KEY:
         required: true
-        description: Google API key
+        description: Groq API key
   workflow_dispatch:
     inputs:
       python-version:
@@ -50,7 +60,8 @@ jobs:
         run: |
           sdeul extract \
             --pretty-json \
-            --google-model=gemini-pro \
-            --google-api-key=${{ secrets.GOOGLE_API_KEY }} \
+            --groq-model=${{ inputs.groq-model || 'llama-3.1-70b-versatile' }} \
+            --groq-api-key=${{ secrets.GROQ_API_KEY }} \
+            --max-tokens=${{ inputs.max-tokens || '8000' }} \
             test/data/medication_history.schema.json \
             test/data/patient_medication_record.txt

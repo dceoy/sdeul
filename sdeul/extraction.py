@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from json.decoder import JSONDecodeError
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -13,10 +13,13 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
+from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 
+from .utility import log_execution_time
 from .validation import read_json_schema_file
 
 _EXTRACTION_TEMPLATE = """\
@@ -37,27 +40,44 @@ Instructions:
 - Output the JSON data in a markdown code block.
 """  # noqa: E501
 
+_DEFAULT_MODEL_NAMES = {
+    "openai": "gpt-4o-mini",
+    "google": "gemini-1.5-pro",
+    "groq": "llama-3.1-70b-versatile",
+    "bedrock": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+}
 
+
+@log_execution_time
 def extract_json_from_text(
     text_file_path: str,
     json_schema_file_path: str,
-    model_file_path: Optional[str] = None,
-    google_model_name: Optional[str] = "gemini-pro",
-    google_api_key: Optional[str] = None,
-    openai_model_name: Optional[str] = "gpt-3.5-turbo",
-    openai_api_key: Optional[str] = None,
-    openai_organization: Optional[str] = None,
-    output_json_file_path: Optional[str] = None,
+    model_file_path: str | None = None,
+    groq_model_name: str | None = None,
+    groq_api_key: str | None = None,
+    bedrock_model_id: str | None = None,
+    google_model_name: str | None = None,
+    google_api_key: str | None = None,
+    openai_model_name: str | None = None,
+    openai_api_key: str | None = None,
+    openai_api_base: str | None = None,
+    openai_organization: str | None = None,
+    output_json_file_path: str | None = None,
     pretty_json: bool = False,
     skip_validation: bool = False,
     temperature: float = 0.8,
     top_p: float = 0.95,
-    max_tokens: int = 256,
+    max_tokens: int = 8192,
     n_ctx: int = 512,
     seed: int = -1,
     n_batch: int = 8,
     n_gpu_layers: int = -1,
     token_wise_streaming: bool = False,
+    timeout: int | None = None,
+    max_retries: int = 2,
+    aws_credentials_profile_name: str | None = None,
+    aws_region: str | None = None,
+    bedrock_endpoint_base_url: str | None = None,
 ) -> None:
     """Extract JSON from input text."""
     logger = logging.getLogger(__name__)
@@ -75,6 +95,7 @@ def extract_json_from_text(
         )
     else:
         overrided_env_vars = {
+            "GROQ_API_KEY": groq_api_key,
             "GOOGLE_API_KEY": google_api_key,
             "OPENAI_API_KEY": openai_api_key,
             "OPENAI_ORGANIZATION": openai_organization,
@@ -83,10 +104,43 @@ def extract_json_from_text(
             if v:
                 logger.info(f"Override environment variable: {k}")
                 os.environ[k] = v
-        if google_model_name:
-            llm = ChatGoogleGenerativeAI(model=google_model_name)  # type: ignore
+        if groq_model_name:
+            llm = ChatGroq(
+                model=(groq_model_name or _DEFAULT_MODEL_NAMES["groq"]),
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=timeout,
+                max_retries=max_retries,
+                stop_sequences=None,
+            )
+        elif bedrock_model_id:
+            llm = ChatBedrockConverse(
+                model=(bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]),
+                temperature=temperature,
+                max_tokens=max_tokens,
+                region_name=aws_region,
+                base_url=bedrock_endpoint_base_url,
+                credentials_profile_name=aws_credentials_profile_name,
+            )
+        elif google_model_name:
+            llm = ChatGoogleGenerativeAI(
+                model=(google_model_name or _DEFAULT_MODEL_NAMES["google"]),
+                temperature=temperature,
+                top_p=top_p,
+                max_output_tokens=max_tokens,
+                timeout=timeout,
+                max_retries=max_retries,
+            )
         else:
-            llm = ChatOpenAI(model_name=openai_model_name)  # type: ignore
+            llm = ChatOpenAI(
+                model=(openai_model_name or _DEFAULT_MODEL_NAMES["openai"]),
+                temperature=temperature,
+                top_p=top_p,
+                seed=seed,
+                max_tokens=max_tokens,
+                timeout=timeout,
+                max_retries=max_retries,
+            )
     schema = read_json_schema_file(path=json_schema_file_path)
     input_text = _read_text_file(path=text_file_path)
     llm_chain = _create_llm_chain(schema=schema, llm=llm)

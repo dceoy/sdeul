@@ -4,12 +4,15 @@ import json
 import logging
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
+from .utility import log_execution_time
 
+
+@log_execution_time
 def validate_json_files_using_json_schema(
     json_file_paths: List[str], json_schema_file_path: str
 ) -> None:
@@ -31,7 +34,7 @@ def validate_json_files_using_json_schema(
         exit(n_invalid)
 
 
-def _validate_json_file(path: str, json_schema: Dict[str, Any]) -> Union[None, str]:
+def _validate_json_file(path: str, json_schema: Dict[str, Any]) -> str | None:
     logger = logging.getLogger(__name__)
     try:
         validate(instance=_read_json_file(path=path), schema=json_schema)
