@@ -67,7 +67,7 @@ def extract_json_from_text(
     skip_validation: bool = False,
     temperature: float = 0.8,
     top_p: float = 0.95,
-    max_tokens: int = 256,
+    max_tokens: int = 8192,
     n_ctx: int = 512,
     seed: int = -1,
     n_batch: int = 8,

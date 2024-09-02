@@ -7,6 +7,11 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
   workflow_dispatch:
     inputs:
       workflow:
@@ -22,7 +27,7 @@ jobs:
   python-lint-and-scan:
     if: >
       github.event_name == 'push'
-      || github.event_name == 'pull_request'
+      || (github.event_name == 'pull_request' && github.event.action != 'ready_for_review')
       || (github.event_name == 'workflow_dispatch' && inputs.workflow == 'lint-and-test')
     uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-lint-and-scan.yml@main
     with:
@@ -31,11 +36,9 @@ jobs:
   python-test:
     if: >
       github.event_name == 'push'
-      || github.event_name == 'pull_request'
+      || (github.event_name == 'pull_request' && github.event.action != 'ready_for_review')
       || (github.event_name == 'workflow_dispatch' && inputs.workflow == 'lint-and-test')
     uses: ./.github/workflows/test.yml
-    with:
-      python-version: 3.x
     secrets:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
   github-codeql-analysis:
@@ -104,5 +107,10 @@ jobs:
       && github.actor != 'dependabot[bot]'
       && github.event.action != 'synchronize'
     uses: dceoy/gh-actions-for-devops/.github/workflows/pr-agent.yml@main
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
     secrets:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
