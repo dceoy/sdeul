@@ -13,6 +13,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
+from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
@@ -39,6 +40,13 @@ Instructions:
 - Output the JSON data in a markdown code block.
 """  # noqa: E501
 
+_DEFAULT_MODEL_NAMES = {
+    "openai": "gpt-4o-mini",
+    "google": "gemini-1.5-pro",
+    "groq": "llama-3.1-70b-versatile",
+    "bedrock": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+}
+
 
 @log_execution_time
 def extract_json_from_text(
@@ -47,6 +55,7 @@ def extract_json_from_text(
     model_file_path: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
+    bedrock_model_id: str | None = None,
     google_model_name: str | None = None,
     google_api_key: str | None = None,
     openai_model_name: str | None = None,
@@ -66,6 +75,9 @@ def extract_json_from_text(
     token_wise_streaming: bool = False,
     timeout: int | None = None,
     max_retries: int = 2,
+    aws_credentials_profile_name: str | None = None,
+    aws_region: str | None = None,
+    bedrock_endpoint_base_url: str | None = None,
 ) -> None:
     """Extract JSON from input text."""
     logger = logging.getLogger(__name__)
@@ -94,16 +106,25 @@ def extract_json_from_text(
                 os.environ[k] = v
         if groq_model_name:
             llm = ChatGroq(
-                model=(groq_model_name or "llama-3.1-70b-versatile"),
+                model=(groq_model_name or _DEFAULT_MODEL_NAMES["groq"]),
                 temperature=temperature,
                 max_tokens=max_tokens,
                 timeout=timeout,
                 max_retries=max_retries,
                 stop_sequences=None,
             )
+        elif bedrock_model_id:
+            llm = ChatBedrockConverse(
+                model=(bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]),
+                temperature=temperature,
+                max_tokens=max_tokens,
+                region_name=aws_region,
+                base_url=bedrock_endpoint_base_url,
+                credentials_profile_name=aws_credentials_profile_name,
+            )
         elif google_model_name:
             llm = ChatGoogleGenerativeAI(
-                model=(google_model_name or "gemini-1.5-pro"),
+                model=(google_model_name or _DEFAULT_MODEL_NAMES["google"]),
                 temperature=temperature,
                 top_p=top_p,
                 max_output_tokens=max_tokens,
@@ -112,7 +133,7 @@ def extract_json_from_text(
             )
         else:
             llm = ChatOpenAI(
-                model=(openai_model_name or "gpt-4o-mini"),
+                model=(openai_model_name or _DEFAULT_MODEL_NAMES["openai"]),
                 temperature=temperature,
                 top_p=top_p,
                 seed=seed,
