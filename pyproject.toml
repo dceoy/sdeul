@@ -34,6 +34,7 @@ langchain-google-genai = "^1.0.10"
 langchain-openai = "^0.1.23"
 llama-cpp-python = "^0.2.90"
 openai = "^1.43.0"
+langchain-groq = "^0.1.9"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.3.1"

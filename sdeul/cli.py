@@ -7,9 +7,9 @@ Usage:
         [--skip-validation] [--temperature=<float>] [--top-p=<float>]
         [--max-tokens=<int>] [--n-ctx=<int>] [--seed=<int>] [--n-batch=<int>]
         [--n-gpu-layers=<int>]
-        [--openai-model=<name>|--google-model=<name>|--model-gguf=<path>]
-        [--openai-api-key=<str>] [--openai-organization=<str>]
-        [--google-api-key=<str>] <json_schema_path> <text_path>
+        [--openai-model=<name>|--google-model=<name>|--groq-model=<path>|--model-gguf=<path>]
+        [--openai-api-key=<str>] [--openai-api-base=<url>] [--openai-organization=<str>]
+        [--google-api-key=<str>] [--groq-api-key=<str>] <json_schema_path> <text_path>
     sdeul validate [--debug|--info] <json_schema_path> <json_path>...
     sdeul -h|--help
     sdeul --version
@@ -30,19 +30,24 @@ Options:
     --seed=<int>            Specify the random seed [default: -1]
     --n-batch=<int>         Specify the number of batch tokens [default: 8]
     --n-gpu-layers=<int>    Specify the number of GPU layers [default: -1]
-    --openai-model=<name>   Use the OpenAI model (e.g., gpt-3.5-turbo)
+    --openai-model=<name>   Use the OpenAI model (e.g., gpt-4o-mini)
                             This option requires the environment variables:
                             - OPENAI_API_KEY (OpenAI API key)
                             - OPENAI_ORGANIZATION (OpenAI organization ID)
-    --google-model=<name>   Use the Google model (e.g., gemini-pro)
+    --google-model=<name>   Use the Google model (e.g., gemini-1.5-pro)
                             This option requires the environment variable:
                             - GOOGLE_API_KEY (Google API key)
+    --groq-model=<path>     Use the Groq model (e.g., llama-3.1-70b-versatile)
+                            This option requires the environment variable:
+                            - GROQ_API_KEY (Groq API key)
     --model-gguf=<path>     Use the model GGUF file for llama.cpp
     --openai-api-key=<str>  Override the OpenAI API key ($OPENAI_API_KEY)
+    --openai-api-base=<url> Override the OpenAI API base URL ($OPENAI_API_BASE)
     --openai-organization=<str>
                             Override the OpenAI organization ID
                             ($OPENAI_ORGANIZATION)
     --google-api-key=<str>  Override the Google API key ($GOOGLE_API_KEY)
+    --groq-api-key=<str>    Override the Groq API key ($GROQ_API_KEY)
     -h, --help              Print help and exit
     --version               Print version and exit
 
@@ -60,17 +65,23 @@ from docopt import docopt
 
 from . import __version__
 from .extraction import extract_json_from_text
+from .utility import set_logging_config
 from .validation import validate_json_files_using_json_schema
 
 
 def main():
     args = docopt(__doc__, version=__version__)
-    _set_log_config(debug=args["--debug"], info=args["--info"])
+    set_logging_config(debug=args["--debug"], info=args["--info"])
     logger = logging.getLogger(__name__)
     logger.debug(f"args:{os.linesep}{args}")
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     if args["extract"]:
-        either_required_args = ["--openai-model", "--google-model", "--model-gguf"]
+        either_required_args = [
+            "--openai-model",
+            "--google-model",
+            "--groq-model",
+            "--model-gguf",
+        ]
         if not [s for s in either_required_args if args[s]]:
             raise ValueError(
                 "Either one of the following options is required: "
@@ -81,10 +92,13 @@ def main():
                 text_file_path=args["<text_path>"],
                 json_schema_file_path=args["<json_schema_path>"],
                 model_file_path=args["--model-gguf"],
+                groq_model_name=args["--groq-model"],
+                groq_api_key=args["--groq-api-key"],
                 google_model_name=args["--google-model"],
                 google_api_key=args["--google-api-key"],
                 openai_model_name=args["--openai-model"],
                 openai_api_key=args["--openai-api-key"],
+                openai_api_base=args["--openai-api-base"],
                 openai_organization=args["--openai-organization"],
                 output_json_file_path=args["--output-json"],
                 pretty_json=args["--pretty-json"],
@@ -102,17 +116,3 @@ def main():
             json_file_paths=args["<json_path>"],
             json_schema_file_path=args["<json_schema_path>"],
         )
-
-
-def _set_log_config(debug=None, info=None):
-    if debug:
-        lv = logging.DEBUG
-    elif info:
-        lv = logging.INFO
-    else:
-        lv = logging.WARNING
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)-8s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        level=lv,
-    )
