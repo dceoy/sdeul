@@ -8,16 +8,6 @@ on:
         type: string
         description: Python version to use
         default: 3.x
-      groq-model:
-        required: false
-        type: string
-        description: Groq model to use
-        default: llama-3.1-70b-versatile
-      max-tokens:
-        required: false
-        type: string
-        description: Maximum number of tokens to use
-        default: 8000
     secrets:
       GROQ_API_KEY:
         required: true
@@ -36,32 +26,23 @@ defaults:
 jobs:
   test-cli:
     runs-on: ubuntu-latest
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version || '3.x' }}
+      - name: Setup Bats and bats libs
+        uses: bats-core/bats-action@2.0.0
       - name: Install packages
         run: |
           pip install -U --no-cache-dir pip poetry
-          poetry build --format wheel --no-interaction
-          pip install dist/*.whl
-      - name: Test commands
+          poetry install --no-interaction
+      - name: Run CLI tests using bats
         run: |
-          sdeul --version
-          sdeul --help
-      - name: Test validate command
-        run: |
-          sdeul validate \
-            test/data/medication_history.schema.json \
-            test/data/medication_history.json
-      - name: Test extract command
-        run: |
-          sdeul extract \
-            --pretty-json \
-            --groq-model=${{ inputs.groq-model || 'llama-3.1-70b-versatile' }} \
-            --groq-api-key=${{ secrets.GROQ_API_KEY }} \
-            --max-tokens=${{ inputs.max-tokens || '8000' }} \
-            test/data/medication_history.schema.json \
-            test/data/patient_medication_record.txt
+          bats --verbose-run ./test/
+#     - name: Run unit tests using pytest
+#       run: |
+#         poetry run pytest ./test/

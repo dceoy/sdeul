@@ -19,8 +19,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 
-from .utility import log_execution_time
-from .validation import read_json_schema_file
+from .utility import log_execution_time, read_json_file, read_text_file, write_file
 
 _EXTRACTION_TEMPLATE = """\
 Input text:
@@ -80,7 +79,7 @@ def extract_json_from_text(
     bedrock_endpoint_base_url: str | None = None,
 ) -> None:
     """Extract JSON from input text."""
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(extract_json_from_text.__name__)
     if model_file_path:
         llm = _read_llm_file(
             path=model_file_path,
@@ -131,7 +130,7 @@ def extract_json_from_text(
                 timeout=timeout,
                 max_retries=max_retries,
             )
-        else:
+        elif openai_model_name:
             llm = ChatOpenAI(
                 model=(openai_model_name or _DEFAULT_MODEL_NAMES["openai"]),
                 temperature=temperature,
@@ -141,8 +140,10 @@ def extract_json_from_text(
                 timeout=timeout,
                 max_retries=max_retries,
             )
-    schema = read_json_schema_file(path=json_schema_file_path)
-    input_text = _read_text_file(path=text_file_path)
+        else:
+            raise RuntimeError("No model is specified.")
+    schema = read_json_file(path=json_schema_file_path)
+    input_text = read_text_file(path=text_file_path)
     llm_chain = _create_llm_chain(schema=schema, llm=llm)
 
     logger.info("Start extracting JSON data from the input text.")
@@ -168,20 +169,13 @@ def extract_json_from_text(
             else:
                 logger.info("Validation succeeded.")
         if output_json_file_path:
-            _write_file(path=output_json_file_path, data=output_json_string)
+            write_file(path=output_json_file_path, data=output_json_string)
         else:
             print(output_json_string)
 
 
-def _write_file(path: str, data: str) -> None:
-    logger = logging.getLogger(__name__)
-    logger.info(f"Write data in a file: {path}")
-    with open(path, "w") as f:
-        f.write(data)
-
-
 def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(_parse_llm_output.__name__)
     json_string = None
     markdown = True
     for r in output_string.splitlines(keepends=False):
@@ -212,7 +206,7 @@ def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
 
 
 def _create_llm_chain(schema: Dict[str, Any], llm: LlamaCpp) -> LLMChain:
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(_create_llm_chain.__name__)
     prompt = PromptTemplate(
         template=_EXTRACTION_TEMPLATE,
         input_variables=["input_text"],
@@ -221,15 +215,6 @@ def _create_llm_chain(schema: Dict[str, Any], llm: LlamaCpp) -> LLMChain:
     chain = prompt | llm | StrOutputParser()
     logger.info(f"LLM chain: {chain}")
     return chain
-
-
-def _read_text_file(path: str) -> str:
-    logger = logging.getLogger(__name__)
-    logger.info(f"Read a text file: {path}")
-    with open(path, "r") as f:
-        data = f.read()
-    logger.debug(f"data: {data}")
-    return data
 
 
 def _read_llm_file(
@@ -243,7 +228,7 @@ def _read_llm_file(
     n_gpu_layers: int = -1,
     token_wise_streaming: bool = False,
 ) -> LlamaCpp:
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(_read_llm_file.__name__)
     logger.info(f"Read a Llama 2 model file: {path}")
     llm = LlamaCpp(
         model_path=path,

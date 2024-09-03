@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import logging
 import time
 from functools import wraps
@@ -26,7 +27,7 @@ def log_execution_time(func: Callable) -> Callable:
     return wrapper
 
 
-def set_logging_config(debug=None, info=None):
+def set_logging_config(debug: bool | None = None, info: bool | None = None) -> None:
     if debug:
         lv = logging.DEBUG
     elif info:
@@ -37,3 +38,28 @@ def set_logging_config(debug=None, info=None):
         format="%(asctime)s [%(levelname)-8s] <%(name)s> %(message)s",
         level=lv,
     )
+
+
+def read_json_file(path: str) -> Any:
+    logger = logging.getLogger(read_json_file.__name__)
+    logger.info(f"Read a JSON file: {path}")
+    with open(path, "r") as f:
+        data = json.load(f)
+    logger.debug(f"data: {data}")
+    return data
+
+
+def read_text_file(path: str) -> str:
+    logger = logging.getLogger(read_text_file.__name__)
+    logger.info(f"Read a text file: {path}")
+    with open(path, "r") as f:
+        data = f.read()
+    logger.debug(f"data: {data}")
+    return data
+
+
+def write_file(path: str, data: str) -> None:
+    logger = logging.getLogger(write_file.__name__)
+    logger.info(f"Write data in a file: {path}")
+    with open(path, "w") as f:
+        f.write(data)

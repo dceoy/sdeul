@@ -74,7 +74,7 @@ from .validation import validate_json_files_using_json_schema
 def main():
     args = docopt(__doc__, version=__version__)
     set_logging_config(debug=args["--debug"], info=args["--info"])
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(main.__name__)
     logger.debug(f"args:{os.linesep}{args}")
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     if args["extract"]:
