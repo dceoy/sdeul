@@ -72,7 +72,10 @@ from .validation import validate_json_files_using_json_schema
 
 
 def main():
-    args = docopt(__doc__, version=__version__)
+    if __doc__:
+        args = docopt(__doc__, version=__version__)
+    else:
+        raise ValueError("No docstring found")
     set_logging_config(debug=args["--debug"], info=args["--info"])
     logger = logging.getLogger(main.__name__)
     logger.debug(f"args:{os.linesep}{args}")

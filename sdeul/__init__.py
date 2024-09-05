@@ -2,4 +2,7 @@
 
 from importlib.metadata import version
 
-__version__ = version(__package__)
+if __package__:
+    __version__ = version(__package__)
+else:
+    raise ImportError("Can't determine version number")
