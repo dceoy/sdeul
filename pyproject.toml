@@ -47,6 +47,8 @@ isort = "^5.13.2"
 mypy = "^1.11.2"
 flake8-pyproject = "^1.2.3"
 pyright = "^1.1.379"
+pytest = "^8.3.2"
+pytest-mock = "^3.14.0"
 
 [tool.poetry.scripts]
 sdeul = "sdeul.cli:main"
