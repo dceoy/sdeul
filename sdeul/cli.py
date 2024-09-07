@@ -71,7 +71,7 @@ from .utility import set_logging_config
 from .validation import validate_json_files_using_json_schema
 
 
-def main():
+def main() -> None:
     if __doc__:
         args = docopt(__doc__, version=__version__)
     else:

@@ -55,7 +55,7 @@ def test_validate_json_files_using_json_schema_invalid_files(
     mock_validate: MagicMock,
     mock_logger: MagicMock,
     tmp_path: Path,
-    capsys: pytest.CaptureFixture,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     json_file = tmp_path / "invalid.json"
     json_file.write_text("{")
@@ -74,7 +74,7 @@ def test_validate_json_file_valid(
     mock_read_json_file: MagicMock,
     mock_validate: MagicMock,
     mock_logger: MagicMock,
-    capsys: pytest.CaptureFixture,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     mock_read_json_file.return_value = {}
 
@@ -89,7 +89,7 @@ def test_validate_json_file_json_decode_error(
     mock_read_json_file: MagicMock,
     mock_validate: MagicMock,
     mock_logger: MagicMock,
-    capsys: pytest.CaptureFixture,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     mock_read_json_file.side_effect = JSONDecodeError("Test error", "", 0)
 
@@ -104,7 +104,7 @@ def test_validate_json_file_validation_error(
     mock_read_json_file: MagicMock,
     mock_validate: MagicMock,
     mock_logger: MagicMock,
-    capsys: pytest.CaptureFixture,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     mock_read_json_file.return_value = {}
     mock_validate.side_effect = ValidationError("Test validation error")

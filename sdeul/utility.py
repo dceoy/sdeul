@@ -7,7 +7,7 @@ from functools import wraps
 from typing import Any, Callable
 
 
-def log_execution_time(func: Callable) -> Callable:
+def log_execution_time(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         logger = logging.getLogger(log_execution_time.__name__)

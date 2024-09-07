@@ -7,13 +7,18 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-from sdeul.utility import (log_execution_time, read_json_file, read_text_file,
-                           set_logging_config, write_file)
+from sdeul.utility import (
+    log_execution_time,
+    read_json_file,
+    read_text_file,
+    set_logging_config,
+    write_file,
+)
 
 
 def test_log_execution_time_success(caplog: pytest.LogCaptureFixture) -> None:
     @log_execution_time
-    def sample_function():
+    def sample_function() -> str:
         return "Success"
 
     with caplog.at_level(logging.INFO):
@@ -26,7 +31,7 @@ def test_log_execution_time_success(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_log_execution_time_failure(caplog: pytest.LogCaptureFixture) -> None:
     @log_execution_time
-    def failing_function():
+    def failing_function() -> None:
         raise ValueError("Test error")
 
     with caplog.at_level(logging.ERROR):

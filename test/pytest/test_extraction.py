@@ -7,8 +7,11 @@ import pytest
 from jsonschema import ValidationError
 from pytest_mock import MockerFixture
 
-from sdeul.extraction import (_create_llm_chain, _parse_llm_output,
-                              extract_json_from_text)
+from sdeul.extraction import (
+    _create_llm_chain,
+    _parse_llm_output,
+    extract_json_from_text,
+)
 
 TEST_TEXT = "This is a test input text."
 TEST_SCHEMA = {

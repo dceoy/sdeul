@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from json.decoder import JSONDecodeError
-from typing import Any, Dict, List, Union
+from typing import Any, Dict
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -174,7 +174,7 @@ def extract_json_from_text(
             print(output_json_string)
 
 
-def _parse_llm_output(output_string: str) -> Union[List[Any], Dict[Any, Any]]:
+def _parse_llm_output(output_string: str) -> Any:
     logger = logging.getLogger(_parse_llm_output.__name__)
     json_string = None
     markdown = True

@@ -45,10 +45,9 @@ jobs:
       - name: Lint code using ruff
         run: |
           poetry run ruff check --output-format=github .
-      - name: Run CLI tests using bats
-        run: >
-          poetry run bats --verbose-run ./test/bats/
       - name: Run unit tests using pytest
         run: >
-          poetry run pytest --doctest-modules --junitxml=junit/test-results.xml
-          --cov=com --cov-report=xml --cov-report=html ./test/pytest/
+          poetry run pytest .
+      - name: Run CLI tests using bats
+        run: >
+          bats --verbose-run ./test/bats/
