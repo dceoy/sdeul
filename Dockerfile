@@ -24,6 +24,7 @@ RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
       apt-get -y update \
+      && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
         g++
 

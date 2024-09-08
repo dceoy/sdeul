@@ -20,10 +20,8 @@ def test_log_execution_time_success(caplog: pytest.LogCaptureFixture) -> None:
     @log_execution_time
     def sample_function() -> str:
         return "Success"
-
     with caplog.at_level(logging.INFO):
         result = sample_function()
-
     assert result == "Success"
     assert "sample_function` is executed." in caplog.text
     assert "sample_function` succeeded in" in caplog.text
@@ -33,27 +31,23 @@ def test_log_execution_time_failure(caplog: pytest.LogCaptureFixture) -> None:
     @log_execution_time
     def failing_function() -> None:
         raise ValueError("Test error")
-
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError):
             failing_function()
-
     assert "failing_function` failed after" in caplog.text
 
 
-def test_set_logging_config_debug() -> None:
-    set_logging_config(debug=True)
-    assert logging.getLogger().level == logging.DEBUG
-
-
-def test_set_logging_config_info() -> None:
-    set_logging_config(info=True)
-    assert logging.getLogger().level == logging.INFO
-
-
-def test_set_logging_config_default() -> None:
-    set_logging_config()
-    assert logging.getLogger().level == logging.WARNING
+@pytest.mark.parametrize(
+    "debug, info, expected",
+    [
+        (True, False, logging.DEBUG),
+        (False, True, logging.INFO),
+        (False, False, logging.WARNING),
+    ],
+)
+def test_set_logging_config(debug: bool, info: bool, expected: int) -> None:
+    set_logging_config(debug=debug, info=info)
+    assert logging.getLogger().level == expected
 
 
 def test_read_json_file(tmp_path: Path, mocker: MockerFixture) -> None:

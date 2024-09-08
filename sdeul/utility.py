@@ -27,7 +27,7 @@ def log_execution_time(func: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def set_logging_config(debug: bool | None = None, info: bool | None = None) -> None:
+def set_logging_config(debug: bool = False, info: bool = False) -> None:
     if debug:
         lv = logging.DEBUG
     elif info:
