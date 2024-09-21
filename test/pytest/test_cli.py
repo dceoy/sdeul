@@ -38,7 +38,7 @@ def test_main_extract(mocker: MockerFixture) -> None:
             "<text_path>": "input.txt",
             "<json_schema_path>": "schema.json",
             "<json_path>": None,
-        }
+        },
     )
     mock_set_logging_config = mocker.patch("sdeul.cli.set_logging_config")
     mock_extract_json_from_text = mocker.patch("sdeul.cli.extract_json_from_text")
@@ -101,7 +101,7 @@ def test_main_validate(mocker: MockerFixture) -> None:
             "<text_path>": None,
             "<json_schema_path>": "schema.json",
             "<json_path>": ["file1.json", "file2.json"],
-        }
+        },
     )
     mock_set_logging_config = mocker.patch("sdeul.cli.set_logging_config")
     mock_validate_json_files_using_json_schema = mocker.patch(
@@ -115,43 +115,18 @@ def test_main_validate(mocker: MockerFixture) -> None:
     )
 
 
-def test_main_no_model_specified(mocker: MockerFixture) -> None:
+def test_main_not_implemented(mocker: MockerFixture) -> None:
     mocker.patch(
         "sdeul.cli.docopt",
         return_value={
-            "extract": True,
+            "extract": False,
             "validate": False,
-            "--debug": False,
-            "--info": True,
-            "--output-json": "output.json",
-            "--pretty-json": True,
-            "--skip-validation": False,
-            "--temperature": "0",
-            "--top-p": "0.1",
-            "--max-tokens": "8000",
-            "--n-ctx": "1024",
-            "--seed": "-1",
-            "--n-batch": "8",
-            "--n-gpu-layers": "-1",
-            "--openai-model": None,
-            "--google-model": None,
-            "--groq-model": None,
-            "--bedrock-model": None,
-            "--model-gguf": None,
-            "--openai-api-key": None,
-            "--openai-api-base": None,
-            "--openai-organization": None,
-            "--google-api-key": None,
-            "--groq-api-key": None,
-            "<text_path>": "input.txt",
-            "<json_schema_path>": "schema.json",
-            "<json_path>": None,
-        }
+            "--debug": True,
+            "--info": False,
+        },
     )
     mocker.patch("sdeul.cli.set_logging_config")
-    with pytest.raises(
-        ValueError, match="Either one of the following options is required:"
-    ):
+    with pytest.raises(NotImplementedError):
         main()
 
 

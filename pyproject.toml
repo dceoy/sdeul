@@ -34,6 +34,7 @@ langchain-google-genai = "^1.0.10"
 langchain-openai = "^0.1.23"
 langchain-groq = "^0.1.9"
 langchain-aws = "^0.1.17"
+boto3-stubs = {extras = ["sts"], version = "^1.35.24"}
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.3.1"
@@ -50,6 +51,7 @@ pyright = "^1.1.379"
 pytest = "^8.3.2"
 pytest-mock = "^3.14.0"
 pytest-cov = "^5.0.0"
+pytest-xdist = "^3.6.1"
 
 [tool.poetry.scripts]
 sdeul = "sdeul.cli:main"
@@ -77,7 +79,10 @@ strict_equality = true
 strict_concatenate = true
 exclude = ["build"]
 
+
 [tool.pyright]
+typeCheckingMode = "strict"
+reportPrivateUsage = false
 exclude = ["build"]
 
 [tool.bandit]
@@ -90,9 +95,11 @@ addopts = [
   "--cov-report=xml",
   "--cov-report=html",
   "--cov-report=term-missing",
+  "--cov-branch",
   "--junitxml=junit/test-results.xml",
   "--doctest-modules",
-  "--capture=no"
+  "--capture=no",
+  "--numprocesses=auto"
 ]
 testpaths = ["test/pytest"]
 python_files = ["test_*.py", "*_test.py"]

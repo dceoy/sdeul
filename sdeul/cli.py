@@ -31,9 +31,8 @@ Options:
     --n-batch=<int>               Specify the number of batch tokens [default: 8]
     --n-gpu-layers=<int>          Specify the number of GPU layers [default: -1]
     --openai-model=<name>         Use the OpenAI model (e.g., gpt-4o-mini)
-                                  This option requires the environment variables:
+                                  This option requires the environment variable:
                                     - OPENAI_API_KEY (OpenAI API key)
-                                    - OPENAI_ORGANIZATION (OpenAI organization ID)
     --google-model=<name>         Use the Google Generative AI model
                                   (e.g., gemini-1.5-pro)
                                   This option requires the environment variable:
@@ -81,44 +80,34 @@ def main() -> None:
     logger.debug(f"args:{os.linesep}{args}")
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     if args["extract"]:
-        either_required_args = [
-            "--openai-model",
-            "--google-model",
-            "--groq-model",
-            "--model-gguf",
-        ]
-        if not [s for s in either_required_args if args[s]]:
-            raise ValueError(
-                "Either one of the following options is required: "
-                + ", ".join(either_required_args)
-            )
-        else:
-            extract_json_from_text(
-                text_file_path=args["<text_path>"],
-                json_schema_file_path=args["<json_schema_path>"],
-                model_file_path=args["--model-gguf"],
-                bedrock_model_id=args["--bedrock-model"],
-                groq_model_name=args["--groq-model"],
-                groq_api_key=args["--groq-api-key"],
-                google_model_name=args["--google-model"],
-                google_api_key=args["--google-api-key"],
-                openai_model_name=args["--openai-model"],
-                openai_api_key=args["--openai-api-key"],
-                openai_api_base=args["--openai-api-base"],
-                openai_organization=args["--openai-organization"],
-                output_json_file_path=args["--output-json"],
-                pretty_json=args["--pretty-json"],
-                skip_validation=args["--skip-validation"],
-                temperature=float(args["--temperature"]),
-                top_p=float(args["--top-p"]),
-                max_tokens=int(args["--max-tokens"]),
-                n_ctx=int(args["--n-ctx"]),
-                seed=int(args["--seed"]),
-                n_batch=int(args["--n-batch"]),
-                n_gpu_layers=int(args["--n-gpu-layers"]),
-            )
+        extract_json_from_text(
+            text_file_path=args["<text_path>"],
+            json_schema_file_path=args["<json_schema_path>"],
+            model_file_path=args["--model-gguf"],
+            bedrock_model_id=args["--bedrock-model"],
+            groq_model_name=args["--groq-model"],
+            groq_api_key=args["--groq-api-key"],
+            google_model_name=args["--google-model"],
+            google_api_key=args["--google-api-key"],
+            openai_model_name=args["--openai-model"],
+            openai_api_key=args["--openai-api-key"],
+            openai_api_base=args["--openai-api-base"],
+            openai_organization=args["--openai-organization"],
+            output_json_file_path=args["--output-json"],
+            pretty_json=args["--pretty-json"],
+            skip_validation=args["--skip-validation"],
+            temperature=float(args["--temperature"]),
+            top_p=float(args["--top-p"]),
+            max_tokens=int(args["--max-tokens"]),
+            n_ctx=int(args["--n-ctx"]),
+            seed=int(args["--seed"]),
+            n_batch=int(args["--n-batch"]),
+            n_gpu_layers=int(args["--n-gpu-layers"]),
+        )
     elif args["validate"]:
         validate_json_files_using_json_schema(
             json_file_paths=args["<json_path>"],
             json_schema_file_path=args["<json_schema_path>"],
         )
+    else:
+        raise NotImplementedError(f"Invalid command: {args}")
