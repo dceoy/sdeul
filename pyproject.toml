@@ -33,7 +33,7 @@ langchain-community = "^0.2.15"
 langchain-google-genai = "^1.0.10"
 langchain-openai = "^0.1.23"
 langchain-groq = "^0.1.9"
-langchain-aws = "^0.1.17"
+langchain-aws = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.3.1"
