@@ -34,7 +34,6 @@ langchain-google-genai = "^1.0.10"
 langchain-openai = "^0.1.23"
 langchain-groq = "^0.1.9"
 langchain-aws = "^0.1.17"
-boto3-stubs = {extras = ["sts"], version = "^1.35.24"}
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.3.1"
@@ -52,6 +51,16 @@ pytest = "^8.3.2"
 pytest-mock = "^3.14.0"
 pytest-cov = "^5.0.0"
 pytest-xdist = "^3.6.1"
+types-pyyaml = "^6.0.12.20240917"
+types-cachetools = "^5.5.0.20240820"
+types-protobuf = "^5.27.0.20240920"
+types-pyopenssl = "^24.1.0.20240722"
+types-pytz = "^2024.2.0.20240913"
+types-redis = "^4.6.0.20240903"
+types-requests = "^2.32.0.20240914"
+types-setuptools = "^75.1.0.20240917"
+types-jsonschema = "^4.23.0.20240813"
+boto3-stubs = {extras = ["sts"], version = "^1.35.24"}
 
 [tool.poetry.scripts]
 sdeul = "sdeul.cli:main"
@@ -79,7 +88,6 @@ strict_equality = true
 strict_concatenate = true
 exclude = ["build"]
 
-
 [tool.pyright]
 typeCheckingMode = "strict"
 reportPrivateUsage = false
@@ -88,6 +96,7 @@ exclude = ["build"]
 [tool.bandit]
 recursive = true
 exclude_dirs = ["build"]
+skips = ["B101"]
 
 [tool.pytest.ini_options]
 addopts = [

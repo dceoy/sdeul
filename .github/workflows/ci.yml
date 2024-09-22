@@ -32,6 +32,7 @@ jobs:
     with:
       package-path: .
       python-version: 3.x
+      bandit-options: --recursive --configfile=./pyproject.toml
   python-test:
     if: >
       github.event_name == 'push'
