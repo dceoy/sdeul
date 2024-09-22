@@ -28,12 +28,12 @@ exclude = []
 python = "^3.11"
 docopt = "^0.6.2"
 jsonschema = "^4.23.0"
-langchain = "^0.2.15"
-langchain-community = "^0.2.15"
-langchain-google-genai = "^1.0.10"
-langchain-openai = "^0.1.23"
-langchain-groq = "^0.1.9"
-langchain-aws = "^0.1.17"
+langchain = "^0.3.0"
+langchain-community = "^0.3.0"
+langchain-google-genai = "^2.0.0"
+langchain-openai = "^0.2.0"
+langchain-groq = "^0.2.0"
+langchain-aws = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.3.1"
@@ -92,6 +92,7 @@ exclude = ["build"]
 typeCheckingMode = "strict"
 reportPrivateUsage = false
 exclude = ["build"]
+threads = 0
 
 [tool.bandit]
 recursive = true
