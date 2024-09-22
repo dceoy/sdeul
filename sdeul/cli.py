@@ -25,7 +25,7 @@ Options:
     --skip-validation             Skip output validation using JSON Schema
     --temperature=<float>         Specify the temperature for sampling [default: 0]
     --top-p=<float>               Specify the top-p value for sampling [default: 0.1]
-    --max-tokens=<int>            Specify the max tokens to generate [default: 8192]
+    --max-tokens=<int>            Specify the max tokens to generate [default: 8000]
     --n-ctx=<int>                 Specify the token context window [default: 1024]
     --seed=<int>                  Specify the random seed [default: -1]
     --n-batch=<int>               Specify the number of batch tokens [default: 8]
@@ -34,7 +34,7 @@ Options:
                                   This option requires the environment variable:
                                     - OPENAI_API_KEY (OpenAI API key)
     --google-model=<name>         Use the Google Generative AI model
-                                  (e.g., gemini-1.5-pro)
+                                  (e.g., gemini-1.5-flash)
                                   This option requires the environment variable:
                                     - GOOGLE_API_KEY (Google API key)
     --groq-model=<path>           Use the Groq model (e.g., llama-3.1-70b-versatile)

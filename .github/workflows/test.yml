@@ -58,5 +58,6 @@ jobs:
           pip install -U --no-cache-dir pip poetry
           poetry install --no-interaction
       - name: Run CLI tests using bats
-        run: >
-          bats --verbose-run ./test/bats/
+        run: |
+          bats --verbose-run ./test/bats/test_cli.bats
+          bats --verbose-run ./test/bats/test_groq.bats

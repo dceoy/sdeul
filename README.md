@@ -15,23 +15,46 @@ $ pip install -U sdeul
 Usage
 -----
 
-1.  Prepare a Llama 2 GGUF file.
+1.  Create a JSON Schema file for the output
+
+2.  Prepare a local model GGUF file or model API key.
 
     Example:
 
     ```sh
-    $ curl -SLO https://huggingface.co/TheBloke/Llama-2-13B-chat-GGUF/resolve/main/llama-2-13b-chat.Q4_K_M.gguf
-    ```
+    # Set an OpenAI API key
+    $ export OPENAI_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
-2.  Create a JSON Schema file for the output
+    # Set a Groq API key
+    $ export GROQ_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+    # Download a model GGUF file from Hugging Face
+    $ curl -SLO https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf
+    ```
 
 3.  Extract structural data from given text using `sdeul extract`.
 
     Example:
 
     ```sh
-    sdeul extract --pretty-json \
-        llama-2-13b-chat.Q4_K_M.gguf \
+    # Use OpenAI API
+    $ sdeul extract \
+        --pretty-json \
+        --openai-model=gpt-4o-mini \
+        test/data/medication_history.schema.json \
+        test/data/patient_medication_record.txt
+
+    # Use Groq API
+    $ sdeul extract \
+        --pretty-json \
+        --groq-model=llama-3.1-70b-versatile \
+        test/data/medication_history.schema.json \
+        test/data/patient_medication_record.txt
+
+    # Use local LLM
+    $ sdeul extract \
+        --pretty-json \
+        --model-gguf=Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
     ```

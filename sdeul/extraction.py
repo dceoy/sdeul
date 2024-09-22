@@ -48,9 +48,32 @@ Instructions:
 _EXTRACTION_INPUT_VARIABLES = ["input_text"]
 _DEFAULT_MODEL_NAMES = {
     "openai": "gpt-4o-mini",
-    "google": "gemini-1.5-pro",
+    "google": "gemini-1.5-flash",
     "groq": "llama-3.1-70b-versatile",
     "bedrock": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+}
+_DEFAULT_MAX_TOKENS = {
+    "gpt-4o": 128000,
+    "gpt-4o-2024-05-13": 128000,
+    "gpt-4o-mini": 128000,
+    "gpt-4o-mini-2024-07-18": 128000,
+    "gpt-4o-2024-08-06": 128000,
+    "o1-mini": 128000,
+    "o1-mini-2024-09-12": 128000,
+    "o1-preview": 128000,
+    "o1-preview-2024-09-12": 128000,
+    "claude-3-5-sonnet@20240620": 100000,
+    "gemini-1.5-pro": 1048576,
+    "gemini-1.5-flash": 1048576,
+    "gemma2": 8200,
+    "gemma2-9b-it": 8192,
+    "claude-3-5-sonnet": 100000,
+    "claude-3-5-sonnet-20240620": 100000,
+    "anthropic.claude-3-5-sonnet-20240620-v1:0": 100000,
+    "mixtral-8x7b-32768": 32768,
+    "llama-3.1-8b-instant": 131072,
+    "llama-3.1-70b-versatile": 131072,
+    "llama-3.1-405b-reasoning": 131072,
 }
 
 
@@ -229,10 +252,11 @@ def _create_llm_instance(
         and os.environ.get("GROQ_API_KEY")
     ):
         logger.info(f"Use GROQ: {groq_model_name}")
+        m = groq_model_name or _DEFAULT_MODEL_NAMES["groq"]
         return ChatGroq(
-            model=(groq_model_name or _DEFAULT_MODEL_NAMES["groq"]),
+            model=m,
             temperature=temperature,
-            max_tokens=max_tokens,
+            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
             timeout=timeout,
             max_retries=max_retries,
             stop_sequences=None,
@@ -241,10 +265,11 @@ def _create_llm_instance(
         (not any([google_model_name, openai_model_name])) and has_aws_credentials()
     ):
         logger.info(f"Use Amazon Bedrock: {bedrock_model_id}")
+        m = bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]
         return ChatBedrockConverse(
-            model=(bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]),
+            model=m,
             temperature=temperature,
-            max_tokens=max_tokens,
+            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
             region_name=aws_region,
             base_url=bedrock_endpoint_base_url,
             credentials_profile_name=aws_credentials_profile_name,
@@ -253,11 +278,12 @@ def _create_llm_instance(
         (not openai_model_name) and os.environ.get("GOOGLE_API_KEY")
     ):
         logger.info(f"Use Google Generative AI: {google_model_name}")
+        m = google_model_name or _DEFAULT_MODEL_NAMES["google"]
         return ChatGoogleGenerativeAI(
-            model=(google_model_name or _DEFAULT_MODEL_NAMES["google"]),
+            model=m,
             temperature=temperature,
             top_p=top_p,
-            max_output_tokens=max_tokens,
+            max_output_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
             timeout=timeout,
             max_retries=max_retries,
         )
@@ -265,14 +291,15 @@ def _create_llm_instance(
         logger.info(f"Use OpenAI: {openai_model_name}")
         logger.info(f"OpenAI API base: {openai_api_base}")
         logger.info(f"OpenAI organization: {openai_organization}")
+        m = openai_model_name or _DEFAULT_MODEL_NAMES["openai"]
         return ChatOpenAI(
-            model=(openai_model_name or _DEFAULT_MODEL_NAMES["openai"]),
+            model=m,
             base_url=openai_api_base,
             organization=openai_organization,
             temperature=temperature,
             top_p=top_p,
             seed=seed,
-            max_tokens=max_tokens,
+            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
             timeout=timeout,
             max_retries=max_retries,
         )
