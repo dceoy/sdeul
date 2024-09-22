@@ -92,6 +92,7 @@ exclude = ["build"]
 typeCheckingMode = "strict"
 reportPrivateUsage = false
 exclude = ["build"]
+threads = 0
 
 [tool.bandit]
 recursive = true
