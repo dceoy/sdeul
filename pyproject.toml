@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdeul"
-version = "v0.1.3"
+version = "v0.1.4"
 description = "Structural Data Extractor using LLMs"
 license = "AGPL-3.0-or-later"
 authors = ["Daichi Narushima <dnarsil+github@gmail.com>"]
