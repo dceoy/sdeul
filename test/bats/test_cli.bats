@@ -2,6 +2,7 @@
 
 setup_file() {
   set -euo pipefail
+  echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
 }
 
 teardown_file() {
