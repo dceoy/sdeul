@@ -59,4 +59,5 @@ jobs:
           poetry install --no-interaction
       - name: Run CLI tests using bats
         run: >
-          bats --verbose-run ./test/bats/
+          bats --verbose-run ./test/bats/test_cli.bats
+          bats --verbose-run ./test/bats/test_groq.bats
