@@ -32,7 +32,7 @@ langchain = "^0.3.0"
 langchain-community = "^0.3.0"
 langchain-google-genai = "^1.0.10"
 langchain-openai = "^0.1.23"
-langchain-groq = "^0.1.9"
+langchain-groq = "^0.2.0"
 langchain-aws = "^0.1.17"
 
 [tool.poetry.group.dev.dependencies]
