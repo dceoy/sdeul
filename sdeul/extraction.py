@@ -18,6 +18,7 @@ from langchain_community.llms import LlamaCpp
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
+from rich import print
 
 from .utility import (
     has_aws_credentials,
@@ -92,7 +93,7 @@ def extract_json_from_text(
     openai_api_base: str | None = None,
     openai_organization: str | None = None,
     output_json_file_path: str | None = None,
-    pretty_json: bool = False,
+    compact_json: bool = False,
     skip_validation: bool = False,
     temperature: float = 0.8,
     top_p: float = 0.95,
@@ -164,7 +165,7 @@ def extract_json_from_text(
             else:
                 logger.info("Validation succeeded.")
         output_json_string = json.dumps(
-            obj=parsed_output_data, indent=(2 if pretty_json else None)
+            obj=parsed_output_data, indent=(None if compact_json else 2)
         )
         if output_json_file_path:
             write_file(path=output_json_file_path, data=output_json_string)

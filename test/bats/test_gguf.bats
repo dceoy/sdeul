@@ -16,7 +16,6 @@ teardown_file() {
 
 @test "pass with \"sdeul extract --model-gguf\"" {
   run poetry run sdeul extract \
-    --pretty-json \
     --model-gguf="${MODEL_GGUF_PATH}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt

@@ -12,7 +12,6 @@ teardown_file() {
 
 @test "pass with \"sdeul extract --openai-model\"" {
   run poetry run sdeul extract \
-    --pretty-json \
     --openai-model="${OPENAI_MODEL}" \
     --openai-api-key="${OPENAI_API_KEY}" \
     ./test/data/medication_history.schema.json \

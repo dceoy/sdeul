@@ -8,6 +8,7 @@ from typing import Any
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
+from rich import print
 
 from .utility import log_execution_time, read_json_file
 
@@ -40,12 +41,12 @@ def _validate_json_file(path: str, json_schema: dict[str, Any]) -> str | None:
         validate(instance=read_json_file(path=path), schema=json_schema)
     except JSONDecodeError as e:
         logger.info(e)
-        print(f"{path}:\tJSONDecodeError ({e.msg})", flush=True)
+        print(f"{path}:\tJSONDecodeError ({e.msg})")
         return e.msg
     except ValidationError as e:
         logger.info(e)
-        print(f"{path}:\tValidationError ({e.message})", flush=True)
+        print(f"{path}:\tValidationError ({e.message})")
         return e.message
     else:
-        print(f"{path}:\tvalid", flush=True)
+        print(f"{path}:\tvalid")
         return None

@@ -39,21 +39,18 @@ Usage
     ```sh
     # Use OpenAI API
     $ sdeul extract \
-        --pretty-json \
         --openai-model=gpt-4o-mini \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
     # Use Groq API
     $ sdeul extract \
-        --pretty-json \
         --groq-model=llama-3.1-70b-versatile \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
     # Use local LLM
     $ sdeul extract \
-        --pretty-json \
         --model-gguf=Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt

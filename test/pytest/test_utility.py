@@ -11,12 +11,12 @@ from botocore.exceptions import NoCredentialsError
 from pytest_mock import MockerFixture
 
 from sdeul.utility import (
+    configure_logging,
     has_aws_credentials,
     log_execution_time,
     override_env_vars,
     read_json_file,
     read_text_file,
-    set_logging_config,
     write_file,
 )
 
@@ -29,19 +29,19 @@ def test_log_execution_time_success(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.INFO):
         result = sample_function()
     assert result == "Success"
-    assert "sample_function` is executed." in caplog.text
-    assert "sample_function` succeeded in" in caplog.text
+    assert "Function `sample_function` started." in caplog.text
+    assert "Function `sample_function` succeeded in" in caplog.text
 
 
 def test_log_execution_time_failure(caplog: pytest.LogCaptureFixture) -> None:
     @log_execution_time
-    def failing_function() -> None:
+    def sample_function() -> None:
         raise ValueError("Test error")
 
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError):
-            failing_function()
-    assert "failing_function` failed after" in caplog.text
+            sample_function()
+    assert "Function `sample_function` failed after" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -52,12 +52,12 @@ def test_log_execution_time_failure(caplog: pytest.LogCaptureFixture) -> None:
         (False, False, logging.WARNING),
     ],
 )
-def test_set_logging_config(
+def test_configure_logging(
     debug: bool, info: bool, expected_level: int, mocker: MockerFixture
 ) -> None:
     logging_format = "%(asctime)s [%(levelname)-8s] <%(name)s> %(message)s"
     mock_logging_basic_config = mocker.patch("logging.basicConfig")
-    set_logging_config(debug=debug, info=info, format=logging_format)
+    configure_logging(debug=debug, info=info, format=logging_format)
     mock_logging_basic_config.assert_called_once_with(
         format=logging_format, level=expected_level
     )

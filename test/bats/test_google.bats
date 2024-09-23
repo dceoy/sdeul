@@ -12,7 +12,6 @@ teardown_file() {
 
 @test "pass with \"sdeul extract --google-model\"" {
   run poetry run sdeul extract \
-    --pretty-json \
     --google-model="${GOOGLE_MODEL}" \
     --google-api-key="${GOOGLE_API_KEY}" \
     ./test/data/medication_history.schema.json \

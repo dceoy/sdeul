@@ -35,17 +35,17 @@ _TEST_LLM_OUTPUT_JSON = {"name": "John Doe", "age": 30}
 
 
 @pytest.mark.parametrize(
-    "skip_validation, pretty_json, output_json_file_path, expected_indent",
+    "skip_validation, compact_json, output_json_file_path, expected_indent",
     [
-        (False, False, None, None),
-        (True, False, None, None),
-        (True, True, None, 2),
-        (True, False, "output.json", None),
+        (False, False, None, 2),
+        (True, False, None, 2),
+        (True, True, None, None),
+        (True, False, "output.json", 2),
     ],
 )
 def test_extract_json_from_text(
     skip_validation: bool,
-    pretty_json: bool,
+    compact_json: bool,
     output_json_file_path: str,
     expected_indent: int,
     capsys: pytest.CaptureFixture[str],
@@ -96,7 +96,7 @@ def test_extract_json_from_text(
         json_schema_file_path=json_schema_file_path,
         model_file_path=model_file_path,
         output_json_file_path=output_json_file_path,
-        pretty_json=pretty_json,
+        compact_json=compact_json,
         skip_validation=skip_validation,
         temperature=temperature,
         top_p=top_p,
