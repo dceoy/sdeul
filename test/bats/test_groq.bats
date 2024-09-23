@@ -12,9 +12,7 @@ teardown_file() {
 
 @test "pass with \"sdeul extract --groq-model\"" {
   run poetry run sdeul extract \
-    --pretty-json \
     --groq-model="${GROQ_MODEL}" \
-    --groq-api-key="${GROQ_API_KEY}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt
   [[ "${status}" -eq 0 ]]

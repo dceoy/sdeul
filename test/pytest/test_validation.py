@@ -80,26 +80,21 @@ def test_validate_json_files_using_json_schema_invalid_files(
     mock_sys_exit.assert_called_once_with(sum((e is not None) for e in error_messages))
 
 
-def test_validate_json_file_valid(
-    capsys: pytest.CaptureFixture[str],
-    mocker: MockFixture,
-) -> None:
+def test__validate_json_file_valid(mocker: MockFixture) -> None:
     json_file_path = "valid.json"
     json_data = {"key": "value"}
     json_schema = {"key": "string"}
     mocker.patch("sdeul.validation.read_json_file", return_value=json_data)
     mock_validate = mocker.patch("sdeul.validation.validate")
+    mock_print = mocker.patch("sdeul.validation.print")
 
     result = _validate_json_file(path=json_file_path, json_schema=json_schema)
     mock_validate.assert_called_once_with(instance=json_data, schema=json_schema)
-    assert f"{json_file_path}:\tvalid" in capsys.readouterr().out
+    mock_print.assert_called_once_with(f"{json_file_path}:\tvalid")
     assert result is None
 
 
-def test_validate_json_file_json_decode_error(
-    capsys: pytest.CaptureFixture[str],
-    mocker: MockFixture,
-) -> None:
+def test__validate_json_file_json_decode_error(mocker: MockFixture) -> None:
     json_file_path = "undecodable.json"
     error_message = "JSON decode error"
     mocker.patch("sdeul.validation.read_json_file")
@@ -107,19 +102,16 @@ def test_validate_json_file_json_decode_error(
         "sdeul.validation.validate",
         side_effect=JSONDecodeError(error_message, "", 0),
     )
+    mock_print = mocker.patch("sdeul.validation.print")
 
     result = _validate_json_file(path=json_file_path, json_schema={})
     assert result == error_message
-    assert (
+    mock_print.assert_called_once_with(
         f"{json_file_path}:\tJSONDecodeError ({error_message})"
-        in capsys.readouterr().out
     )
 
 
-def test_validate_json_file_validation_error(
-    capsys: pytest.CaptureFixture[str],
-    mocker: MockFixture,
-) -> None:
+def test__validate_json_file_validation_error(mocker: MockFixture) -> None:
     json_file_path = "invalid.json"
     error_message = "JSON schema validation error"
     mocker.patch("sdeul.validation.read_json_file")
@@ -127,10 +119,10 @@ def test_validate_json_file_validation_error(
         "sdeul.validation.validate",
         side_effect=ValidationError(error_message),
     )
+    mock_print = mocker.patch("sdeul.validation.print")
 
     result = _validate_json_file(path=json_file_path, json_schema={})
     assert result == error_message
-    assert (
+    mock_print.assert_called_once_with(
         f"{json_file_path}:\tValidationError ({error_message})"
-        in capsys.readouterr().out
     )

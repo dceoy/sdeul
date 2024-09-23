@@ -16,23 +16,24 @@ def log_execution_time(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         logger = logging.getLogger(log_execution_time.__name__)
+        logger.debug(f"Call function `{func.__name__}` with parameters: {vars()}")
         start_time = time.time()
-        logger.info(f"`{func.__name__}` is executed.")
+        logger.info(f"Function `{func.__name__}` started.")
         try:
             result = func(*args, **kwargs)
         except Exception as e:
             s = time.time() - start_time
-            logger.error(f"`{func.__name__}` failed after {s:.3f}s.")
+            logger.error(f"Function `{func.__name__}` failed after {s:.3f}s.")
             raise e
         else:
             s = time.time() - start_time
-            logger.info(f"`{func.__name__}` succeeded in {s:.3f}s.")
+            logger.info(f"Function `{func.__name__}` succeeded in {s:.3f}s.")
             return result
 
     return wrapper
 
 
-def set_logging_config(
+def configure_logging(
     debug: bool = False,
     info: bool = False,
     format: str = "%(asctime)s [%(levelname)-8s] <%(name)s> %(message)s",

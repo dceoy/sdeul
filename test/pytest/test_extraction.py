@@ -35,17 +35,17 @@ _TEST_LLM_OUTPUT_JSON = {"name": "John Doe", "age": 30}
 
 
 @pytest.mark.parametrize(
-    "skip_validation, pretty_json, output_json_file_path, expected_indent",
+    "skip_validation, compact_json, output_json_file_path, expected_indent",
     [
-        (False, False, None, None),
-        (True, False, None, None),
-        (True, True, None, 2),
-        (True, False, "output.json", None),
+        (False, False, None, 2),
+        (True, False, None, 2),
+        (True, True, None, None),
+        (True, False, "output.json", 2),
     ],
 )
 def test_extract_json_from_text(
     skip_validation: bool,
-    pretty_json: bool,
+    compact_json: bool,
     output_json_file_path: str,
     expected_indent: int,
     capsys: pytest.CaptureFixture[str],
@@ -53,7 +53,7 @@ def test_extract_json_from_text(
 ) -> None:
     text_file_path = "input.txt"
     json_schema_file_path = "schema.json"
-    model_file_path = "model.gguf"
+    llamacpp_model_file_path = "model.gguf"
     temperature = 0.8
     top_p = 0.95
     max_tokens = 8192
@@ -94,9 +94,9 @@ def test_extract_json_from_text(
     extract_json_from_text(
         text_file_path=text_file_path,
         json_schema_file_path=json_schema_file_path,
-        model_file_path=model_file_path,
+        llamacpp_model_file_path=llamacpp_model_file_path,
         output_json_file_path=output_json_file_path,
-        pretty_json=pretty_json,
+        compact_json=compact_json,
         skip_validation=skip_validation,
         temperature=temperature,
         top_p=top_p,
@@ -110,7 +110,7 @@ def test_extract_json_from_text(
         max_retries=max_retries,
     )
     mock__create_llm_instance.assert_called_once_with(
-        model_file_path=model_file_path,
+        llamacpp_model_file_path=llamacpp_model_file_path,
         groq_model_name=None,
         groq_api_key=None,
         bedrock_model_id=None,
@@ -172,7 +172,7 @@ def test_extract_json_from_text_with_empty_output(mocker: MockerFixture) -> None
         extract_json_from_text(
             text_file_path="input.txt",
             json_schema_file_path="schema.json",
-            model_file_path="model.gguf",
+            llamacpp_model_file_path="model.gguf",
             skip_validation=False,
         )
 
@@ -198,7 +198,7 @@ def test_extract_json_from_text_with_invalid_json_output(
         extract_json_from_text(
             text_file_path="input.txt",
             json_schema_file_path="schema.json",
-            model_file_path="model.gguf",
+            llamacpp_model_file_path="model.gguf",
             skip_validation=False,
         )
     assert mock_logger.error.call_count > 0
@@ -235,7 +235,7 @@ def test__parse_llm_output_with_unloadable_json(mocker: MockerFixture) -> None:
 
 
 def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
-    model_file_path = "/path/to/model"
+    llamacpp_model_file_path = "/path/to/model"
     temperature = 0.8
     top_p = 0.95
     max_tokens = 8192
@@ -251,7 +251,7 @@ def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     )
 
     result = _create_llm_instance(
-        model_file_path=model_file_path,
+        llamacpp_model_file_path=llamacpp_model_file_path,
         temperature=temperature,
         top_p=top_p,
         max_tokens=max_tokens,
@@ -263,7 +263,7 @@ def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_read_llm_file.assert_called_once_with(
-        path=model_file_path,
+        path=llamacpp_model_file_path,
         temperature=temperature,
         top_p=top_p,
         max_tokens=max_tokens,

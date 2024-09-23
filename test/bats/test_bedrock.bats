@@ -13,7 +13,6 @@ teardown_file() {
 
 @test "pass with \"sdeul extract --bedrock-model\"" {
   run poetry run sdeul extract \
-    --pretty-json \
     --bedrock-model="${BEDROCK_MODEL}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt
