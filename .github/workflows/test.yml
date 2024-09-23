@@ -24,10 +24,16 @@ on:
         type: string
         description: Node.js version to use
         default: latest
-      bats-test-file-name:
+      model-file-url:
         required: false
-        type: string
-        description: Path to a Bats test file
+        type: choice
+        options:
+          - null
+          - https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf
+          - https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-IQ4_XS.gguf
+          - https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q6_K_L.gguf
+          - https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-IQ4_XS.gguf
+        description: Model file URL to run tests with
         default: null
 defaults:
   run:
@@ -35,7 +41,7 @@ defaults:
     working-directory: .
 jobs:
   unit-tests:
-    if: inputs.bats-test-file-name == null
+    if: inputs.model-file-url == null
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,16 +78,15 @@ jobs:
           pip install -U --no-cache-dir pip poetry
           poetry install --no-interaction
       - name: Test CLI
-        if: inputs.bats-test-file-name == null
         run: |
           bats --verbose-run ./test/bats/test_cli.bats
       - name: Test a command using Groq
-        if: inputs.bats-test-file-name == null
+        if: inputs.model-file-url == null
         run: |
           bats --verbose-run ./test/bats/test_groq.bats
       - name: Run a specified Bats test file
-        if: inputs.bats-test-file-name != null
+        if: inputs.model-file-url != null
         env:
-          BATS_TEST_FILE_PATH: ./test/bats/${{ inputs.bats-test-file-name }}
+          MODEL_FILE_URL: ${{ inputs.model-file-url }}
         run: |
-          bats --verbose-run "${BATS_TEST_FILE_PATH}"
+          bats --verbose-run ./test/bats/test_llamacpp.bats
