@@ -38,8 +38,8 @@ def main(
 def extract(
     json_schema_file_path: str = typer.Argument(..., help="JSON Schema file path."),
     text_file_path: str = typer.Argument(..., help="Input text file path."),
-    output_json: str | None = typer.Option(
-        None, "--output-json", help="Output JSON file path."
+    output_json_file_path: str | None = typer.Option(
+        None, "--output-json-file", help="Output JSON file path."
     ),
     compact_json: bool = typer.Option(
         False, "--compact-json", help="Compact instead of pretty-printed output."
@@ -66,25 +66,25 @@ def extract(
     n_gpu_layers: int = typer.Option(
         -1, "--n-gpu-layers", help="Specify the number of GPU layers."
     ),
-    openai_model: str | None = typer.Option(
+    openai_model_name: str | None = typer.Option(
         None,
         "--openai-model",
         envvar="OPENAI_MODEL",
         help="Use the OpenAI model. (e.g., gpt-4o-mini)",
     ),
-    google_model: str | None = typer.Option(
+    google_model_name: str | None = typer.Option(
         None,
         "--google-model",
         envvar="GOOGLE_MODEL",
         help="Use the Google Generative AI model. (e.g., gemini-1.5-flash)",
     ),
-    groq_model: str | None = typer.Option(
+    groq_model_name: str | None = typer.Option(
         None,
         "--groq-model",
         envvar="GROQ_MODEL",
         help="Use the Groq model. (e.g., llama-3.1-70b-versatile)",
     ),
-    bedrock_model: str | None = typer.Option(
+    bedrock_model_id: str | None = typer.Option(
         None,
         "--bedrock-model",
         envvar="BEDROCK_MODEL",
@@ -93,10 +93,9 @@ def extract(
             " (e.g., anthropic.claude-3-5-sonnet-20240620-v1:0)"
         ),
     ),
-    model_gguf: str | None = typer.Option(
+    llamacpp_model_file_path: str | None = typer.Option(
         None,
-        "--model-gguf",
-        envvar="LLAMA_CPP_MODEL_GGUF_PATH",
+        "--model-file",
         help="Use the model GGUF file for llama.cpp.",
     ),
     openai_api_key: str | None = typer.Option(

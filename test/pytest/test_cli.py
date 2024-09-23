@@ -61,7 +61,7 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
         ["extract", "schema.json", "input.txt"],
         ["extract", "--debug", "schema.json", "input.txt"],
         ["extract", "--info", "schema.json", "input.txt"],
-        ["extract", "--output-json=output.json", "schema.json", "input.txt"],
+        ["extract", "--output-json-file=output.json", "schema.json", "input.txt"],
         ["extract", "--compact-json", "schema.json", "input.txt"],
         ["extract", "--skip-validation", "schema.json", "input.txt"],
         [
@@ -93,10 +93,10 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
             "schema.json",
             "input.txt",
         ],
-        ["extract", "--model-gguf=llm.gguf", "schema.json", "input.txt"],
+        ["extract", "--model-file=llm.gguf", "schema.json", "input.txt"],
         [
             "extract",
-            "--model-gguf=llm.gguf",
+            "--model-file=llm.gguf",
             "--temperature=0.5",
             "--top-p=0.2",
             "--max-tokens=4000",

@@ -82,7 +82,7 @@ _DEFAULT_MAX_TOKENS = {
 def extract_json_from_text(
     text_file_path: str,
     json_schema_file_path: str,
-    model_file_path: str | None = None,
+    llamacpp_model_file_path: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
     bedrock_model_id: str | None = None,
@@ -112,7 +112,7 @@ def extract_json_from_text(
     """Extract JSON from input text."""
     logger = logging.getLogger(extract_json_from_text.__name__)
     llm = _create_llm_instance(
-        model_file_path=model_file_path,
+        llamacpp_model_file_path=llamacpp_model_file_path,
         groq_model_name=groq_model_name,
         groq_api_key=groq_api_key,
         bedrock_model_id=bedrock_model_id,
@@ -205,7 +205,7 @@ def _parse_llm_output(string: str) -> Any:
 
 
 def _create_llm_instance(
-    model_file_path: str | None = None,
+    llamacpp_model_file_path: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
     bedrock_model_id: str | None = None,
@@ -235,10 +235,10 @@ def _create_llm_instance(
         GOOGLE_API_KEY=google_api_key,
         OPENAI_API_KEY=openai_api_key,
     )
-    if model_file_path:
-        logger.info(f"Use local LLM: {model_file_path}")
+    if llamacpp_model_file_path:
+        logger.info(f"Use local LLM: {llamacpp_model_file_path}")
         return _read_llm_file(
-            path=model_file_path,
+            path=llamacpp_model_file_path,
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
