@@ -19,12 +19,23 @@ on:
         type: string
         description: Python version to use
         default: 3.x
+      node-version:
+        required: false
+        type: string
+        description: Node.js version to use
+        default: latest
+      bats-test-file-name:
+        required: false
+        type: string
+        description: Path to a Bats test file
+        default: null
 defaults:
   run:
     shell: bash -euo pipefail {0}
     working-directory: .
 jobs:
   unit-tests:
+    if: inputs.bats-test-file-name == null
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,27 +48,40 @@ jobs:
           pip install -U --no-cache-dir pip poetry
           poetry install --no-interaction
       - name: Run unit tests using pytest
-        run: >
+        run: |
           poetry run pytest .
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version || 'latest' }}
+      - name: Install Bats
+        run: |
+          npm install -g bats
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version || '3.x' }}
-      - name: Setup Bats and bats libs
-        uses: bats-core/bats-action@2.0.0
-        with:
-          bats-version: latest
       - name: Install packages
         run: |
           pip install -U --no-cache-dir pip poetry
           poetry install --no-interaction
-      - name: Run CLI tests using bats
+      - name: Test CLI
+        if: inputs.bats-test-file-name == null
         run: |
           bats --verbose-run ./test/bats/test_cli.bats
+      - name: Test a command using Groq
+        if: inputs.bats-test-file-name == null
+        run: |
           bats --verbose-run ./test/bats/test_groq.bats
+      - name: Run a specified Bats test file
+        if: inputs.bats-test-file-name != null
+        env:
+          BATS_TEST_FILE_PATH: ./test/bats/${{ inputs.bats-test-file-name }}
+        run: |
+          bats --verbose-run "${BATS_TEST_FILE_PATH}"
