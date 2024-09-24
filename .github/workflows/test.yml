@@ -24,6 +24,14 @@ on:
         type: string
         description: Node.js version to use
         default: latest
+      groq-model:
+        required: false
+        type: choice
+        options:
+          - null
+          - llama-3.1-70b-versatile
+        description: Groq model to use
+        default: null
       model-file-url:
         required: false
         type: choice
@@ -81,7 +89,9 @@ jobs:
         run: |
           bats --verbose-run ./test/bats/test_cli.bats
       - name: Test a command using Groq
-        if: inputs.model-file-url == null
+        if: inputs.groq-model != null
+        env:
+          GROQ_MODEL: ${{ inputs.groq-model }}
         run: |
           bats --verbose-run ./test/bats/test_groq.bats
       - name: Run a specified Bats test file

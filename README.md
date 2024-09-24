@@ -51,7 +51,7 @@ Usage
 
     # Use local LLM
     $ sdeul extract \
-        --model-gguf=Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf \
+        --model-file=Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
     ```
