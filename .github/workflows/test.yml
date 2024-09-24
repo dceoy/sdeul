@@ -1,5 +1,5 @@
 ---
-name: Test for CLI
+name: Unit and E2E tests
 on:
   workflow_call:
     inputs:
