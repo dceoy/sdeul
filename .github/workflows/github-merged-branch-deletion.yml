@@ -6,6 +6,10 @@ on:
       - main
     types:
       - closed
+permissions:
+  contents: write
 jobs:
   delete-merged-branch:
     uses: dceoy/gh-actions-for-devops/.github/workflows/github-merged-branch-deletion.yml@main
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
