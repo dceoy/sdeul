@@ -21,9 +21,7 @@ def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     token_wise_streaming = False
     mocker.patch("sdeul.llm.override_env_vars")
     llm = mocker.MagicMock()
-    mock_read_llm_file = mocker.patch(
-        "sdeul.llm._read_llm_file", return_value=llm
-    )
+    mock_read_llm_file = mocker.patch("sdeul.llm._read_llm_file", return_value=llm)
 
     result = create_llm_instance(
         llamacpp_model_file_path=llamacpp_model_file_path,
@@ -217,15 +215,14 @@ def test__read_llm_file(
     mocker.patch("logging.getLogger", return_value=mock_logger)
     mock_logger.level = logging_level
     expected_result = mocker.Mock()
-    mock_llamacpp = mocker.patch(
-        "sdeul.llm.LlamaCpp", return_value=expected_result
-    )
+    mock_llamacpp = mocker.patch("sdeul.llm.LlamaCpp", return_value=expected_result)
     mocker.patch("sdeul.llm.StreamingStdOutCallbackHandler")
     mock_callback_manager = mocker.MagicMock()
     mocker.patch(
         "sdeul.llm.CallbackManager",
         return_value=mock_callback_manager,
     )
+
     result = _read_llm_file(
         path=llm_file_path,
         temperature=temperature,
