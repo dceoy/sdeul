@@ -7,7 +7,7 @@ import typer
 from rich import print
 
 from . import __version__
-from .extraction import extract_json_from_text
+from .extraction import extract_json_from_text_file
 from .utility import configure_logging
 from .validation import validate_json_files_using_json_schema
 
@@ -133,7 +133,7 @@ def extract(
 ) -> None:
     """Extract data as JSON"""
     configure_logging(debug=debug, info=info)
-    extract_json_from_text(
+    extract_json_from_text_file(
         **{k: v for k, v in vars().items() if k not in ["debug", "info"]}
     )
 

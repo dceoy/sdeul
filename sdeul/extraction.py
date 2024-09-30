@@ -8,8 +8,6 @@ from typing import Any
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
@@ -20,14 +18,8 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from rich import print
 
-from .utility import (
-    has_aws_credentials,
-    log_execution_time,
-    override_env_vars,
-    read_json_file,
-    read_text_file,
-    write_file,
-)
+from .llm import create_llm_instance
+from .utility import log_execution_time, read_json_file, read_text_file, write_file
 
 _EXTRACTION_TEMPLATE = """\
 Input text:
@@ -79,7 +71,7 @@ _DEFAULT_MAX_TOKENS = {
 
 
 @log_execution_time
-def extract_json_from_text(
+def extract_json_from_text_file(
     text_file_path: str,
     json_schema_file_path: str,
     llamacpp_model_file_path: str | None = None,
@@ -110,8 +102,7 @@ def extract_json_from_text(
     bedrock_endpoint_base_url: str | None = None,
 ) -> None:
     """Extract JSON from input text."""
-    logger = logging.getLogger(extract_json_from_text.__name__)
-    llm = _create_llm_instance(
+    llm = create_llm_instance(
         llamacpp_model_file_path=llamacpp_model_file_path,
         groq_model_name=groq_model_name,
         groq_api_key=groq_api_key,
@@ -138,6 +129,43 @@ def extract_json_from_text(
     )
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
+    parsed_output_data = _extruct_structured_data_from_text(
+        input_text=input_text,
+        schema=schema,
+        llm=llm,
+        skip_validation=skip_validation,
+    )
+    output_data_as_json(
+        data=parsed_output_data,
+        output_json_file_path=output_json_file_path,
+        compact_json=compact_json,
+    )
+
+
+def output_data_as_json(
+    data: Any,
+    output_json_file_path: str | None = None,
+    compact_json: bool = False,
+) -> None:
+    output_json_string = json.dumps(obj=data, indent=(None if compact_json else 2))
+    if output_json_file_path:
+        write_file(path=output_json_file_path, data=output_json_string)
+    else:
+        print(output_json_string)
+
+
+def _extruct_structured_data_from_text(
+    input_text: str,
+    schema: dict[str, Any],
+    llm: LlamaCpp
+    | ChatGroq
+    | ChatBedrockConverse
+    | ChatGoogleGenerativeAI
+    | ChatOpenAI,
+    skip_validation: bool = False,
+) -> Any:
+    logger = logging.getLogger(_extruct_structured_data_from_text.__name__)
+    logger.info("Start extracting structured data from the input text.")
     prompt = PromptTemplate(
         template=_EXTRACTION_TEMPLATE,
         input_variables=_EXTRACTION_INPUT_VARIABLES,
@@ -145,8 +173,6 @@ def extract_json_from_text(
     )
     llm_chain: LLMChain = prompt | llm | StrOutputParser()
     logger.info(f"LLM chain: {llm_chain}")
-
-    logger.info("Start extracting JSON data from the input text.")
     output_string = llm_chain.invoke({"input_text": input_text})
     logger.info(f"LLM output: {output_string}")
     if not output_string:
@@ -156,7 +182,7 @@ def extract_json_from_text(
         if skip_validation:
             logger.info("Skip validation using JSON Schema.")
         else:
-            logger.info("Validate the parsed output using JSON Schema.")
+            logger.info("Validate data using JSON Schema.")
             try:
                 validate(instance=parsed_output_data, schema=schema)
             except ValidationError as e:
@@ -164,13 +190,7 @@ def extract_json_from_text(
                 raise e
             else:
                 logger.info("Validation succeeded.")
-        output_json_string = json.dumps(
-            obj=parsed_output_data, indent=(None if compact_json else 2)
-        )
-        if output_json_file_path:
-            write_file(path=output_json_file_path, data=output_json_string)
-        else:
-            print(output_json_string)
+        return parsed_output_data
 
 
 def _parse_llm_output(string: str) -> Any:
@@ -202,140 +222,3 @@ def _parse_llm_output(string: str) -> Any:
         else:
             logger.info(f"Parsed output: {output_data}")
             return output_data
-
-
-def _create_llm_instance(
-    llamacpp_model_file_path: str | None = None,
-    groq_model_name: str | None = None,
-    groq_api_key: str | None = None,
-    bedrock_model_id: str | None = None,
-    google_model_name: str | None = None,
-    google_api_key: str | None = None,
-    openai_model_name: str | None = None,
-    openai_api_key: str | None = None,
-    openai_api_base: str | None = None,
-    openai_organization: str | None = None,
-    temperature: float = 0.8,
-    top_p: float = 0.95,
-    max_tokens: int = 8192,
-    n_ctx: int = 512,
-    seed: int = -1,
-    n_batch: int = 8,
-    n_gpu_layers: int = -1,
-    token_wise_streaming: bool = False,
-    timeout: int | None = None,
-    max_retries: int = 2,
-    aws_credentials_profile_name: str | None = None,
-    aws_region: str | None = None,
-    bedrock_endpoint_base_url: str | None = None,
-) -> LlamaCpp | ChatGroq | ChatBedrockConverse | ChatGoogleGenerativeAI | ChatOpenAI:
-    logger = logging.getLogger(extract_json_from_text.__name__)
-    override_env_vars(
-        GROQ_API_KEY=groq_api_key,
-        GOOGLE_API_KEY=google_api_key,
-        OPENAI_API_KEY=openai_api_key,
-    )
-    if llamacpp_model_file_path:
-        logger.info(f"Use local LLM: {llamacpp_model_file_path}")
-        return _read_llm_file(
-            path=llamacpp_model_file_path,
-            temperature=temperature,
-            top_p=top_p,
-            max_tokens=max_tokens,
-            n_ctx=n_ctx,
-            seed=seed,
-            n_batch=n_batch,
-            n_gpu_layers=n_gpu_layers,
-            token_wise_streaming=token_wise_streaming,
-        )
-    elif groq_model_name or (
-        (not any([bedrock_model_id, google_model_name, openai_model_name]))
-        and os.environ.get("GROQ_API_KEY")
-    ):
-        logger.info(f"Use GROQ: {groq_model_name}")
-        m = groq_model_name or _DEFAULT_MODEL_NAMES["groq"]
-        return ChatGroq(
-            model=m,
-            temperature=temperature,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
-            timeout=timeout,
-            max_retries=max_retries,
-            stop_sequences=None,
-        )
-    elif bedrock_model_id or (
-        (not any([google_model_name, openai_model_name])) and has_aws_credentials()
-    ):
-        logger.info(f"Use Amazon Bedrock: {bedrock_model_id}")
-        m = bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]
-        return ChatBedrockConverse(
-            model=m,
-            temperature=temperature,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
-            region_name=aws_region,
-            base_url=bedrock_endpoint_base_url,
-            credentials_profile_name=aws_credentials_profile_name,
-        )
-    elif google_model_name or (
-        (not openai_model_name) and os.environ.get("GOOGLE_API_KEY")
-    ):
-        logger.info(f"Use Google Generative AI: {google_model_name}")
-        m = google_model_name or _DEFAULT_MODEL_NAMES["google"]
-        return ChatGoogleGenerativeAI(
-            model=m,
-            temperature=temperature,
-            top_p=top_p,
-            max_output_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
-            timeout=timeout,
-            max_retries=max_retries,
-        )
-    elif openai_model_name or os.environ.get("OPENAI_API_KEY"):
-        logger.info(f"Use OpenAI: {openai_model_name}")
-        logger.info(f"OpenAI API base: {openai_api_base}")
-        logger.info(f"OpenAI organization: {openai_organization}")
-        m = openai_model_name or _DEFAULT_MODEL_NAMES["openai"]
-        return ChatOpenAI(
-            model=m,
-            base_url=openai_api_base,
-            organization=openai_organization,
-            temperature=temperature,
-            top_p=top_p,
-            seed=seed,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
-            timeout=timeout,
-            max_retries=max_retries,
-        )
-    else:
-        raise RuntimeError("The model cannot be determined.")
-
-
-def _read_llm_file(
-    path: str,
-    temperature: float = 0.8,
-    top_p: float = 0.95,
-    max_tokens: int = 256,
-    n_ctx: int = 512,
-    seed: int = -1,
-    n_batch: int = 8,
-    n_gpu_layers: int = -1,
-    token_wise_streaming: bool = False,
-) -> LlamaCpp:
-    logger = logging.getLogger(_read_llm_file.__name__)
-    logger.info(f"Read the model file: {path}")
-    llm = LlamaCpp(
-        model_path=path,
-        temperature=temperature,
-        top_p=top_p,
-        max_tokens=max_tokens,
-        n_ctx=n_ctx,
-        seed=seed,
-        n_batch=n_batch,
-        n_gpu_layers=n_gpu_layers,
-        verbose=(token_wise_streaming or logger.level <= logging.DEBUG),
-        callback_manager=(
-            CallbackManager([StreamingStdOutCallbackHandler()])
-            if token_wise_streaming
-            else None
-        ),
-    )
-    logger.debug(f"llm: {llm}")
-    return llm

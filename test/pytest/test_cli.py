@@ -113,13 +113,15 @@ def test_extract_command(
     cli_args: list[str], runner: CliRunner, mocker: MockerFixture
 ) -> None:
     mock_configure_logging = mocker.patch("sdeul.cli.configure_logging")
-    mock_extract_json_from_text = mocker.patch("sdeul.cli.extract_json_from_text")
+    mock_extract_json_from_text_file = mocker.patch(
+        "sdeul.cli.extract_json_from_text_file"
+    )
     result = runner.invoke(app, cli_args)
     assert result.exit_code == 0
     mock_configure_logging.assert_called_once_with(
         debug=("--debug" in cli_args), info=("--info" in cli_args)
     )
-    mock_extract_json_from_text.assert_called_once()
+    mock_extract_json_from_text_file.assert_called_once()
 
 
 @pytest.mark.parametrize(
