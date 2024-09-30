@@ -19,10 +19,10 @@ def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     n_batch = 8
     n_gpu_layers = -1
     token_wise_streaming = False
-    mocker.patch("sdeul.extraction.override_env_vars")
+    mocker.patch("sdeul.llm.override_env_vars")
     llm = mocker.MagicMock()
     mock_read_llm_file = mocker.patch(
-        "sdeul.extraction._read_llm_file", return_value=llm
+        "sdeul.llm._read_llm_file", return_value=llm
     )
 
     result = create_llm_instance(
@@ -57,9 +57,9 @@ def test__create_llm_instance_with_groq(mocker: MockerFixture) -> None:
     timeout = None
     max_retries = 2
     stop_sequences = None
-    mocker.patch("sdeul.extraction.override_env_vars")
+    mocker.patch("sdeul.llm.override_env_vars")
     llm = mocker.MagicMock()
-    mock_chat_groq = mocker.patch("sdeul.extraction.ChatGroq", return_value=llm)
+    mock_chat_groq = mocker.patch("sdeul.llm.ChatGroq", return_value=llm)
 
     result = create_llm_instance(
         groq_model_name=groq_model_name,
@@ -86,11 +86,11 @@ def test__create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     aws_credentials_profile_name = None
     aws_region = "us-east-1"
     bedrock_endpoint_base_url = "https://api.bedrock.com"
-    mocker.patch("sdeul.extraction.override_env_vars")
-    mocker.patch("sdeul.extraction.has_aws_credentials")
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials")
     llm = mocker.MagicMock()
     mock_chat_bedrock_converse = mocker.patch(
-        "sdeul.extraction.ChatBedrockConverse", return_value=llm
+        "sdeul.llm.ChatBedrockConverse", return_value=llm
     )
 
     result = create_llm_instance(
@@ -119,10 +119,10 @@ def test__create_llm_instance_with_google(mocker: MockerFixture) -> None:
     max_tokens = 8192
     timeout = None
     max_retries = 2
-    mocker.patch("sdeul.extraction.override_env_vars")
+    mocker.patch("sdeul.llm.override_env_vars")
     llm = mocker.MagicMock()
     mock_chat_google_generative_ai = mocker.patch(
-        "sdeul.extraction.ChatGoogleGenerativeAI", return_value=llm
+        "sdeul.llm.ChatGoogleGenerativeAI", return_value=llm
     )
 
     result = create_llm_instance(
@@ -154,9 +154,9 @@ def test__create_llm_instance_with_openai(mocker: MockerFixture) -> None:
     max_tokens = 8192
     timeout = None
     max_retries = 2
-    mocker.patch("sdeul.extraction.override_env_vars")
+    mocker.patch("sdeul.llm.override_env_vars")
     llm = mocker.MagicMock()
-    mock_chat_openai = mocker.patch("sdeul.extraction.ChatOpenAI", return_value=llm)
+    mock_chat_openai = mocker.patch("sdeul.llm.ChatOpenAI", return_value=llm)
 
     result = create_llm_instance(
         openai_model_name=openai_model_name,
@@ -184,9 +184,9 @@ def test__create_llm_instance_with_openai(mocker: MockerFixture) -> None:
 
 
 def test__create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
-    mocker.patch("sdeul.extraction.override_env_vars")
+    mocker.patch("sdeul.llm.override_env_vars")
     mocker.patch.dict(os.environ, {}, clear=True)
-    mocker.patch("sdeul.extraction.has_aws_credentials", return_value=False)
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
     with pytest.raises(RuntimeError, match="The model cannot be determined."):
         create_llm_instance()
 
@@ -218,12 +218,12 @@ def test__read_llm_file(
     mock_logger.level = logging_level
     expected_result = mocker.Mock()
     mock_llamacpp = mocker.patch(
-        "sdeul.extraction.LlamaCpp", return_value=expected_result
+        "sdeul.llm.LlamaCpp", return_value=expected_result
     )
-    mocker.patch("sdeul.extraction.StreamingStdOutCallbackHandler")
+    mocker.patch("sdeul.llm.StreamingStdOutCallbackHandler")
     mock_callback_manager = mocker.MagicMock()
     mocker.patch(
-        "sdeul.extraction.CallbackManager",
+        "sdeul.llm.CallbackManager",
         return_value=mock_callback_manager,
     )
     result = _read_llm_file(

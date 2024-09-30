@@ -8,6 +8,7 @@ on:
       - closed
 permissions:
   contents: write
+  pull-requests: read
 jobs:
   delete-merged-branch:
     uses: dceoy/gh-actions-for-devops/.github/workflows/github-merged-branch-deletion.yml@main

@@ -193,9 +193,12 @@ def test__extruct_structured_data_from_text(
     )
     mock_llm_chain.invoke.assert_called_once_with({"input_text": _TEST_TEXT})
     mock__parse_llm_output.assert_called_once_with(string=_TEST_LLM_OUTPUT_MD)
-    mock_validate.assert_called_once_with(
-        instance=_TEST_LLM_OUTPUT_JSON, schema=_TEST_SCHEMA
-    )
+    if skip_validation:
+        mock_validate.assert_not_called()
+    else:
+        mock_validate.assert_called_once_with(
+            instance=_TEST_LLM_OUTPUT_JSON, schema=_TEST_SCHEMA
+        )
     assert mock_logger.error.call_count == 0
 
 
