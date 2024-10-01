@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-"""
-Structural Data Extractor using LLMs
-"""
+"""Structural Data Extractor using LLMs."""
 
 import typer
 from rich import print
@@ -17,7 +15,7 @@ app = typer.Typer()
 def _version_callback(value: bool) -> None:
     if value:
         print(__version__)
-        raise typer.Exit()
+        raise typer.Exit
 
 
 @app.callback()
@@ -30,7 +28,7 @@ def main(
         help="Show version information and exit.",
     ),
 ) -> None:
-    """Structural Data Extractor using LLMs"""
+    """Structural Data Extractor using LLMs."""
     pass
 
 
@@ -39,32 +37,50 @@ def extract(
     json_schema_file_path: str = typer.Argument(..., help="JSON Schema file path."),
     text_file_path: str = typer.Argument(..., help="Input text file path."),
     output_json_file_path: str | None = typer.Option(
-        None, "--output-json-file", help="Output JSON file path."
+        None,
+        "--output-json-file",
+        help="Output JSON file path.",
     ),
     compact_json: bool = typer.Option(
-        False, "--compact-json", help="Compact instead of pretty-printed output."
+        False,
+        "--compact-json",
+        help="Compact instead of pretty-printed output.",
     ),
     skip_validation: bool = typer.Option(
-        False, "--skip-validation", help="Skip output validation using JSON Schema."
+        False,
+        "--skip-validation",
+        help="Skip output validation using JSON Schema.",
     ),
     temperature: float = typer.Option(
-        0, "--temperature", help="Specify the temperature for sampling."
+        0,
+        "--temperature",
+        help="Specify the temperature for sampling.",
     ),
     top_p: float = typer.Option(
-        0.1, "--top-p", help="Specify the top-p value for sampling."
+        0.1,
+        "--top-p",
+        help="Specify the top-p value for sampling.",
     ),
     max_tokens: int = typer.Option(
-        8000, "--max-tokens", help="Specify the max tokens to generate."
+        8000,
+        "--max-tokens",
+        help="Specify the max tokens to generate.",
     ),
     n_ctx: int = typer.Option(
-        1024, "--n-ctx", help="Specify the token context window."
+        1024,
+        "--n-ctx",
+        help="Specify the token context window.",
     ),
     seed: int = typer.Option(-1, "--seed", help="Specify the random seed."),
     n_batch: int = typer.Option(
-        8, "--n-batch", help="Specify the number of batch tokens."
+        8,
+        "--n-batch",
+        help="Specify the number of batch tokens.",
     ),
     n_gpu_layers: int = typer.Option(
-        -1, "--n-gpu-layers", help="Specify the number of GPU layers."
+        -1,
+        "--n-gpu-layers",
+        help="Specify the number of GPU layers.",
     ),
     openai_model_name: str | None = typer.Option(
         None,
@@ -131,10 +147,31 @@ def extract(
     debug: bool = typer.Option(False, "--debug", help="Execute with debug messages."),
     info: bool = typer.Option(False, "--info", help="Execute with info messages."),
 ) -> None:
-    """Extract data as JSON"""
+    """Extract data as JSON."""
     configure_logging(debug=debug, info=info)
     extract_json_from_text_file(
-        **{k: v for k, v in vars().items() if k not in ["debug", "info"]}
+        json_schema_file_path=json_schema_file_path,
+        text_file_path=text_file_path,
+        output_json_file_path=output_json_file_path,
+        compact_json=compact_json,
+        skip_validation=skip_validation,
+        temperature=temperature,
+        top_p=top_p,
+        max_tokens=max_tokens,
+        n_ctx=n_ctx,
+        seed=seed,
+        n_batch=n_batch,
+        n_gpu_layers=n_gpu_layers,
+        openai_model_name=openai_model_name,
+        google_model_name=google_model_name,
+        groq_model_name=groq_model_name,
+        bedrock_model_id=bedrock_model_id,
+        llamacpp_model_file_path=llamacpp_model_file_path,
+        openai_api_key=openai_api_key,
+        openai_api_base=openai_api_base,
+        openai_organization=openai_organization,
+        google_api_key=google_api_key,
+        groq_api_key=groq_api_key,
     )
 
 
@@ -148,5 +185,6 @@ def validate(
     """Validate JSON files using JSON Schema."""
     configure_logging(debug=debug, info=info)
     validate_json_files_using_json_schema(
-        **{k: v for k, v in vars().items() if k not in ["debug", "info"]}
+        json_schema_file_path=json_schema_file_path,
+        json_file_paths=json_file_paths,
     )

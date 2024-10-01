@@ -42,7 +42,7 @@ def test_main_with_help_option(cli_args: list[str], runner: CliRunner) -> None:
     [[], ["invalid-command"], ["--invalid-option"]],
 )
 def test_main_invalid_arguments(cli_args: list[str], runner: CliRunner) -> None:
-    result = runner.invoke(app, ["--invalid-option"])
+    result = runner.invoke(app, cli_args)
     assert result.exit_code != 0
     assert "Error" in result.stdout
 
@@ -110,16 +110,19 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
     ],
 )
 def test_extract_command(
-    cli_args: list[str], runner: CliRunner, mocker: MockerFixture
+    cli_args: list[str],
+    runner: CliRunner,
+    mocker: MockerFixture,
 ) -> None:
     mock_configure_logging = mocker.patch("sdeul.cli.configure_logging")
     mock_extract_json_from_text_file = mocker.patch(
-        "sdeul.cli.extract_json_from_text_file"
+        "sdeul.cli.extract_json_from_text_file",
     )
     result = runner.invoke(app, cli_args)
     assert result.exit_code == 0
     mock_configure_logging.assert_called_once_with(
-        debug=("--debug" in cli_args), info=("--info" in cli_args)
+        debug=("--debug" in cli_args),
+        info=("--info" in cli_args),
     )
     mock_extract_json_from_text_file.assert_called_once()
 
@@ -134,15 +137,18 @@ def test_extract_command(
     ],
 )
 def test_validate_command(
-    cli_args: list[str], runner: CliRunner, mocker: MockerFixture
+    cli_args: list[str],
+    runner: CliRunner,
+    mocker: MockerFixture,
 ) -> None:
     mock_configure_logging = mocker.patch("sdeul.cli.configure_logging")
     mock_validate_json_files_using_json_schema = mocker.patch(
-        "sdeul.cli.validate_json_files_using_json_schema"
+        "sdeul.cli.validate_json_files_using_json_schema",
     )
     result = runner.invoke(app, cli_args)
     assert result.exit_code == 0
     mock_configure_logging.assert_called_once_with(
-        debug=("--debug" in cli_args), info=("--info" in cli_args)
+        debug=("--debug" in cli_args),
+        info=("--info" in cli_args),
     )
     mock_validate_json_files_using_json_schema.assert_called_once()

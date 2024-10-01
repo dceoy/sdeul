@@ -88,7 +88,8 @@ def test__create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     mocker.patch("sdeul.llm.has_aws_credentials")
     llm = mocker.MagicMock()
     mock_chat_bedrock_converse = mocker.patch(
-        "sdeul.llm.ChatBedrockConverse", return_value=llm
+        "sdeul.llm.ChatBedrockConverse",
+        return_value=llm,
     )
 
     result = create_llm_instance(
@@ -120,7 +121,8 @@ def test__create_llm_instance_with_google(mocker: MockerFixture) -> None:
     mocker.patch("sdeul.llm.override_env_vars")
     llm = mocker.MagicMock()
     mock_chat_google_generative_ai = mocker.patch(
-        "sdeul.llm.ChatGoogleGenerativeAI", return_value=llm
+        "sdeul.llm.ChatGoogleGenerativeAI",
+        return_value=llm,
     )
 
     result = create_llm_instance(
@@ -190,7 +192,7 @@ def test__create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
 
 
 @pytest.mark.parametrize(
-    "token_wise_streaming, logging_level, expected_verbose",
+    ("token_wise_streaming", "logging_level", "expected_verbose"),
     [
         (False, logging.INFO, False),
         (False, logging.DEBUG, True),

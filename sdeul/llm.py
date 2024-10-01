@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Functions for LLM."""
 
 import logging
 import os
@@ -69,6 +70,39 @@ def create_llm_instance(
     aws_region: str | None = None,
     bedrock_endpoint_base_url: str | None = None,
 ) -> LlamaCpp | ChatGroq | ChatBedrockConverse | ChatGoogleGenerativeAI | ChatOpenAI:
+    """Create an instance of LLM.
+
+    Args:
+        llamacpp_model_file_path: The file path of the LLM model.
+        groq_model_name: The name of the GROQ model.
+        groq_api_key: The API
+        bedrock_model_id: The ID of the Amazon Bedrock model.
+        google_model_name: The name of the Google Generative AI model.
+        google_api_key: The API key of the Google Generative AI.
+        openai_model_name: The name of the OpenAI model.
+        openai_api_key: The API key of the OpenAI.
+        openai_api_base: The base URL of the OpenAI API.
+        openai_organization: The organization of the OpenAI.
+        temperature: The temperature of the model.
+        top_p: The top-p of the model.
+        max_tokens: The maximum number of tokens.
+        n_ctx: The context size.
+        seed: The seed of the model.
+        n_batch: The batch size.
+        n_gpu_layers: The number of GPU layers.
+        token_wise_streaming: The flag to enable token-wise streaming.
+        timeout: The timeout of the model.
+        max_retries: The maximum number of retries.
+        aws_credentials_profile_name: The name of the AWS credentials profile.
+        aws_region: The AWS region.
+        bedrock_endpoint_base_url: The base URL of the Amazon Bedrock endpoint.
+
+    Returns:
+        An instance of LLM.
+
+    Raises:
+        RuntimeError: The model cannot be determined.
+    """
     logger = logging.getLogger(create_llm_instance.__name__)
     override_env_vars(
         GROQ_API_KEY=groq_api_key,
@@ -76,7 +110,7 @@ def create_llm_instance(
         OPENAI_API_KEY=openai_api_key,
     )
     if llamacpp_model_file_path:
-        logger.info(f"Use local LLM: {llamacpp_model_file_path}")
+        logger.info("Use local LLM: %s", llamacpp_model_file_path)
         return _read_llm_file(
             path=llamacpp_model_file_path,
             temperature=temperature,
@@ -92,12 +126,12 @@ def create_llm_instance(
         (not any([bedrock_model_id, google_model_name, openai_model_name]))
         and os.environ.get("GROQ_API_KEY")
     ):
-        logger.info(f"Use GROQ: {groq_model_name}")
+        logger.info("Use GROQ: %s", groq_model_name)
         m = groq_model_name or _DEFAULT_MODEL_NAMES["groq"]
         return ChatGroq(
             model=m,
             temperature=temperature,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             timeout=timeout,
             max_retries=max_retries,
             stop_sequences=None,
@@ -105,12 +139,12 @@ def create_llm_instance(
     elif bedrock_model_id or (
         (not any([google_model_name, openai_model_name])) and has_aws_credentials()
     ):
-        logger.info(f"Use Amazon Bedrock: {bedrock_model_id}")
+        logger.info("Use Amazon Bedrock: %s", bedrock_model_id)
         m = bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]
         return ChatBedrockConverse(
             model=m,
             temperature=temperature,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             region_name=aws_region,
             base_url=bedrock_endpoint_base_url,
             credentials_profile_name=aws_credentials_profile_name,
@@ -118,20 +152,20 @@ def create_llm_instance(
     elif google_model_name or (
         (not openai_model_name) and os.environ.get("GOOGLE_API_KEY")
     ):
-        logger.info(f"Use Google Generative AI: {google_model_name}")
+        logger.info("Use Google Generative AI: %s", google_model_name)
         m = google_model_name or _DEFAULT_MODEL_NAMES["google"]
         return ChatGoogleGenerativeAI(
             model=m,
             temperature=temperature,
             top_p=top_p,
-            max_output_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_output_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             timeout=timeout,
             max_retries=max_retries,
         )
     elif openai_model_name or os.environ.get("OPENAI_API_KEY"):
-        logger.info(f"Use OpenAI: {openai_model_name}")
-        logger.info(f"OpenAI API base: {openai_api_base}")
-        logger.info(f"OpenAI organization: {openai_organization}")
+        logger.info("Use OpenAI: %s", openai_model_name)
+        logger.info("OpenAI API base: %s", openai_api_base)
+        logger.info("OpenAI organization: %s", openai_organization)
         m = openai_model_name or _DEFAULT_MODEL_NAMES["openai"]
         return ChatOpenAI(
             model=m,
@@ -140,12 +174,24 @@ def create_llm_instance(
             temperature=temperature,
             top_p=top_p,
             seed=seed,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             timeout=timeout,
             max_retries=max_retries,
         )
     else:
         raise RuntimeError("The model cannot be determined.")
+
+
+def _limit_max_tokens(max_tokens: int, model_name: str) -> int:
+    default_max_tokens = _DEFAULT_MAX_TOKENS.get(model_name, max_tokens)
+    if max_tokens > default_max_tokens:
+        logging.getLogger(_limit_max_tokens.__name__).warning(
+            "The maximum number of tokens is limited to %d.",
+            default_max_tokens,
+        )
+        return default_max_tokens
+    else:
+        return max_tokens
 
 
 def _read_llm_file(
@@ -160,7 +206,7 @@ def _read_llm_file(
     token_wise_streaming: bool = False,
 ) -> LlamaCpp:
     logger = logging.getLogger(_read_llm_file.__name__)
-    logger.info(f"Read the model file: {path}")
+    logger.info("Read the model file: %s", path)
     llm = LlamaCpp(
         model_path=path,
         temperature=temperature,
@@ -177,5 +223,5 @@ def _read_llm_file(
             else None
         ),
     )
-    logger.debug(f"llm: {llm}")
+    logger.debug("llm: %s", llm)
     return llm
