@@ -3,22 +3,19 @@
 
 import json
 import logging
-import os
-from json.decoder import JSONDecodeError
 from typing import Any
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.schema import StrOutputParser
 from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 
-from .llm import create_llm_instance
+from .llm import JsonCodeOutputParser, create_llm_instance
 from .utility import (
     log_execution_time,
     read_json_file,
@@ -166,54 +163,19 @@ def _extruct_structured_data_from_text(
         input_variables=_EXTRACTION_INPUT_VARIABLES,
         partial_variables={"schema": json.dumps(obj=schema)},
     )
-    llm_chain: LLMChain = prompt | llm | StrOutputParser()
+    llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()
     logger.info("LLM chain: %s", llm_chain)
-    output_string = llm_chain.invoke({"input_text": input_text})
-    logger.info("LLM output: %s", output_string)
-    if not output_string:
-        raise RuntimeError("LLM output is empty.")
+    parsed_output_data = llm_chain.invoke({"input_text": input_text})
+    logger.info("LLM output: %s", parsed_output_data)
+    if skip_validation:
+        logger.info("Skip validation using JSON Schema.")
     else:
-        parsed_output_data = _parse_llm_output(string=str(output_string))
-        if skip_validation:
-            logger.info("Skip validation using JSON Schema.")
-        else:
-            logger.info("Validate data using JSON Schema.")
-            try:
-                validate(instance=parsed_output_data, schema=schema)
-            except ValidationError:
-                logger.exception("Validation failed: %s", parsed_output_data)
-                raise
-            else:
-                logger.info("Validation succeeded.")
-        return parsed_output_data
-
-
-def _parse_llm_output(string: str) -> Any:
-    logger = logging.getLogger(_parse_llm_output.__name__)
-    json_string = None
-    markdown = True
-    for r in string.strip().splitlines(keepends=False):
-        if json_string is None:
-            if r in {"```json", "```"}:
-                json_string = ""
-            elif r in {"[", "{"}:
-                markdown = False
-                json_string = r + os.linesep
-            else:
-                pass
-        elif (markdown and r != "```") or (not markdown and r):
-            json_string += r + os.linesep
-        else:
-            break
-    logger.debug("json_string: %s", json_string)
-    if not json_string:
-        raise RuntimeError(f"JSON code block is not found: {string}")
-    else:
+        logger.info("Validate data using JSON Schema.")
         try:
-            output_data = json.loads(json_string)
-        except JSONDecodeError:
-            logger.exception("Failed to parse the LLM output: %s", string)
+            validate(instance=parsed_output_data, schema=schema)
+        except ValidationError:
+            logger.exception("Validation failed: %s", parsed_output_data)
             raise
         else:
-            logger.info("Parsed output: %s", output_data)
-            return output_data
+            logger.info("Validation succeeded.")
+    return parsed_output_data

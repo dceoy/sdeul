@@ -154,9 +154,12 @@ max-locals = 30
 ]
 "test/**.py" = [
   "D100",     # undocumented-public-module
+  "D101",     # undocumented-public-class
+  "D102",     # undocumented-public-method
   "D103",     # undocumented-public-function
   "S101",     # assert
   "PLC2701",  # import-private-name
+  "SLF001",   # private-member-access
 ]
 
 [tool.mypy]

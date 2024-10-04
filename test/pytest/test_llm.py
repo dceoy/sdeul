@@ -4,9 +4,64 @@ import logging
 import os
 
 import pytest
+from conftest import TEST_LLM_OUTPUT, TEST_LLM_OUTPUT_JSON, TEST_LLM_OUTPUT_MD
+from langchain_core.exceptions import OutputParserException
 from pytest_mock import MockerFixture
 
-from sdeul.llm import _read_llm_file, create_llm_instance
+from sdeul.llm import JsonCodeOutputParser, _read_llm_file, create_llm_instance
+
+
+def test_jsoncodeoutputparser_parse(mocker: MockerFixture) -> None:
+    mock_logger = mocker.Mock(spec=logging.Logger)
+    mocker.patch("logging.getLogger", return_value=mock_logger)
+    parser = JsonCodeOutputParser()
+    mock__detect_json_code_block = mocker.patch.object(
+        parser,
+        "_detect_json_code_block",
+        return_value=TEST_LLM_OUTPUT_JSON,
+    )
+    result = parser.parse(text=TEST_LLM_OUTPUT_MD)
+    assert result == TEST_LLM_OUTPUT
+    assert mock_logger.info.call_count > 0
+    mock__detect_json_code_block.assert_called_once_with(text=TEST_LLM_OUTPUT_MD)
+
+
+def test_jsoncodeoutputparser_parse_with_invalid_input(mocker: MockerFixture) -> None:
+    mock_logger = mocker.Mock(spec=logging.Logger)
+    mocker.patch("logging.getLogger", return_value=mock_logger)
+    parser = JsonCodeOutputParser()
+    invalid_json_code = "invalid"
+    mocker.patch.object(
+        parser,
+        "_detect_json_code_block",
+        return_value=invalid_json_code,
+    )
+    with pytest.raises(OutputParserException) as exc_info:
+        parser.parse(text=TEST_LLM_OUTPUT_MD)
+    assert str(exc_info.value) == f"Invalid JSON code block: {invalid_json_code}"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected_result"),
+    [
+        (TEST_LLM_OUTPUT_MD, TEST_LLM_OUTPUT_JSON),
+        (TEST_LLM_OUTPUT_JSON, TEST_LLM_OUTPUT_JSON),
+    ],
+)
+def test_jsoncodeoutputparser__detect_json_code_block(
+    text: str,
+    expected_result: str,
+) -> None:
+    result = JsonCodeOutputParser()._detect_json_code_block(text=text)
+    assert result == expected_result
+
+
+def test_jsoncodeoutputparser__detect_json_code_block_with_invalid_input() -> None:
+    text = "This is not a valid JSON code block"
+    msg = f"JSON code block not detected in the output text: {text}"
+    with pytest.raises(OutputParserException) as exc_info:
+        JsonCodeOutputParser()._detect_json_code_block(text)
+    assert str(exc_info.value) == msg
 
 
 def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:

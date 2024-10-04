@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 """Functions for LLM."""
 
+import json
 import logging
 import os
+from typing import Any
 
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.schema import StrOutputParser
 from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
+from langchain_core.exceptions import OutputParserException
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
@@ -43,6 +47,69 @@ _DEFAULT_MAX_TOKENS = {
     "llama-3.1-70b-versatile": 131072,
     "llama-3.1-405b-reasoning": 131072,
 }
+
+
+class JsonCodeOutputParser(StrOutputParser):
+    """Detect and parse the JSON code block in the output of an LLM call."""
+
+    def parse(self, text: str) -> Any:
+        """Parse the output text.
+
+        Args:
+            text: The output text.
+
+        Returns:
+            The parsed output.
+
+        Raises:
+            OutputParserException: The JSON code block is not detected or invalid.
+        """
+        logger = logging.getLogger(f"{self.__class__.__name__}.{self.parse.__name__}")
+        logger.debug("text: %s", text)
+        json_code = self._detect_json_code_block(text=text)
+        logger.debug("json_code: %s", json_code)
+        try:
+            data = json.loads(s=json_code)
+        except json.JSONDecodeError as e:
+            m = f"Invalid JSON code block: {json_code}"
+            raise OutputParserException(m, llm_output=text) from e
+        else:
+            logger.info("Parsed data: %s", data)
+            return data
+
+    @staticmethod
+    def _detect_json_code_block(text: str) -> str:
+        """Detect the JSON code block in the output text.
+
+        Args:
+            text: The output text.
+
+        Returns:
+            The detected JSON code.
+
+        Raises:
+            OutputParserException: The JSON code block is not detected.
+        """
+        json_code: str | None = None
+        markdown: bool = True
+        for r in text.strip().splitlines(keepends=False):
+            if json_code is None:
+                if r in {"```json", "```"}:
+                    json_code = ""
+                elif r.startswith(("[", "{", '"')):
+                    markdown = False
+                    json_code = r + os.linesep
+                else:
+                    pass
+            elif (markdown and r != "```") or (not markdown and r):
+                json_code += r + os.linesep
+            else:
+                break
+        if not json_code:
+            m = f"JSON code block not detected in the output text: {text}"
+            raise OutputParserException(m, llm_output=text)
+        else:
+            return json_code.strip()
 
 
 def create_llm_instance(
