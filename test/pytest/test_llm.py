@@ -12,7 +12,12 @@ from conftest import TEST_LLM_OUTPUT, TEST_LLM_OUTPUT_JSON, TEST_LLM_OUTPUT_MD
 from langchain_core.exceptions import OutputParserException
 from pytest_mock import MockerFixture
 
-from sdeul.llm import JsonCodeOutputParser, _read_llm_file, create_llm_instance
+from sdeul.llm import (
+    JsonCodeOutputParser,
+    _limit_max_tokens,
+    _read_llm_file,
+    create_llm_instance,
+)
 
 
 def test_jsoncodeoutputparser_parse(mocker: MockerFixture) -> None:
@@ -68,7 +73,7 @@ def test_jsoncodeoutputparser__detect_json_code_block_with_invalid_input() -> No
     assert str(exc_info.value) == msg
 
 
-def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
+def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     llamacpp_model_file_path = "/path/to/model"
     temperature = 0.8
     top_p = 0.95
@@ -107,7 +112,7 @@ def test__create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     )
 
 
-def test__create_llm_instance_with_groq(mocker: MockerFixture) -> None:
+def test_create_llm_instance_with_groq(mocker: MockerFixture) -> None:
     groq_model_name = "dummy-groq-model"
     temperature = 0.8
     max_tokens = 8192
@@ -136,7 +141,7 @@ def test__create_llm_instance_with_groq(mocker: MockerFixture) -> None:
     )
 
 
-def test__create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
+def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     bedrock_model_id = "dummy-bedrock-model"
     temperature = 0.8
     max_tokens = 8192
@@ -170,7 +175,7 @@ def test__create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     )
 
 
-def test__create_llm_instance_with_google(mocker: MockerFixture) -> None:
+def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
     google_model_name = "dummy-google-model"
     temperature = 0.8
     top_p = 0.95
@@ -203,7 +208,7 @@ def test__create_llm_instance_with_google(mocker: MockerFixture) -> None:
     )
 
 
-def test__create_llm_instance_with_openai(mocker: MockerFixture) -> None:
+def test_create_llm_instance_with_openai(mocker: MockerFixture) -> None:
     openai_model_name = "dummy-openai-model"
     openai_api_base = "https://api.openai.com"
     openai_organization = "dummy-organization"
@@ -242,12 +247,38 @@ def test__create_llm_instance_with_openai(mocker: MockerFixture) -> None:
     )
 
 
-def test__create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
+def test_create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
     mocker.patch("sdeul.llm.override_env_vars")
     mocker.patch.dict(os.environ, {}, clear=True)
     mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
     with pytest.raises(RuntimeError, match="The model cannot be determined."):
         create_llm_instance()
+
+
+@pytest.mark.parametrize(
+    ("max_tokens", "model_name", "default_max_tokens", "expected"),
+    [
+        (1024, "a", {"a": 512}, 512),
+        (1024, "a", {"a": 8192}, 1024),
+        (8192, "b", {"a": 512}, 8192),
+    ],
+)
+def test__limit_max_tokens(
+    max_tokens: int,
+    model_name: str,
+    default_max_tokens: dict[str, int],
+    expected: int,
+    mocker: MockerFixture,
+) -> None:
+    mock_logger = mocker.MagicMock()
+    mocker.patch("logging.getLogger", return_value=mock_logger)
+    mocker.patch("sdeul.llm._DEFAULT_MAX_TOKENS", new=default_max_tokens)
+    result = _limit_max_tokens(max_tokens=max_tokens, model_name=model_name)
+    assert result == expected
+    if max_tokens > default_max_tokens.get(model_name, max_tokens):
+        mock_logger.warning.assert_called_once()
+    else:
+        mock_logger.warning.assert_not_called()
 
 
 @pytest.mark.parametrize(
