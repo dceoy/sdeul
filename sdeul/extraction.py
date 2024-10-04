@@ -1,25 +1,27 @@
 #!/usr/bin/env python
+"""Functions for extracting JSON from text."""
 
 import json
 import logging
-import os
-from json.decoder import JSONDecodeError
 from typing import Any
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.schema import StrOutputParser
 from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
-from rich import print
 
-from .llm import create_llm_instance
-from .utility import log_execution_time, read_json_file, read_text_file, write_file
+from .llm import JsonCodeOutputParser, create_llm_instance
+from .utility import (
+    log_execution_time,
+    read_json_file,
+    read_text_file,
+    write_or_print_json_data,
+)
 
 _EXTRACTION_TEMPLATE = """\
 Input text:
@@ -39,35 +41,6 @@ Instructions:
 - Output the JSON data in a markdown code block.
 """  # noqa: E501
 _EXTRACTION_INPUT_VARIABLES = ["input_text"]
-_DEFAULT_MODEL_NAMES = {
-    "openai": "gpt-4o-mini",
-    "google": "gemini-1.5-flash",
-    "groq": "llama-3.1-70b-versatile",
-    "bedrock": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-}
-_DEFAULT_MAX_TOKENS = {
-    "gpt-4o": 128000,
-    "gpt-4o-2024-05-13": 128000,
-    "gpt-4o-mini": 128000,
-    "gpt-4o-mini-2024-07-18": 128000,
-    "gpt-4o-2024-08-06": 128000,
-    "o1-mini": 128000,
-    "o1-mini-2024-09-12": 128000,
-    "o1-preview": 128000,
-    "o1-preview-2024-09-12": 128000,
-    "claude-3-5-sonnet@20240620": 100000,
-    "gemini-1.5-pro": 1048576,
-    "gemini-1.5-flash": 1048576,
-    "gemma2": 8200,
-    "gemma2-9b-it": 8192,
-    "claude-3-5-sonnet": 100000,
-    "claude-3-5-sonnet-20240620": 100000,
-    "anthropic.claude-3-5-sonnet-20240620-v1:0": 100000,
-    "mixtral-8x7b-32768": 32768,
-    "llama-3.1-8b-instant": 131072,
-    "llama-3.1-70b-versatile": 131072,
-    "llama-3.1-405b-reasoning": 131072,
-}
 
 
 @log_execution_time
@@ -101,7 +74,38 @@ def extract_json_from_text_file(
     aws_region: str | None = None,
     bedrock_endpoint_base_url: str | None = None,
 ) -> None:
-    """Extract JSON from input text."""
+    """Extract JSON from input text.
+
+    Args:
+        text_file_path: Path to the input text file.
+        json_schema_file_path: Path to the JSON schema file.
+        llamacpp_model_file_path: Path to the LlamaCpp model file.
+        groq_model_name: Name of the Groq model.
+        groq_api_key: API key
+        bedrock_model_id: Bedrock model ID.
+        google_model_name: Name of the Google model.
+        google_api_key: API key of the Google model.
+        openai_model_name: Name of the OpenAI model.
+        openai_api_key: API key of the OpenAI model.
+        openai_api_base: Base URL of the OpenAI API.
+        openai_organization: Organization of the OpenAI.
+        output_json_file_path: Path to the output JSON file.
+        compact_json: Flag to output the JSON in compact format.
+        skip_validation: Flag to skip JSON validation.
+        temperature: Temperature of the model.
+        top_p: Top-p of the model.
+        max_tokens: Maximum number of tokens.
+        n_ctx: Context size.
+        seed: Seed of the model.
+        n_batch: Batch size.
+        n_gpu_layers: Number of GPU layers.
+        token_wise_streaming: Flag to enable token-wise streaming.
+        timeout: Timeout of the model.
+        max_retries: Maximum number of retries.
+        aws_credentials_profile_name: Name of the AWS credentials profile.
+        aws_region: AWS region.
+        bedrock_endpoint_base_url: Base URL of the Amazon Bedrock endpoint.
+    """
     llm = create_llm_instance(
         llamacpp_model_file_path=llamacpp_model_file_path,
         groq_model_name=groq_model_name,
@@ -135,23 +139,11 @@ def extract_json_from_text_file(
         llm=llm,
         skip_validation=skip_validation,
     )
-    output_data_as_json(
+    write_or_print_json_data(
         data=parsed_output_data,
         output_json_file_path=output_json_file_path,
         compact_json=compact_json,
     )
-
-
-def output_data_as_json(
-    data: Any,
-    output_json_file_path: str | None = None,
-    compact_json: bool = False,
-) -> None:
-    output_json_string = json.dumps(obj=data, indent=(None if compact_json else 2))
-    if output_json_file_path:
-        write_file(path=output_json_file_path, data=output_json_string)
-    else:
-        print(output_json_string)
 
 
 def _extruct_structured_data_from_text(
@@ -171,54 +163,19 @@ def _extruct_structured_data_from_text(
         input_variables=_EXTRACTION_INPUT_VARIABLES,
         partial_variables={"schema": json.dumps(obj=schema)},
     )
-    llm_chain: LLMChain = prompt | llm | StrOutputParser()
-    logger.info(f"LLM chain: {llm_chain}")
-    output_string = llm_chain.invoke({"input_text": input_text})
-    logger.info(f"LLM output: {output_string}")
-    if not output_string:
-        raise RuntimeError("LLM output is empty.")
+    llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()
+    logger.info("LLM chain: %s", llm_chain)
+    parsed_output_data = llm_chain.invoke({"input_text": input_text})
+    logger.info("LLM output: %s", parsed_output_data)
+    if skip_validation:
+        logger.info("Skip validation using JSON Schema.")
     else:
-        parsed_output_data = _parse_llm_output(string=str(output_string))
-        if skip_validation:
-            logger.info("Skip validation using JSON Schema.")
-        else:
-            logger.info("Validate data using JSON Schema.")
-            try:
-                validate(instance=parsed_output_data, schema=schema)
-            except ValidationError as e:
-                logger.error(f"Validation failed: {parsed_output_data}")
-                raise e
-            else:
-                logger.info("Validation succeeded.")
-        return parsed_output_data
-
-
-def _parse_llm_output(string: str) -> Any:
-    logger = logging.getLogger(_parse_llm_output.__name__)
-    json_string = None
-    markdown = True
-    for r in string.splitlines(keepends=False):
-        if json_string is None:
-            if r in {"```json", "```"}:
-                json_string = ""
-            elif r in {"[", "{"}:
-                markdown = False
-                json_string = r + os.linesep
-            else:
-                pass
-        elif (markdown and r != "```") or (not markdown and r):
-            json_string += r + os.linesep
-        else:
-            break
-    logger.debug(f"json_string: {json_string}")
-    if not json_string:
-        raise RuntimeError(f"JSON code block is not found: {string}")
-    else:
+        logger.info("Validate data using JSON Schema.")
         try:
-            output_data = json.loads(json_string)
-        except JSONDecodeError as e:
-            logger.error(f"Failed to parse the LLM output: {string}")
-            raise e
+            validate(instance=parsed_output_data, schema=schema)
+        except ValidationError:
+            logger.exception("Validation failed: %s", parsed_output_data)
+            raise
         else:
-            logger.info(f"Parsed output: {output_data}")
-            return output_data
+            logger.info("Validation succeeded.")
+    return parsed_output_data

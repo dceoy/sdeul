@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pyright: reportPrivateUsage=false
 
 from json.decoder import JSONDecodeError
 from pathlib import Path
@@ -19,7 +20,7 @@ def test_validate_json_files_using_json_schema_success(
     json_schema = {"key": "string"}
     json_file_paths = [str(tmp_path / f"test_{i}.json") for i in range(3)]
     for p in json_file_paths:
-        Path(p).write_text("{}")
+        Path(p).write_text("{}", encoding="utf-8")
     mock_logger = mocker.patch(
         "logging.getLogger",
         return_value=mocker.MagicMock(),
@@ -29,7 +30,8 @@ def test_validate_json_files_using_json_schema_success(
         return_value=json_schema,
     )
     mock__validate_json_file = mocker.patch(
-        "sdeul.validation._validate_json_file", return_value=None
+        "sdeul.validation._validate_json_file",
+        return_value=None,
     )
     mock_sys_exit = mocker.patch("sys.exit")
 
@@ -39,7 +41,7 @@ def test_validate_json_files_using_json_schema_success(
     )
     mock_read_json_file.assert_called_once_with(path=json_schema_file_path)
     mock__validate_json_file.assert_has_calls(
-        [call(path=p, json_schema=json_schema) for p in json_file_paths]
+        [call(path=p, json_schema=json_schema) for p in json_file_paths],
     )
     mock_logger.return_value.error.assert_not_called()
     mock_sys_exit.assert_not_called()
@@ -63,7 +65,7 @@ def test_validate_json_files_using_json_schema_invalid_files(
     json_file_paths = [str(tmp_path / f"test_{i}.json") for i in range(3)]
     error_messages = ["Test error 0", "Test error 1", None]
     for p in json_file_paths:
-        Path(p).write_text("{}")
+        Path(p).write_text("{}", encoding="utf-8")
     mock_logger = mocker.patch(
         "logging.getLogger",
         return_value=mocker.MagicMock(),
@@ -107,7 +109,7 @@ def test__validate_json_file_json_decode_error(mocker: MockFixture) -> None:
     result = _validate_json_file(path=json_file_path, json_schema={})
     assert result == error_message
     mock_print.assert_called_once_with(
-        f"{json_file_path}:\tJSONDecodeError ({error_message})"
+        f"{json_file_path}:\tJSONDecodeError ({error_message})",
     )
 
 
@@ -124,5 +126,5 @@ def test__validate_json_file_validation_error(mocker: MockFixture) -> None:
     result = _validate_json_file(path=json_file_path, json_schema={})
     assert result == error_message
     mock_print.assert_called_once_with(
-        f"{json_file_path}:\tValidationError ({error_message})"
+        f"{json_file_path}:\tValidationError ({error_message})",
     )

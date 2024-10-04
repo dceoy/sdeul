@@ -1,12 +1,17 @@
 #!/usr/bin/env python
+"""Functions for LLM."""
 
+import json
 import logging
 import os
+from typing import Any
 
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.schema import StrOutputParser
 from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
+from langchain_core.exceptions import OutputParserException
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
@@ -44,6 +49,69 @@ _DEFAULT_MAX_TOKENS = {
 }
 
 
+class JsonCodeOutputParser(StrOutputParser):
+    """Detect and parse the JSON code block in the output of an LLM call."""
+
+    def parse(self, text: str) -> Any:
+        """Parse the output text.
+
+        Args:
+            text: The output text.
+
+        Returns:
+            The parsed output.
+
+        Raises:
+            OutputParserException: The JSON code block is not detected or invalid.
+        """
+        logger = logging.getLogger(f"{self.__class__.__name__}.{self.parse.__name__}")
+        logger.debug("text: %s", text)
+        json_code = self._detect_json_code_block(text=text)
+        logger.debug("json_code: %s", json_code)
+        try:
+            data = json.loads(s=json_code)
+        except json.JSONDecodeError as e:
+            m = f"Invalid JSON code block: {json_code}"
+            raise OutputParserException(m, llm_output=text) from e
+        else:
+            logger.info("Parsed data: %s", data)
+            return data
+
+    @staticmethod
+    def _detect_json_code_block(text: str) -> str:
+        """Detect the JSON code block in the output text.
+
+        Args:
+            text: The output text.
+
+        Returns:
+            The detected JSON code.
+
+        Raises:
+            OutputParserException: The JSON code block is not detected.
+        """
+        json_code: str | None = None
+        markdown: bool = True
+        for r in text.strip().splitlines(keepends=False):
+            if json_code is None:
+                if r in {"```json", "```"}:
+                    json_code = ""
+                elif r.startswith(("[", "{", '"')):
+                    markdown = False
+                    json_code = r + os.linesep
+                else:
+                    pass
+            elif (markdown and r != "```") or (not markdown and r):
+                json_code += r + os.linesep
+            else:
+                break
+        if not json_code:
+            m = f"JSON code block not detected in the output text: {text}"
+            raise OutputParserException(m, llm_output=text)
+        else:
+            return json_code.strip()
+
+
 def create_llm_instance(
     llamacpp_model_file_path: str | None = None,
     groq_model_name: str | None = None,
@@ -69,6 +137,39 @@ def create_llm_instance(
     aws_region: str | None = None,
     bedrock_endpoint_base_url: str | None = None,
 ) -> LlamaCpp | ChatGroq | ChatBedrockConverse | ChatGoogleGenerativeAI | ChatOpenAI:
+    """Create an instance of LLM.
+
+    Args:
+        llamacpp_model_file_path: The file path of the LLM model.
+        groq_model_name: The name of the GROQ model.
+        groq_api_key: The API
+        bedrock_model_id: The ID of the Amazon Bedrock model.
+        google_model_name: The name of the Google Generative AI model.
+        google_api_key: The API key of the Google Generative AI.
+        openai_model_name: The name of the OpenAI model.
+        openai_api_key: The API key of the OpenAI.
+        openai_api_base: The base URL of the OpenAI API.
+        openai_organization: The organization of the OpenAI.
+        temperature: The temperature of the model.
+        top_p: The top-p of the model.
+        max_tokens: The maximum number of tokens.
+        n_ctx: The context size.
+        seed: The seed of the model.
+        n_batch: The batch size.
+        n_gpu_layers: The number of GPU layers.
+        token_wise_streaming: The flag to enable token-wise streaming.
+        timeout: The timeout of the model.
+        max_retries: The maximum number of retries.
+        aws_credentials_profile_name: The name of the AWS credentials profile.
+        aws_region: The AWS region.
+        bedrock_endpoint_base_url: The base URL of the Amazon Bedrock endpoint.
+
+    Returns:
+        An instance of LLM.
+
+    Raises:
+        RuntimeError: The model cannot be determined.
+    """
     logger = logging.getLogger(create_llm_instance.__name__)
     override_env_vars(
         GROQ_API_KEY=groq_api_key,
@@ -76,7 +177,7 @@ def create_llm_instance(
         OPENAI_API_KEY=openai_api_key,
     )
     if llamacpp_model_file_path:
-        logger.info(f"Use local LLM: {llamacpp_model_file_path}")
+        logger.info("Use local LLM: %s", llamacpp_model_file_path)
         return _read_llm_file(
             path=llamacpp_model_file_path,
             temperature=temperature,
@@ -92,12 +193,12 @@ def create_llm_instance(
         (not any([bedrock_model_id, google_model_name, openai_model_name]))
         and os.environ.get("GROQ_API_KEY")
     ):
-        logger.info(f"Use GROQ: {groq_model_name}")
+        logger.info("Use GROQ: %s", groq_model_name)
         m = groq_model_name or _DEFAULT_MODEL_NAMES["groq"]
         return ChatGroq(
             model=m,
             temperature=temperature,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             timeout=timeout,
             max_retries=max_retries,
             stop_sequences=None,
@@ -105,12 +206,12 @@ def create_llm_instance(
     elif bedrock_model_id or (
         (not any([google_model_name, openai_model_name])) and has_aws_credentials()
     ):
-        logger.info(f"Use Amazon Bedrock: {bedrock_model_id}")
+        logger.info("Use Amazon Bedrock: %s", bedrock_model_id)
         m = bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]
         return ChatBedrockConverse(
             model=m,
             temperature=temperature,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             region_name=aws_region,
             base_url=bedrock_endpoint_base_url,
             credentials_profile_name=aws_credentials_profile_name,
@@ -118,20 +219,20 @@ def create_llm_instance(
     elif google_model_name or (
         (not openai_model_name) and os.environ.get("GOOGLE_API_KEY")
     ):
-        logger.info(f"Use Google Generative AI: {google_model_name}")
+        logger.info("Use Google Generative AI: %s", google_model_name)
         m = google_model_name or _DEFAULT_MODEL_NAMES["google"]
         return ChatGoogleGenerativeAI(
             model=m,
             temperature=temperature,
             top_p=top_p,
-            max_output_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_output_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             timeout=timeout,
             max_retries=max_retries,
         )
     elif openai_model_name or os.environ.get("OPENAI_API_KEY"):
-        logger.info(f"Use OpenAI: {openai_model_name}")
-        logger.info(f"OpenAI API base: {openai_api_base}")
-        logger.info(f"OpenAI organization: {openai_organization}")
+        logger.info("Use OpenAI: %s", openai_model_name)
+        logger.info("OpenAI API base: %s", openai_api_base)
+        logger.info("OpenAI organization: %s", openai_organization)
         m = openai_model_name or _DEFAULT_MODEL_NAMES["openai"]
         return ChatOpenAI(
             model=m,
@@ -140,12 +241,24 @@ def create_llm_instance(
             temperature=temperature,
             top_p=top_p,
             seed=seed,
-            max_tokens=min(max_tokens, _DEFAULT_MAX_TOKENS.get(m, max_tokens)),
+            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             timeout=timeout,
             max_retries=max_retries,
         )
     else:
         raise RuntimeError("The model cannot be determined.")
+
+
+def _limit_max_tokens(max_tokens: int, model_name: str) -> int:
+    default_max_tokens = _DEFAULT_MAX_TOKENS.get(model_name, max_tokens)
+    if max_tokens > default_max_tokens:
+        logging.getLogger(_limit_max_tokens.__name__).warning(
+            "The maximum number of tokens is limited to %d.",
+            default_max_tokens,
+        )
+        return default_max_tokens
+    else:
+        return max_tokens
 
 
 def _read_llm_file(
@@ -160,7 +273,7 @@ def _read_llm_file(
     token_wise_streaming: bool = False,
 ) -> LlamaCpp:
     logger = logging.getLogger(_read_llm_file.__name__)
-    logger.info(f"Read the model file: {path}")
+    logger.info("Read the model file: %s", path)
     llm = LlamaCpp(
         model_path=path,
         temperature=temperature,
@@ -177,5 +290,5 @@ def _read_llm_file(
             else None
         ),
     )
-    logger.debug(f"llm: {llm}")
+    logger.debug("llm: %s", llm)
     return llm

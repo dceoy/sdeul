@@ -18,6 +18,7 @@ from sdeul.utility import (
     read_json_file,
     read_text_file,
     write_file,
+    write_or_print_json_data,
 )
 
 
@@ -36,16 +37,15 @@ def test_log_execution_time_success(caplog: pytest.LogCaptureFixture) -> None:
 def test_log_execution_time_failure(caplog: pytest.LogCaptureFixture) -> None:
     @log_execution_time
     def sample_function() -> None:
-        raise ValueError("Test error")
+        raise RuntimeError("Test")
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
-            sample_function()
+    with caplog.at_level(logging.ERROR), pytest.raises(RuntimeError, match="Test"):
+        sample_function()
     assert "Function `sample_function` failed after" in caplog.text
 
 
 @pytest.mark.parametrize(
-    "debug, info, expected_level",
+    ("debug", "info", "expected_level"),
     [
         (True, False, logging.DEBUG),
         (False, True, logging.INFO),
@@ -53,13 +53,17 @@ def test_log_execution_time_failure(caplog: pytest.LogCaptureFixture) -> None:
     ],
 )
 def test_configure_logging(
-    debug: bool, info: bool, expected_level: int, mocker: MockerFixture
+    debug: bool,
+    info: bool,
+    expected_level: int,
+    mocker: MockerFixture,
 ) -> None:
     logging_format = "%(asctime)s [%(levelname)-8s] <%(name)s> %(message)s"
     mock_logging_basic_config = mocker.patch("logging.basicConfig")
     configure_logging(debug=debug, info=info, format=logging_format)
     mock_logging_basic_config.assert_called_once_with(
-        format=logging_format, level=expected_level
+        format=logging_format,
+        level=expected_level,
     )
 
 
@@ -108,7 +112,7 @@ def test_has_aws_credentials(expected: bool, mocker: MockerFixture) -> None:
     assert has_aws_credentials() == expected
 
 
-def test_override_env_vars(mocker: MockerFixture) -> None:
+def test_override_env_vars() -> None:
     kwargs = {"FOO": "foo", "BAR": None, "BAZ": "baz"}
     override_env_vars(**kwargs)
     for k, v in kwargs.items():
@@ -116,6 +120,39 @@ def test_override_env_vars(mocker: MockerFixture) -> None:
             assert k not in os.environ
         else:
             assert os.environ.get(k) == v
+
+
+@pytest.mark.parametrize(
+    ("compact_json", "output_json_file_path", "expected_indent"),
+    [
+        (False, None, 2),
+        (True, None, None),
+        (False, "output.json", 2),
+    ],
+)
+def test_write_or_print_json_data(
+    compact_json: bool,
+    output_json_file_path: str | None,
+    expected_indent: int,
+    capsys: pytest.CaptureFixture[str],
+    mocker: MockerFixture,
+) -> None:
+    data = {"description": "dummy"}
+    expected_json_ouput = json.dumps(obj=data, indent=expected_indent)
+    mock_write_file = mocker.patch("sdeul.utility.write_file")
+
+    write_or_print_json_data(
+        data=data,
+        output_json_file_path=output_json_file_path,
+        compact_json=compact_json,
+    )
+    if output_json_file_path:
+        mock_write_file.assert_called_once_with(
+            path=output_json_file_path,
+            data=expected_json_ouput,
+        )
+    else:
+        assert capsys.readouterr().out.strip() == expected_json_ouput
 
 
 @pytest.fixture(autouse=True)
