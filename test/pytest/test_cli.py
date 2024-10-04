@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pyright: reportPrivateUsage=false
 
 import pytest
 from pytest_mock import MockerFixture

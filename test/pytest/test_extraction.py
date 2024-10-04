@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# pyright: reportMissingImports=false
+# pyright: reportUnknownVariableType=false
+# pyright: reportPrivateUsage=false
+# pyright: reportUnknownArgumentType=false
 
 import json
 

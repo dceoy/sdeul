@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pyright: reportPrivateUsage=false
 
 from json.decoder import JSONDecodeError
 from pathlib import Path

@@ -174,7 +174,6 @@ exclude = ["build"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
-reportPrivateUsage = false
 exclude = ["build"]
 threads = 0
 
