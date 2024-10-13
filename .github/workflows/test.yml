@@ -8,6 +8,11 @@ on:
         type: string
         description: Python version to use
         default: 3.x
+      bats-version:
+        required: false
+        type: string
+        description: Bats version to use
+        default: latest
     secrets:
       GROQ_API_KEY:
         required: true
@@ -23,6 +28,11 @@ on:
         required: false
         type: string
         description: Node.js version to use
+        default: latest
+      bats-version:
+        required: false
+        type: string
+        description: Bats version to use
         default: latest
       groq-model:
         required: false
@@ -75,8 +85,10 @@ jobs:
         with:
           node-version: ${{ inputs.node-version || 'latest' }}
       - name: Install Bats
+        env:
+          BATS_VERSION: ${{ inputs.bats-version || 'latest' }}
         run: |
-          npm install -g bats
+          npm install -g "bats@${BATS_VERSION}"
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
