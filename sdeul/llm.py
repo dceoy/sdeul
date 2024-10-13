@@ -101,6 +101,8 @@ class JsonCodeOutputParser(StrOutputParser):
                     json_code = r + os.linesep
                 else:
                     pass
+            elif not json_code and r in {"```", "```json"}:
+                pass
             elif (markdown and r != "```") or (not markdown and r):
                 json_code += r + os.linesep
             else:
