@@ -69,7 +69,7 @@ class JsonCodeOutputParser(StrOutputParser):
         json_code = self._detect_json_code_block(text=text)
         logger.debug("json_code: %s", json_code)
         try:
-            data = json.loads(s=json_code)
+            data = json.loads(s=json_code.encode("utf-8"))
         except json.JSONDecodeError as e:
             m = f"Invalid JSON code block: {json_code}"
             raise OutputParserException(m, llm_output=text) from e
