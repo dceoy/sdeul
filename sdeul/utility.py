@@ -158,7 +158,9 @@ def write_or_print_json_data(
         output_json_file_path: Path to the output JSON file.
         compact_json: Flag to output the JSON in compact format.
     """
-    output_json_string = json.dumps(obj=data, indent=(None if compact_json else 2))
+    output_json_string = json.dumps(
+        obj=data, indent=(None if compact_json else 2), ensure_ascii=False
+    )
     if output_json_file_path:
         write_file(path=output_json_file_path, data=output_json_string)
     else:
