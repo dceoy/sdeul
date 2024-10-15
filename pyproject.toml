@@ -39,7 +39,6 @@ typer = "^0.12.5"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.4"
-mypy = "^1.11.2"
 pyright = "^1.1.379"
 pytest = "^8.3.2"
 pytest-mock = "^3.14.0"
@@ -161,16 +160,6 @@ max-locals = 30
   "PLC2701",  # import-private-name
   "SLF001",   # private-member-access
 ]
-
-[tool.mypy]
-install_types = true
-non_interactive = true
-ignore_missing_imports = true
-strict = true
-strict_optional = true
-strict_equality = true
-strict_concatenate = true
-exclude = ["build"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
