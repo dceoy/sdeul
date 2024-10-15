@@ -90,28 +90,15 @@ class JsonCodeOutputParser(StrOutputParser):
         Raises:
             OutputParserException: The JSON code block is not detected.
         """
-        json_code: str | None = None
-        markdown: bool = True
-        for r in text.strip().splitlines(keepends=False):
-            if json_code is None:
-                if r in {"```json", "```"}:
-                    json_code = ""
-                elif r.startswith(("[", "{", '"')):
-                    markdown = False
-                    json_code = r + os.linesep
-                else:
-                    pass
-            elif not json_code and r in {"```", "```json"}:
-                pass
-            elif (markdown and r != "```") or (not markdown and r):
-                json_code += r + os.linesep
-            else:
-                break
-        if not json_code:
+        if "```json" in text:
+            return text.split("```json", 1)[1].split("```", 1)[0].strip()
+        elif "```" in text:
+            return text.split("```", 1)[1].split("```", 1)[0].strip()
+        elif text.rstrip().startswith(("[", "{", '"')):
+            return text.strip()
+        else:
             m = f"JSON code block not detected in the output text: {text}"
             raise OutputParserException(m, llm_output=text)
-        else:
-            return json_code.strip()
 
 
 def create_llm_instance(
@@ -227,7 +214,7 @@ def create_llm_instance(
             model=m,
             temperature=temperature,
             top_p=top_p,
-            max_output_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
+            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
             timeout=timeout,
             max_retries=max_retries,
         )

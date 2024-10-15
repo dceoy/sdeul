@@ -54,6 +54,11 @@ def test_jsoncodeoutputparser_parse_with_invalid_input(mocker: MockerFixture) ->
     ("text", "expected_result"),
     [
         (TEST_LLM_OUTPUT_MD, TEST_LLM_OUTPUT_JSON),
+        (str.replace(TEST_LLM_OUTPUT_MD, "```json", "```"), TEST_LLM_OUTPUT_JSON),
+        (
+            str.replace(TEST_LLM_OUTPUT_MD, "```", f"```{os.linesep}```"),
+            TEST_LLM_OUTPUT_JSON,
+        ),
         (TEST_LLM_OUTPUT_JSON, TEST_LLM_OUTPUT_JSON),
     ],
 )
@@ -202,7 +207,7 @@ def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
         model=google_model_name,
         temperature=temperature,
         top_p=top_p,
-        max_output_tokens=max_tokens,
+        max_tokens=max_tokens,
         timeout=timeout,
         max_retries=max_retries,
     )
