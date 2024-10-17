@@ -84,6 +84,7 @@ jobs:
       platforms: linux/amd64,linux/arm64
       context: .
       file: ./Dockerfile
+      target: cli
       push: true
       image-artifact-name: docker-image
     secrets:

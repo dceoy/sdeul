@@ -5,10 +5,39 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: cli
+      args:
+        PYTHON_IMAGE: 3.13-slim
     image: dceoy/sdeul:latest
     volumes:
-      - ${PWD}:/wd
-    working_dir: /wd
+      - ${PWD}:/mnt/host
+    working_dir: /mnt/host
+    entrypoint:
+      - /usr/local/bin/sdeul
+    command:
+      - --version
+  sdeul-cuda:
+    container_name: sdeul-cuda
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cuda-cli
+      args:
+        CUDA_DEVEL_IMAGE: 12.6.2-devel-ubuntu24.04
+        CUDA_BASE_IMAGE: 12.6.2-base-ubuntu24.04
+        CUDA_DOCKER_ARCH: all
+        GGML_CUDA: '1'
+    image: dceoy/sdeul:cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ${PWD}:/mnt/host
+    working_dir: /mnt/host
     entrypoint:
       - /usr/local/bin/sdeul
     command:
