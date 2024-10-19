@@ -4,6 +4,8 @@
 # pyright: reportPrivateUsage=false
 # pyright: reportUnknownArgumentType=false
 
+import ctypes
+import io
 import logging
 import os
 
@@ -15,6 +17,7 @@ from pytest_mock import MockerFixture
 from sdeul.llm import (
     JsonCodeOutputParser,
     _limit_max_tokens,
+    _llama_log_callback,
     _read_llm_file,
     create_llm_instance,
 )
@@ -311,6 +314,7 @@ def test__read_llm_file(
     mock_logger = mocker.MagicMock()
     mocker.patch("logging.getLogger", return_value=mock_logger)
     mock_logger.level = logging_level
+    mocker.patch("sdeul.llm.llama_log_set")
     expected_result = mocker.Mock()
     mock_llamacpp = mocker.patch("sdeul.llm.LlamaCpp", return_value=expected_result)
     mocker.patch("sdeul.llm.StreamingStdOutCallbackHandler")
@@ -358,3 +362,23 @@ def test__read_llm_file(
             verbose=expected_verbose,
             callback_manager=None,
         )
+
+
+@pytest.mark.parametrize(
+    ("text", "root_level", "expected_output"),
+    [
+        (b"info message", logging.DEBUG, "info message"),
+        (b"debug message", logging.INFO, "debug message"),
+        (b"warning message", logging.WARNING, ""),
+    ],
+)
+def test__llama_log_callback(
+    text: bytes,
+    root_level: int,
+    expected_output: str,
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch.object(logging.root, "level", root_level)
+    mock_stderr = mocker.patch("sdeul.llm.sys.stderr", new_callable=io.StringIO)
+    _llama_log_callback(0, text, ctypes.c_void_p(0))
+    assert mock_stderr.getvalue() == expected_output

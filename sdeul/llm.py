@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 """Functions for LLM."""
 
+import ctypes
 import json
 import logging
 import os
+import sys
 from typing import Any
 
 from langchain.callbacks.manager import CallbackManager
@@ -15,6 +17,7 @@ from langchain_core.exceptions import OutputParserException
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
+from llama_cpp import llama_log_callback, llama_log_set
 
 from .utility import has_aws_credentials, override_env_vars
 
@@ -262,6 +265,7 @@ def _read_llm_file(
     token_wise_streaming: bool = False,
 ) -> LlamaCpp:
     logger = logging.getLogger(_read_llm_file.__name__)
+    llama_log_set(_llama_log_callback, ctypes.c_void_p(0))
     logger.info("Read the model file: %s", path)
     llm = LlamaCpp(
         model_path=path,
@@ -281,3 +285,9 @@ def _read_llm_file(
     )
     logger.debug("llm: %s", llm)
     return llm
+
+
+@llama_log_callback
+def _llama_log_callback(level: int, text: bytes, user_data: ctypes.c_void_p) -> None:  # noqa: ARG001
+    if logging.root.level < logging.WARNING:
+        print(text.decode("utf-8"), end="", flush=True, file=sys.stderr)
