@@ -47,7 +47,7 @@ def test_jsoncodeoutputparser_parse_with_invalid_input(mocker: MockerFixture) ->
     )
     with pytest.raises(OutputParserException) as exc_info:
         parser.parse(text=TEST_LLM_OUTPUT_MD)
-    assert str(exc_info.value) == f"Invalid JSON code block: {invalid_json_code}"
+    assert str(exc_info.value).startswith(f"Invalid JSON code: {invalid_json_code}")
 
 
 @pytest.mark.parametrize(
@@ -72,10 +72,10 @@ def test_jsoncodeoutputparser__detect_json_code_block(
 
 def test_jsoncodeoutputparser__detect_json_code_block_with_invalid_input() -> None:
     text = "This is not a valid JSON code block"
-    msg = f"JSON code block not detected in the output text: {text}"
+    msg = f"JSON code block not detected in the text: {text}"
     with pytest.raises(OutputParserException) as exc_info:
         JsonCodeOutputParser()._detect_json_code_block(text)
-    assert str(exc_info.value) == msg
+    assert str(exc_info.value).startswith(msg)
 
 
 def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:

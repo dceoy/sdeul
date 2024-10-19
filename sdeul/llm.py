@@ -71,7 +71,7 @@ class JsonCodeOutputParser(StrOutputParser):
         try:
             data = json.loads(s=json_code)
         except json.JSONDecodeError as e:
-            m = f"Invalid JSON code block: {json_code}"
+            m = f"Invalid JSON code: {json_code}"
             raise OutputParserException(m, llm_output=text) from e
         else:
             logger.info("Parsed data: %s", data)
@@ -97,7 +97,7 @@ class JsonCodeOutputParser(StrOutputParser):
         elif text.rstrip().startswith(("[", "{", '"')):
             return text.strip()
         else:
-            m = f"JSON code block not detected in the output text: {text}"
+            m = f"JSON code block not detected in the text: {text}"
             raise OutputParserException(m, llm_output=text)
 
 
