@@ -8,6 +8,9 @@ services:
       target: cli
       args:
         PYTHON_IMAGE: 3.13-slim
+        USER_NAME: sdeul
+        USER_UID: '1001'
+        USER_GID: '1001'
     image: dceoy/sdeul:latest
     volumes:
       - ${PWD}:/mnt/host
@@ -27,6 +30,10 @@ services:
         CUDA_BASE_IMAGE: 12.6.2-base-ubuntu24.04
         CUDA_DOCKER_ARCH: all
         GGML_CUDA: '1'
+        PYTHON_VERSION: '3.13'
+        USER_NAME: sdeul
+        USER_UID: '1001'
+        USER_GID: '1001'
     image: dceoy/sdeul:cuda
     deploy:
       resources:

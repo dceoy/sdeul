@@ -149,8 +149,8 @@ ARG USER_NAME=sdeul
 ARG USER_UID=1001
 ARG USER_GID=1001
 
-COPY --from=builder /usr/local /usr/local
-COPY --from=builder /etc/apt/apt.conf.d/keep-cache /etc/apt/apt.conf.d/keep-cache
+COPY --from=cuda-builder /usr/local /usr/local
+COPY --from=cuda-builder /etc/apt/apt.conf.d/keep-cache /etc/apt/apt.conf.d/keep-cache
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
