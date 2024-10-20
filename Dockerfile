@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
-ARG PYTHON_IMAGE=3.13-slim
+ARG UBUNTU_VERSION=24.04
 ARG CUDA_DEVEL_IMAGE=12.6.2-devel-ubuntu24.04
 ARG CUDA_BASE_IMAGE=12.6.2-base-ubuntu24.04
 
-FROM public.ecr.aws/docker/library/python:${PYTHON_IMAGE} AS builder
+FROM public.ecr.aws/docker/library/ubuntu:${UBUNTU_VERSION} AS builder
+
+ARG PYTHON_VERSION=3.13
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -26,24 +28,39 @@ RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
       apt-get -y update \
+      && apt-get -y install --no-install-recommends --no-install-suggests \
+        software-properties-common \
+      && add-apt-repository ppa:deadsnakes/ppa
+
+RUN \
+      --mount=type=cache,target=/var/cache/apt,sharing=locked \
+      --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      apt-get -y update \
       && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        g++
+        ca-certificates curl gcc g++ libopenblas-dev "python${PYTHON_VERSION}-dev"
 
 RUN \
       --mount=type=cache,target=/root/.cache \
-      /usr/local/bin/python -m pip install --upgrade pip poetry
+      ln -s "python${PYTHON_VERSION}" /usr/bin/python \
+      && curl -SL -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
+      && /usr/bin/python /tmp/get-pip.py \
+      && /usr/bin/python -m pip install --prefix /usr --upgrade \
+        pip poetry \
+      && rm -f /tmp/get-pip.py
 
 RUN \
       --mount=type=cache,target=/root/.cache \
       --mount=type=bind,source=.,target=/mnt/host \
       cp -a /mnt/host /tmp/sdeul \
-      && /usr/local/bin/python -m poetry --directory=/tmp/sdeul build --format=wheel \
-      && /usr/local/bin/python -m pip install /tmp/sdeul/dist/sdeul-*.whl
+      && /usr/bin/python -m poetry --directory=/tmp/sdeul build --format=wheel \
+      && /usr/bin/python -m pip install --prefix /usr \
+        /tmp/sdeul/dist/sdeul-*.whl
 
 
-FROM public.ecr.aws/docker/library/python:${PYTHON_IMAGE} AS cli
+FROM public.ecr.aws/docker/library/ubuntu:${UBUNTU_VERSION} AS cli
 
+ARG PYTHON_VERSION=3.13
 ARG USER_NAME=sdeul
 ARG USER_UID=1001
 ARG USER_GID=1001
@@ -59,7 +76,16 @@ ENV PYTHONIOENCODING=utf-8
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 RUN \
-      rm -f /etc/apt/apt.conf.d/docker-clean
+      ln -s "python${PYTHON_VERSION}" /usr/bin/python \
+      && rm -f /etc/apt/apt.conf.d/docker-clean
+
+RUN \
+      --mount=type=cache,target=/var/cache/apt,sharing=locked \
+      --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      apt-get -y update \
+      && apt-get -y install --no-install-recommends --no-install-suggests \
+        software-properties-common \
+      && add-apt-repository ppa:deadsnakes/ppa
 
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -67,7 +93,7 @@ RUN \
       apt-get -y update \
       && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        ca-certificates jq
+        ca-certificates jq "python${PYTHON_VERSION}"
 
 RUN \
       groupadd --gid "${USER_GID}" "${USER_NAME}" \
@@ -108,7 +134,7 @@ RUN \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
       apt-get -y update \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        gnupg gpg-agent software-properties-common \
+        software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
 RUN \
@@ -129,14 +155,14 @@ RUN \
       ln -s "python${PYTHON_VERSION}" /usr/bin/python \
       && curl -SL -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
       && /usr/bin/python /tmp/get-pip.py \
-      && /usr/bin/python -m pip install --prefix /usr --upgrade pip \
+      && /usr/bin/python -m pip install --prefix /usr --upgrade \
+        pip poetry \
       && rm -f /tmp/get-pip.py
 
 RUN \
       --mount=type=cache,target=/root/.cache \
       --mount=type=bind,source=.,target=/mnt/host \
       cp -a /mnt/host /tmp/sdeul \
-      && /usr/bin/python -m pip install --prefix /usr poetry \
       && /usr/bin/python -m poetry --directory=/tmp/sdeul build --format=wheel \
       && CMAKE_ARGS="-DGGML_CUDA=on" /usr/bin/python -m pip install --prefix /usr \
         /tmp/sdeul/dist/sdeul-*.whl
@@ -168,7 +194,7 @@ RUN \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
       apt-get -y update \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        gnupg gpg-agent software-properties-common \
+        software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
 RUN \
