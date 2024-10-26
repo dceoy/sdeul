@@ -36,10 +36,10 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     token_wise_streaming = False
     timeout = None
     max_retries = 2
-    mock_llm_chain = mocker.MagicMock()
+    mock_llm_instance = mocker.MagicMock()
     mock_create_llm_instance = mocker.patch(
         "sdeul.extraction.create_llm_instance",
-        return_value=mock_llm_chain,
+        return_value=mock_llm_instance,
     )
     mock_read_json_file = mocker.patch(
         "sdeul.extraction.read_json_file",
@@ -105,7 +105,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     mock__extract_structured_data_from_text.assert_called_once_with(
         input_text=TEST_TEXT,
         schema=TEST_SCHEMA,
-        llm=mock_llm_chain,
+        llm=mock_llm_instance,
         skip_validation=skip_validation,
     )
     mock_write_or_print_json_data.assert_called_once_with(
