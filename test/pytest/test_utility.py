@@ -3,8 +3,8 @@
 import json
 import logging
 import os
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from botocore.exceptions import NoCredentialsError
