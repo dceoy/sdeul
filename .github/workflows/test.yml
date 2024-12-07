@@ -18,6 +18,11 @@ on:
         type: string
         description: Bats version to use
         default: latest
+      runs-on:
+        required: false
+        type: string
+        description: Runner to use
+        default: ubuntu-latest
     secrets:
       GROQ_API_KEY:
         required: true
@@ -58,6 +63,11 @@ on:
           - https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-IQ4_XS.gguf
         description: Model file URL to run tests with
         default: null
+      runs-on:
+        required: false
+        type: string
+        description: Runner to use
+        default: ubuntu-latest
 defaults:
   run:
     shell: bash -euo pipefail {0}
@@ -65,7 +75,7 @@ defaults:
 jobs:
   unit-tests:
     if: inputs.model-file-url == null
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -80,7 +90,7 @@ jobs:
         run: |
           poetry run pytest .
   e2e-tests:
-    runs-on: macos-latest
+    runs-on: ${{ inputs.runs-on }}
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
