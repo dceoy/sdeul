@@ -38,7 +38,7 @@ Instructions:
 - Extract only the relevant entities defined by the provided JSON schema from the input text.
 - Generate the extracted entities in JSON format according to the schema.
 - If a property is not present in the schema, DO NOT include it in the output.
-- Output the complete JSON data in a markdown code block.
+- Output the JSON data in a markdown code block.
 - Provide complete, unabridged code in all responses without omitting any parts.
 """  # noqa: E501
 _EXTRACTION_INPUT_VARIABLES = ["input_text"]
