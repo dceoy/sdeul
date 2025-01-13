@@ -24,6 +24,7 @@ RUN \
       && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
         > /etc/apt/apt.conf.d/keep-cache
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -32,6 +33,7 @@ RUN \
         software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -79,6 +81,7 @@ RUN \
       ln -s "python${PYTHON_VERSION}" /usr/bin/python \
       && rm -f /etc/apt/apt.conf.d/docker-clean
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -87,6 +90,7 @@ RUN \
         software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -129,6 +133,7 @@ RUN \
       && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
         > /etc/apt/apt.conf.d/keep-cache
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -137,6 +142,7 @@ RUN \
         software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -189,6 +195,7 @@ RUN \
       ln -s "python${PYTHON_VERSION}" /usr/bin/python \
       && rm -f /etc/apt/apt.conf.d/docker-clean
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -197,6 +204,7 @@ RUN \
         software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
