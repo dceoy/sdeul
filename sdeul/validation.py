@@ -34,7 +34,8 @@ def validate_json_files_using_json_schema(
     logger.info("Start validating %d JSON files.", n_input)
     for p in json_file_paths:
         if not Path(p).is_file():
-            raise FileNotFoundError(f"File not found: {p}")
+            error_message = f"File not found: {p}"
+            raise FileNotFoundError(error_message)
     n_invalid = sum(
         (_validate_json_file(path=p, json_schema=schema) is not None)
         for p in json_file_paths

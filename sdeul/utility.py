@@ -7,12 +7,14 @@ import os
 import time
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 import boto3
 from botocore.exceptions import NoCredentialsError
-from mypy_boto3_sts.client import STSClient
 from rich import print
+
+if TYPE_CHECKING:
+    from mypy_boto3_sts.client import STSClient
 
 
 def log_execution_time(func: Callable[..., Any]) -> Callable[..., Any]:

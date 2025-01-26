@@ -3,11 +3,10 @@
 
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
@@ -22,6 +21,9 @@ from .utility import (
     read_text_file,
     write_or_print_json_data,
 )
+
+if TYPE_CHECKING:
+    from langchain.chains import LLMChain
 
 _EXTRACTION_TEMPLATE = """\
 Input text:

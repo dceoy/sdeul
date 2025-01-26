@@ -37,7 +37,8 @@ def test_log_execution_time_success(caplog: pytest.LogCaptureFixture) -> None:
 def test_log_execution_time_failure(caplog: pytest.LogCaptureFixture) -> None:
     @log_execution_time
     def sample_function() -> None:
-        raise RuntimeError("Test")
+        error_message = "Test"
+        raise RuntimeError(error_message)
 
     with caplog.at_level(logging.ERROR), pytest.raises(RuntimeError, match="Test"):
         sample_function()
