@@ -78,7 +78,7 @@ jobs:
           poetry install --no-interaction
       - name: Run unit tests using pytest
         run: |
-          poetry run pytest .
+          poetry run pytest
   e2e-tests:
     runs-on: ${{ inputs.runs-on }}
     env:
