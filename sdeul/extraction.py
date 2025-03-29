@@ -12,6 +12,7 @@ from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
+from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
 from .llm import JsonCodeOutputParser, create_llm_instance
@@ -50,6 +51,7 @@ _EXTRACTION_INPUT_VARIABLES = ["input_text"]
 def extract_json_from_text_file(
     text_file_path: str,
     json_schema_file_path: str,
+    ollama_model_name: str | None = None,
     llamacpp_model_file_path: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
@@ -82,6 +84,7 @@ def extract_json_from_text_file(
     Args:
         text_file_path: Path to the input text file.
         json_schema_file_path: Path to the JSON schema file.
+        ollama_model_name: Name of the Ollama model.
         llamacpp_model_file_path: Path to the LlamaCpp model file.
         groq_model_name: Name of the Groq model.
         groq_api_key: API key
@@ -110,6 +113,7 @@ def extract_json_from_text_file(
         bedrock_endpoint_base_url: Base URL of the Amazon Bedrock endpoint.
     """
     llm = create_llm_instance(
+        ollama_model_name=ollama_model_name,
         llamacpp_model_file_path=llamacpp_model_file_path,
         groq_model_name=groq_model_name,
         groq_api_key=groq_api_key,
@@ -152,7 +156,8 @@ def extract_json_from_text_file(
 def _extruct_structured_data_from_text(
     input_text: str,
     schema: dict[str, Any],
-    llm: LlamaCpp
+    llm: ChatOllama
+    | LlamaCpp
     | ChatGroq
     | ChatBedrockConverse
     | ChatGoogleGenerativeAI
