@@ -16,6 +16,7 @@ from langchain_community.llms import LlamaCpp
 from langchain_core.exceptions import OutputParserException
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
+from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from llama_cpp import llama_log_callback, llama_log_set
 
@@ -105,6 +106,7 @@ class JsonCodeOutputParser(StrOutputParser):
 
 
 def create_llm_instance(
+    ollama_model_name: str | None = None,
     llamacpp_model_file_path: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
@@ -128,39 +130,60 @@ def create_llm_instance(
     aws_credentials_profile_name: str | None = None,
     aws_region: str | None = None,
     bedrock_endpoint_base_url: str | None = None,
-) -> LlamaCpp | ChatGroq | ChatBedrockConverse | ChatGoogleGenerativeAI | ChatOpenAI:
-    """Create an instance of LLM.
+) -> (
+    ChatOllama
+    | LlamaCpp
+    | ChatGroq
+    | ChatBedrockConverse
+    | ChatGoogleGenerativeAI
+    | ChatOpenAI
+):
+    """Create an instance of a Language Learning Model (LLM).
 
     Args:
-        llamacpp_model_file_path: The file path of the LLM model.
-        groq_model_name: The name of the GROQ model.
-        groq_api_key: The API
-        bedrock_model_id: The ID of the Amazon Bedrock model.
-        google_model_name: The name of the Google Generative AI model.
-        google_api_key: The API key of the Google Generative AI.
-        openai_model_name: The name of the OpenAI model.
-        openai_api_key: The API key of the OpenAI.
-        openai_api_base: The base URL of the OpenAI API.
-        openai_organization: The organization of the OpenAI.
-        temperature: The temperature of the model.
-        top_p: The top-p of the model.
-        max_tokens: The maximum number of tokens.
-        n_ctx: The context size.
-        seed: The seed of the model.
-        n_batch: The batch size.
-        n_gpu_layers: The number of GPU layers.
-        token_wise_streaming: The flag to enable token-wise streaming.
-        timeout: The timeout of the model.
-        max_retries: The maximum number of retries.
-        aws_credentials_profile_name: The name of the AWS credentials profile.
-        aws_region: The AWS region.
-        bedrock_endpoint_base_url: The base URL of the Amazon Bedrock endpoint.
+        ollama_model_name (str | None): Name of the Ollama model to use.
+            Defaults to None.
+        llamacpp_model_file_path (str | None): Path to the llama.cpp model file.
+            Defaults to None.
+        groq_model_name (str | None): Name of the Groq model to use.
+            Defaults to None.
+        groq_api_key (str | None): API key for Groq. Defaults to None.
+        bedrock_model_id (str | None): ID of the Amazon Bedrock model to use.
+            Defaults to None.
+        google_model_name (str | None): Name of the Google Generative AI model
+            to use. Defaults to None.
+        google_api_key (str | None): API key for Google Generative AI.
+            Defaults to None.
+        openai_model_name (str | None): Name of the OpenAI model to use.
+            Defaults to None.
+        openai_api_key (str | None): API key for OpenAI. Defaults to None.
+        openai_api_base (str | None): Base URL for OpenAI API. Defaults to None.
+        openai_organization (str | None): OpenAI organization ID. Defaults to None.
+        temperature (float): Sampling temperature for the model. Defaults to 0.8.
+        top_p (float): Top-p value for sampling. Defaults to 0.95.
+        max_tokens (int): Maximum number of tokens to generate. Defaults to 8192.
+        n_ctx (int): Token context window size. Defaults to 512.
+        seed (int): Random seed for reproducibility. Defaults to -1.
+        n_batch (int): Number of batch tokens. Defaults to 8.
+        n_gpu_layers (int): Number of GPU layers to use. Defaults to -1.
+        token_wise_streaming (bool): Whether to enable token-wise streaming.
+            Defaults to False.
+        timeout (int | None): Timeout for the API calls in seconds.
+            Defaults to None.
+        max_retries (int): Maximum number of retries for API calls. Defaults to 2.
+        aws_credentials_profile_name (str | None): AWS credentials profile name.
+            Defaults to None.
+        aws_region (str | None): AWS region for Bedrock. Defaults to None.
+        bedrock_endpoint_base_url (str | None): Base URL for Amazon Bedrock
+            endpoint. Defaults to None.
 
     Returns:
-        An instance of LLM.
+        ChatOllama | LlamaCpp | ChatGroq | ChatBedrockConverse |
+        ChatGoogleGenerativeAI | ChatOpenAI:
+            An instance of the selected LLM.
 
     Raises:
-        RuntimeError: The model cannot be determined.
+        RuntimeError: If the model cannot be determined.
     """
     logger = logging.getLogger(create_llm_instance.__name__)
     override_env_vars(
@@ -168,7 +191,16 @@ def create_llm_instance(
         GOOGLE_API_KEY=google_api_key,
         OPENAI_API_KEY=openai_api_key,
     )
-    if llamacpp_model_file_path:
+    if ollama_model_name:
+        logger.info("Use Ollama: %s", ollama_model_name)
+        return ChatOllama(
+            model=ollama_model_name,
+            temperature=temperature,
+            top_p=top_p,
+            num_ctx=n_ctx,
+            seed=seed,
+        )
+    elif llamacpp_model_file_path:
         logger.info("Use local LLM: %s", llamacpp_model_file_path)
         return _read_llm_file(
             path=llamacpp_model_file_path,

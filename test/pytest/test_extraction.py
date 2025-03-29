@@ -82,6 +82,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         bedrock_model_id=None,
         google_model_name=None,
         google_api_key=None,
+        ollama_model_name=None,
         openai_model_name=None,
         openai_api_key=None,
         openai_api_base=None,
