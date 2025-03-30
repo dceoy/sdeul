@@ -41,7 +41,8 @@ RUN \
       apt-get -y update \
       && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        ca-certificates cargo curl gcc g++ libopenblas-dev "python${PYTHON_VERSION}-dev"
+        ca-certificates cargo curl g++ gcc git libopenblas-dev \
+        "python${PYTHON_VERSION}-dev"
 
 RUN \
       --mount=type=cache,target=/root/.cache \
