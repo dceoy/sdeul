@@ -115,6 +115,12 @@ def extract(
         envvar="OLLAMA_MODEL",
         help="Use the Ollama model. (e.g., llama3.1)",
     ),
+    ollama_base_url: str | None = typer.Option(
+        None,
+        "--ollama-base-url",
+        envvar="OLLAMA_BASE_URL",
+        help="Override the Ollama base URL.",
+    ),
     llamacpp_model_file_path: str | None = typer.Option(
         None,
         "--model-file",
@@ -179,6 +185,7 @@ def extract(
         openai_organization=openai_organization,
         google_api_key=google_api_key,
         groq_api_key=groq_api_key,
+        ollama_base_url=ollama_base_url,
     )
 
 

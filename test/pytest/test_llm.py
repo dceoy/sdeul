@@ -386,6 +386,7 @@ def test__llama_log_callback(
 
 def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
     ollama_model_name = "dummy-ollama-model"
+    ollama_base_url = "http://localhost:11434"
     temperature = 0.8
     top_p = 0.95
     n_ctx = 512
@@ -396,6 +397,7 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
 
     result = create_llm_instance(
         ollama_model_name=ollama_model_name,
+        ollama_base_url=ollama_base_url,
         temperature=temperature,
         top_p=top_p,
         n_ctx=n_ctx,
@@ -404,6 +406,7 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
     assert result == llm
     mock_chat_ollama.assert_called_once_with(
         model=ollama_model_name,
+        base_url=ollama_base_url,
         temperature=temperature,
         top_p=top_p,
         num_ctx=n_ctx,

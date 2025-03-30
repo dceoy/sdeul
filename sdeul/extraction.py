@@ -52,6 +52,7 @@ def extract_json_from_text_file(
     text_file_path: str,
     json_schema_file_path: str,
     ollama_model_name: str | None = None,
+    ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
@@ -85,6 +86,7 @@ def extract_json_from_text_file(
         text_file_path: Path to the input text file.
         json_schema_file_path: Path to the JSON schema file.
         ollama_model_name: Name of the Ollama model.
+        ollama_base_url: Base URL of the Ollama API.
         llamacpp_model_file_path: Path to the LlamaCpp model file.
         groq_model_name: Name of the Groq model.
         groq_api_key: API key
@@ -114,6 +116,7 @@ def extract_json_from_text_file(
     """
     llm = create_llm_instance(
         ollama_model_name=ollama_model_name,
+        ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
         groq_model_name=groq_model_name,
         groq_api_key=groq_api_key,

@@ -107,6 +107,7 @@ class JsonCodeOutputParser(StrOutputParser):
 
 def create_llm_instance(
     ollama_model_name: str | None = None,
+    ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
@@ -142,6 +143,8 @@ def create_llm_instance(
 
     Args:
         ollama_model_name (str | None): Name of the Ollama model to use.
+            Defaults to None.
+        ollama_base_url (str | None): Base URL for the Ollama API.
             Defaults to None.
         llamacpp_model_file_path (str | None): Path to the llama.cpp model file.
             Defaults to None.
@@ -193,8 +196,10 @@ def create_llm_instance(
     )
     if ollama_model_name:
         logger.info("Use Ollama: %s", ollama_model_name)
+        logger.info("Ollama base URL: %s", ollama_base_url)
         return ChatOllama(
             model=ollama_model_name,
+            base_url=ollama_base_url,
             temperature=temperature,
             top_p=top_p,
             num_ctx=n_ctx,

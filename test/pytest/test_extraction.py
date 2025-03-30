@@ -36,6 +36,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     token_wise_streaming = False
     timeout = None
     max_retries = 2
+    ollama_base_url = "http://localhost:11434"
     mock_llm_instance = mocker.MagicMock()
     mock_create_llm_instance = mocker.patch(
         "sdeul.extraction.create_llm_instance",
@@ -60,6 +61,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     extract_json_from_text_file(
         text_file_path=text_file_path,
         json_schema_file_path=json_schema_file_path,
+        ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
         output_json_file_path=output_json_file_path,
         compact_json=compact_json,
@@ -83,6 +85,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         google_model_name=None,
         google_api_key=None,
         ollama_model_name=None,
+        ollama_base_url=ollama_base_url,
         openai_model_name=None,
         openai_api_key=None,
         openai_api_base=None,
