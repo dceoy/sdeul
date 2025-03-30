@@ -143,7 +143,7 @@ def extract_json_from_text_file(
     )
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
-    parsed_output_data = _extruct_structured_data_from_text(
+    parsed_output_data = _extract_structured_data_from_text(
         input_text=input_text,
         schema=schema,
         llm=llm,
@@ -156,7 +156,7 @@ def extract_json_from_text_file(
     )
 
 
-def _extruct_structured_data_from_text(
+def _extract_structured_data_from_text(
     input_text: str,
     schema: dict[str, Any],
     llm: ChatOllama
@@ -167,7 +167,7 @@ def _extruct_structured_data_from_text(
     | ChatOpenAI,
     skip_validation: bool = False,
 ) -> Any:
-    logger = logging.getLogger(_extruct_structured_data_from_text.__name__)
+    logger = logging.getLogger(_extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
     prompt = PromptTemplate(
         template=_EXTRACTION_TEMPLATE,

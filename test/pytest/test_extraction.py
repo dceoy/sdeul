@@ -14,7 +14,7 @@ from pytest_mock import MockerFixture
 from sdeul.extraction import (
     _EXTRACTION_INPUT_VARIABLES,
     _EXTRACTION_TEMPLATE,
-    _extruct_structured_data_from_text,
+    _extract_structured_data_from_text,
     extract_json_from_text_file,
 )
 
@@ -51,7 +51,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         return_value=TEST_TEXT,
     )
     mock__extract_structured_data_from_text = mocker.patch(
-        "sdeul.extraction._extruct_structured_data_from_text",
+        "sdeul.extraction._extract_structured_data_from_text",
         return_value=TEST_LLM_OUTPUT,
     )
     mock_write_or_print_json_data = mocker.patch(
@@ -120,7 +120,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
 
 
 @pytest.mark.parametrize("skip_validation", [(False), (True)])
-def test__extruct_structured_data_from_text(
+def test__extract_structured_data_from_text(
     skip_validation: bool,
     mocker: MockerFixture,
 ) -> None:
@@ -136,7 +136,7 @@ def test__extruct_structured_data_from_text(
     mock_llm_chain.invoke.return_value = TEST_LLM_OUTPUT
     mock_validate = mocker.patch("sdeul.extraction.validate")
 
-    result = _extruct_structured_data_from_text(
+    result = _extract_structured_data_from_text(
         input_text=TEST_TEXT,
         schema=TEST_SCHEMA,
         llm=mock_llm_chain,
@@ -159,7 +159,7 @@ def test__extruct_structured_data_from_text(
     assert mock_logger.error.call_count == 0
 
 
-def test__extruct_structured_data_from_text_with_invalid_json_output(
+def test__extract_structured_data_from_text_with_invalid_json_output(
     mocker: MockerFixture,
 ) -> None:
     mock_logger = mocker.MagicMock()
@@ -175,7 +175,7 @@ def test__extruct_structured_data_from_text_with_invalid_json_output(
         side_effect=ValidationError("Schema validation failed."),
     )
     with pytest.raises(ValidationError):
-        _extruct_structured_data_from_text(
+        _extract_structured_data_from_text(
             input_text=TEST_TEXT,
             schema=TEST_SCHEMA,
             llm=mock_llm_chain,
