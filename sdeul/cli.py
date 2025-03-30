@@ -113,7 +113,7 @@ def extract(
         None,
         "--ollama-model",
         envvar="OLLAMA_MODEL",
-        help="Use the Ollama model. (e.g., llama3.1)",
+        help="Use the Ollama model. (e.g., gemma3)",
     ),
     ollama_base_url: str | None = typer.Option(
         None,
