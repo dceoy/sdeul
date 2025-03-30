@@ -109,6 +109,18 @@ def extract(
             " (e.g., anthropic.claude-3-5-sonnet-20240620-v1:0)"
         ),
     ),
+    ollama_model_name: str | None = typer.Option(
+        None,
+        "--ollama-model",
+        envvar="OLLAMA_MODEL",
+        help="Use the Ollama model. (e.g., gemma3)",
+    ),
+    ollama_base_url: str | None = typer.Option(
+        None,
+        "--ollama-base-url",
+        envvar="OLLAMA_BASE_URL",
+        help="Override the Ollama base URL.",
+    ),
     llamacpp_model_file_path: str | None = typer.Option(
         None,
         "--model-file",
@@ -166,12 +178,14 @@ def extract(
         google_model_name=google_model_name,
         groq_model_name=groq_model_name,
         bedrock_model_id=bedrock_model_id,
+        ollama_model_name=ollama_model_name,
         llamacpp_model_file_path=llamacpp_model_file_path,
         openai_api_key=openai_api_key,
         openai_api_base=openai_api_base,
         openai_organization=openai_organization,
         google_api_key=google_api_key,
         groq_api_key=groq_api_key,
+        ollama_base_url=ollama_base_url,
     )
 
 

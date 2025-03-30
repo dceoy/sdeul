@@ -14,7 +14,7 @@ from pytest_mock import MockerFixture
 from sdeul.extraction import (
     _EXTRACTION_INPUT_VARIABLES,
     _EXTRACTION_TEMPLATE,
-    _extruct_structured_data_from_text,
+    _extract_structured_data_from_text,
     extract_json_from_text_file,
 )
 
@@ -36,6 +36,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     token_wise_streaming = False
     timeout = None
     max_retries = 2
+    ollama_base_url = "http://localhost:11434"
     mock_llm_instance = mocker.MagicMock()
     mock_create_llm_instance = mocker.patch(
         "sdeul.extraction.create_llm_instance",
@@ -50,7 +51,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         return_value=TEST_TEXT,
     )
     mock__extract_structured_data_from_text = mocker.patch(
-        "sdeul.extraction._extruct_structured_data_from_text",
+        "sdeul.extraction._extract_structured_data_from_text",
         return_value=TEST_LLM_OUTPUT,
     )
     mock_write_or_print_json_data = mocker.patch(
@@ -60,6 +61,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     extract_json_from_text_file(
         text_file_path=text_file_path,
         json_schema_file_path=json_schema_file_path,
+        ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
         output_json_file_path=output_json_file_path,
         compact_json=compact_json,
@@ -82,6 +84,8 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         bedrock_model_id=None,
         google_model_name=None,
         google_api_key=None,
+        ollama_model_name=None,
+        ollama_base_url=ollama_base_url,
         openai_model_name=None,
         openai_api_key=None,
         openai_api_base=None,
@@ -116,7 +120,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
 
 
 @pytest.mark.parametrize("skip_validation", [(False), (True)])
-def test__extruct_structured_data_from_text(
+def test__extract_structured_data_from_text(
     skip_validation: bool,
     mocker: MockerFixture,
 ) -> None:
@@ -132,7 +136,7 @@ def test__extruct_structured_data_from_text(
     mock_llm_chain.invoke.return_value = TEST_LLM_OUTPUT
     mock_validate = mocker.patch("sdeul.extraction.validate")
 
-    result = _extruct_structured_data_from_text(
+    result = _extract_structured_data_from_text(
         input_text=TEST_TEXT,
         schema=TEST_SCHEMA,
         llm=mock_llm_chain,
@@ -155,7 +159,7 @@ def test__extruct_structured_data_from_text(
     assert mock_logger.error.call_count == 0
 
 
-def test__extruct_structured_data_from_text_with_invalid_json_output(
+def test__extract_structured_data_from_text_with_invalid_json_output(
     mocker: MockerFixture,
 ) -> None:
     mock_logger = mocker.MagicMock()
@@ -171,7 +175,7 @@ def test__extruct_structured_data_from_text_with_invalid_json_output(
         side_effect=ValidationError("Schema validation failed."),
     )
     with pytest.raises(ValidationError):
-        _extruct_structured_data_from_text(
+        _extract_structured_data_from_text(
             input_text=TEST_TEXT,
             schema=TEST_SCHEMA,
             llm=mock_llm_chain,

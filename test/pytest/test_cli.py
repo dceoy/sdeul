@@ -95,6 +95,14 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
             "input.txt",
         ],
         ["extract", "--model-file=llm.gguf", "schema.json", "input.txt"],
+        ["extract", "--ollama-model=llama3.1", "schema.json", "input.txt"],
+        [
+            "extract",
+            "--ollama-model=llama3.1",
+            "--ollama-base-url=http://localhost:11434",
+            "schema.json",
+            "input.txt",
+        ],
         [
             "extract",
             "--model-file=llm.gguf",

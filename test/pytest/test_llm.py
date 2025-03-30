@@ -382,3 +382,33 @@ def test__llama_log_callback(
     mock_stderr = mocker.patch("sdeul.llm.sys.stderr", new_callable=io.StringIO)
     _llama_log_callback(0, text, ctypes.c_void_p(0))
     assert mock_stderr.getvalue() == expected_output
+
+
+def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
+    ollama_model_name = "dummy-ollama-model"
+    ollama_base_url = "http://localhost:11434"
+    temperature = 0.8
+    top_p = 0.95
+    n_ctx = 512
+    seed = -1
+    mocker.patch("sdeul.llm.override_env_vars")
+    llm = mocker.MagicMock()
+    mock_chat_ollama = mocker.patch("sdeul.llm.ChatOllama", return_value=llm)
+
+    result = create_llm_instance(
+        ollama_model_name=ollama_model_name,
+        ollama_base_url=ollama_base_url,
+        temperature=temperature,
+        top_p=top_p,
+        n_ctx=n_ctx,
+        seed=seed,
+    )
+    assert result == llm
+    mock_chat_ollama.assert_called_once_with(
+        model=ollama_model_name,
+        base_url=ollama_base_url,
+        temperature=temperature,
+        top_p=top_p,
+        num_ctx=n_ctx,
+        seed=seed,
+    )
