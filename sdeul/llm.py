@@ -25,8 +25,8 @@ from .utility import has_aws_credentials, override_env_vars
 _DEFAULT_MODEL_NAMES = {
     "openai": "o3-mini",
     "google": "gemini-2.0-flash",
-    "groq": "llama-3.3-70b-versatile",
     "bedrock": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "groq": "llama-3.3-70b-versatile",
 }
 
 
