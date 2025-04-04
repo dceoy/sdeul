@@ -156,6 +156,12 @@ def extract(
         envvar="GROQ_API_KEY",
         help="Override the Groq API key.",
     ),
+    aws_credentials_profile_name: str | None = typer.Option(
+        None,
+        "--aws-profile",
+        envvar="AWS_PROFILE",
+        help="Specify the AWS credentials profile name for Amazon Bedrock.",
+    ),
     debug: bool = typer.Option(False, "--debug", help="Execute with debug messages."),
     info: bool = typer.Option(False, "--info", help="Execute with info messages."),
 ) -> None:
@@ -186,6 +192,7 @@ def extract(
         google_api_key=google_api_key,
         groq_api_key=groq_api_key,
         ollama_base_url=ollama_base_url,
+        aws_credentials_profile_name=aws_credentials_profile_name,
     )
 
 
