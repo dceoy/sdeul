@@ -26,7 +26,7 @@ _DEFAULT_MODEL_NAMES = {
     "openai": "o3-mini",
     "google": "gemini-2.0-flash",
     "groq": "llama-3.3-70b-versatile",
-    "bedrock": "anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "bedrock": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
 }
 
 
