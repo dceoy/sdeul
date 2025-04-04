@@ -38,20 +38,22 @@ Usage
 
     ```sh
     # Use OpenAI API
-    $ sdeul extract \
-        --openai-model=gpt-4o-mini \
+    $ sdeul extract --openai-model=gpt-4o-mini \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
     # Use Groq API
-    $ sdeul extract \
-        --groq-model=llama-3.1-70b-versatile \
+    $ sdeul extract --groq-model=llama-3.3-70b-versatile \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
-    # Use local LLM
-    $ sdeul extract \
-        --model-file=Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf \
+    # Use Ollama API
+    $ sdeul extract --ollama-model=gemma3:27b \
+        test/data/medication_history.schema.json \
+        test/data/patient_medication_record.txt
+
+    # Use a GGUF file
+    $ sdeul extract --model-file=google_gemma-3-27b-it-Q4_K_M.gguf \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
     ```

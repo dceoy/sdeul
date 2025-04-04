@@ -16,7 +16,6 @@ from pytest_mock import MockerFixture
 
 from sdeul.llm import (
     JsonCodeOutputParser,
-    _limit_max_tokens,
     _llama_log_callback,
     _read_llm_file,
     create_llm_instance,
@@ -261,32 +260,6 @@ def test_create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
     mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
     with pytest.raises(RuntimeError, match=r"The model cannot be determined."):
         create_llm_instance()
-
-
-@pytest.mark.parametrize(
-    ("max_tokens", "model_name", "default_max_tokens", "expected"),
-    [
-        (1024, "a", {"a": 512}, 512),
-        (1024, "a", {"a": 8192}, 1024),
-        (8192, "b", {"a": 512}, 8192),
-    ],
-)
-def test__limit_max_tokens(
-    max_tokens: int,
-    model_name: str,
-    default_max_tokens: dict[str, int],
-    expected: int,
-    mocker: MockerFixture,
-) -> None:
-    mock_logger = mocker.MagicMock()
-    mocker.patch("logging.getLogger", return_value=mock_logger)
-    mocker.patch("sdeul.llm._DEFAULT_MAX_TOKENS", new=default_max_tokens)
-    result = _limit_max_tokens(max_tokens=max_tokens, model_name=model_name)
-    assert result == expected
-    if max_tokens > default_max_tokens.get(model_name, max_tokens):
-        mock_logger.warning.assert_called_once()
-    else:
-        mock_logger.warning.assert_not_called()
 
 
 @pytest.mark.parametrize(

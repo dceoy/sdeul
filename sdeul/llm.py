@@ -23,33 +23,10 @@ from llama_cpp import llama_log_callback, llama_log_set
 from .utility import has_aws_credentials, override_env_vars
 
 _DEFAULT_MODEL_NAMES = {
-    "openai": "gpt-4o-mini",
-    "google": "gemini-1.5-flash",
-    "groq": "llama-3.1-70b-versatile",
-    "bedrock": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-}
-_DEFAULT_MAX_TOKENS = {
-    "gpt-4o": 128000,
-    "gpt-4o-2024-05-13": 128000,
-    "gpt-4o-mini": 128000,
-    "gpt-4o-mini-2024-07-18": 128000,
-    "gpt-4o-2024-08-06": 128000,
-    "o1-mini": 128000,
-    "o1-mini-2024-09-12": 128000,
-    "o1-preview": 128000,
-    "o1-preview-2024-09-12": 128000,
-    "claude-3-5-sonnet@20240620": 100000,
-    "gemini-1.5-pro": 1048576,
-    "gemini-1.5-flash": 1048576,
-    "gemma2": 8200,
-    "gemma2-9b-it": 8192,
-    "claude-3-5-sonnet": 100000,
-    "claude-3-5-sonnet-20240620": 100000,
-    "anthropic.claude-3-5-sonnet-20240620-v1:0": 100000,
-    "mixtral-8x7b-32768": 32768,
-    "llama-3.1-8b-instant": 131072,
-    "llama-3.1-70b-versatile": 131072,
-    "llama-3.1-405b-reasoning": 131072,
+    "openai": "o3-mini",
+    "google": "gemini-2.0-flash",
+    "groq": "llama-3.3-70b-versatile",
+    "bedrock": "anthropic.claude-3-7-sonnet-20250219-v1:0",
 }
 
 
@@ -227,7 +204,7 @@ def create_llm_instance(
         return ChatGroq(
             model=m,
             temperature=temperature,
-            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
+            max_tokens=max_tokens,
             timeout=timeout,
             max_retries=max_retries,
             stop_sequences=None,
@@ -240,7 +217,7 @@ def create_llm_instance(
         return ChatBedrockConverse(
             model=m,
             temperature=temperature,
-            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
+            max_tokens=max_tokens,
             region_name=aws_region,
             base_url=bedrock_endpoint_base_url,
             credentials_profile_name=aws_credentials_profile_name,
@@ -254,7 +231,7 @@ def create_llm_instance(
             model=m,
             temperature=temperature,
             top_p=top_p,
-            max_tokens=_limit_max_tokens(max_tokens=max_tokens, model_name=m),
+            max_tokens=max_tokens,
             timeout=timeout,
             max_retries=max_retries,
         )
@@ -270,27 +247,13 @@ def create_llm_instance(
             temperature=temperature,
             top_p=top_p,
             seed=seed,
-            max_completion_tokens=_limit_max_tokens(
-                max_tokens=max_tokens, model_name=m
-            ),
+            max_completion_tokens=max_tokens,
             timeout=timeout,
             max_retries=max_retries,
         )
     else:
         error_message = "The model cannot be determined."
         raise RuntimeError(error_message)
-
-
-def _limit_max_tokens(max_tokens: int, model_name: str) -> int:
-    default_max_tokens = _DEFAULT_MAX_TOKENS.get(model_name, max_tokens)
-    if max_tokens > default_max_tokens:
-        logging.getLogger(_limit_max_tokens.__name__).warning(
-            "The maximum number of tokens is limited to %d.",
-            default_max_tokens,
-        )
-        return default_max_tokens
-    else:
-        return max_tokens
 
 
 def _read_llm_file(
