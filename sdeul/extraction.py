@@ -174,7 +174,7 @@ def _extract_structured_data_from_text(
         input_variables=_EXTRACTION_INPUT_VARIABLES,
         partial_variables={"schema": json.dumps(obj=schema)},
     )
-    llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()
+    llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()  # pyright: ignore[reportUnknownVariableType]
     logger.info("LLM chain: %s", llm_chain)
     parsed_output_data = llm_chain.invoke({"input_text": input_text})
     logger.info("LLM output: %s", parsed_output_data)
