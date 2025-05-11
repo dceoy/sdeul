@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 ARG UBUNTU_VERSION=24.04
-ARG CUDA_DEVEL_IMAGE=12.8.1-devel-ubuntu24.04
-ARG CUDA_BASE_IMAGE=12.8.1-base-ubuntu24.04
+ARG CUDA_DEVEL_IMAGE=12.9.0-devel-ubuntu24.04
+ARG CUDA_BASE_IMAGE=12.9.0-base-ubuntu24.04
 
 FROM public.ecr.aws/docker/library/ubuntu:${UBUNTU_VERSION} AS builder
 
