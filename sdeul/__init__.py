@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""Initialization file for the package."""
 
 from importlib.metadata import version
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Functions for extracting JSON from text."""
 
 import json
@@ -15,6 +14,7 @@ from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
+from .constants import EXTRACTION_INPUT_VARIABLES, EXTRACTION_TEMPLATE
 from .llm import JsonCodeOutputParser, create_llm_instance
 from .utility import (
     log_execution_time,
@@ -25,26 +25,6 @@ from .utility import (
 
 if TYPE_CHECKING:
     from langchain.chains import LLMChain
-
-_EXTRACTION_TEMPLATE = """\
-Input text:
-```
-{input_text}
-```
-
-Provided JSON schema:
-```json
-{schema}
-```
-
-Instructions:
-- Extract only the relevant entities defined by the provided JSON schema from the input text.
-- Generate the extracted entities in JSON format according to the schema.
-- If a property is not present in the schema, DO NOT include it in the output.
-- Output the complete JSON data in a markdown code block.
-- Provide complete, unabridged code in all responses without omitting any parts.
-"""  # noqa: E501
-_EXTRACTION_INPUT_VARIABLES = ["input_text"]
 
 
 @log_execution_time
@@ -170,8 +150,8 @@ def _extract_structured_data_from_text(
     logger = logging.getLogger(_extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
     prompt = PromptTemplate(
-        template=_EXTRACTION_TEMPLATE,
-        input_variables=_EXTRACTION_INPUT_VARIABLES,
+        template=EXTRACTION_TEMPLATE,
+        input_variables=EXTRACTION_INPUT_VARIABLES,
         partial_variables={"schema": json.dumps(obj=schema)},
     )
     llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()  # pyright: ignore[reportUnknownVariableType]

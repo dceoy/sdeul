@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Structural Data Extractor using LLMs."""
 
 import typer

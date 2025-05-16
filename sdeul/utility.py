@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Utility functions."""
 
 import json

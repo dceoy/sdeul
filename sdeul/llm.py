@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Functions for LLM."""
 
 import ctypes
@@ -20,14 +19,8 @@ from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from llama_cpp import llama_log_callback, llama_log_set
 
+from .constants import DEFAULT_MODEL_NAMES
 from .utility import has_aws_credentials, override_env_vars
-
-_DEFAULT_MODEL_NAMES = {
-    "openai": "o3-mini",
-    "google": "gemini-2.0-flash",
-    "bedrock": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-    "groq": "llama-3.3-70b-versatile",
-}
 
 
 class JsonCodeOutputParser(StrOutputParser):
@@ -200,7 +193,7 @@ def create_llm_instance(
         and os.environ.get("GROQ_API_KEY")
     ):
         logger.info("Use GROQ: %s", groq_model_name)
-        m = groq_model_name or _DEFAULT_MODEL_NAMES["groq"]
+        m = groq_model_name or DEFAULT_MODEL_NAMES["groq"]
         return ChatGroq(
             model=m,
             temperature=temperature,
@@ -213,7 +206,7 @@ def create_llm_instance(
         (not any([google_model_name, openai_model_name])) and has_aws_credentials()
     ):
         logger.info("Use Amazon Bedrock: %s", bedrock_model_id)
-        m = bedrock_model_id or _DEFAULT_MODEL_NAMES["bedrock"]
+        m = bedrock_model_id or DEFAULT_MODEL_NAMES["bedrock"]
         return ChatBedrockConverse(
             model=m,
             temperature=temperature,
@@ -226,7 +219,7 @@ def create_llm_instance(
         (not openai_model_name) and os.environ.get("GOOGLE_API_KEY")
     ):
         logger.info("Use Google Generative AI: %s", google_model_name)
-        m = google_model_name or _DEFAULT_MODEL_NAMES["google"]
+        m = google_model_name or DEFAULT_MODEL_NAMES["google"]
         return ChatGoogleGenerativeAI(
             model=m,
             temperature=temperature,
@@ -239,7 +232,7 @@ def create_llm_instance(
         logger.info("Use OpenAI: %s", openai_model_name)
         logger.info("OpenAI API base: %s", openai_api_base)
         logger.info("OpenAI organization: %s", openai_organization)
-        m = openai_model_name or _DEFAULT_MODEL_NAMES["openai"]
+        m = openai_model_name or DEFAULT_MODEL_NAMES["openai"]
         return ChatOpenAI(
             model=m,
             base_url=openai_api_base,

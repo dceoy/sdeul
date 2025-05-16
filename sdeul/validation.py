@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Validation functions."""
 
 import logging
