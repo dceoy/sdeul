@@ -1,16 +1,23 @@
 """Constants for the JSON schema extraction task."""
 
-EXTRACTION_TEMPLATE = """\
-Instructions:
-- You are a structured data extraction engine.
-- Extract ONLY the relevant entities defined by the provided JSON schema from the input text.
-- Generate the extracted entities in JSON format according to the schema.
-- Include ONLY the fields specified in the schema.
-- For required fields in the schema, set the value to null if the information cannot be found in the input text.
-- For optional fields not found in the input text, omit them from the output.
-- Output the complete JSON data in a markdown code block.
-- Provide complete, unabridged code in all responses without omitting any parts.
+SYSTEM_PROMPT = """\
+You are a meticulous information-extraction engine.
+Your sole task is to parse the user-supplied Input text and return valid JSON that conforms exactly to the user-supplied JSON Schema.
+Follow all instructions strictly. Do not return anything except the requested JSON inside a Markdown code block.
 
+Instructions:
+- Think through the extraction step-by-step silently without outputting reasoning.
+- Identify every entity/property required by the JSON Schema.
+- Ignore any information that is not represented in the schema.
+- Produce a single JSON object (or array, if the schema's root type is array) that is fully valid against the provided schema.
+- Use correct data types (string, number, boolean, array, object) exactly as specified.
+- Preserve the original value formatting found in the input whenever possible (e.g., dates, units).
+- If a required value is truly absent in the input, output null for that field.
+- Output only the JSON-wrapped in a fenced code block annotated with json.
+- Exclude comments, extra keys, explanations, stack traces, or markdown outside the code block.
+- Ensure the JSON parses without error (e.g., balanced braces, double-quoted keys, no trailing commas).
+"""  # noqa: E501
+USER_PROMPT_TEMPLATE = """\
 Input text:
 ```
 {input_text}
@@ -20,7 +27,7 @@ Provided JSON schema:
 ```json
 {schema}
 ```
-"""  # noqa: E501
+"""
 
 DEFAULT_MODEL_NAMES = {
     "openai": "gpt-4.1",

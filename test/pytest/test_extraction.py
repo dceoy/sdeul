@@ -11,7 +11,6 @@ from conftest import TEST_LLM_OUTPUT, TEST_SCHEMA, TEST_TEXT
 from jsonschema import ValidationError
 from pytest_mock import MockerFixture
 
-from sdeul.constants import EXTRACTION_TEMPLATE
 from sdeul.extraction import (
     _extract_structured_data_from_text,
     extract_json_from_text_file,
@@ -126,10 +125,7 @@ def test__extract_structured_data_from_text(
     mock_logger = mocker.MagicMock()
     mocker.patch("logging.getLogger", return_value=mock_logger)
     mock_llm_chain = mocker.MagicMock()
-    mock_prompt_template = mocker.patch(
-        "sdeul.extraction.PromptTemplate",
-        return_value=mock_llm_chain,
-    )
+    mocker.patch("sdeul.extraction.ChatPromptTemplate", return_value=mock_llm_chain)
     mocker.patch("sdeul.extraction.JsonCodeOutputParser", return_value=mock_llm_chain)
     mock_llm_chain.__or__.return_value = mock_llm_chain
     mock_llm_chain.invoke.return_value = TEST_LLM_OUTPUT
@@ -142,12 +138,10 @@ def test__extract_structured_data_from_text(
         skip_validation=skip_validation,
     )
     assert result == TEST_LLM_OUTPUT
-    mock_prompt_template.assert_called_once_with(
-        template=EXTRACTION_TEMPLATE,
-        input_variables=["input_text"],
-        partial_variables={"schema": json.dumps(obj=TEST_SCHEMA)},
-    )
-    mock_llm_chain.invoke.assert_called_once_with({"input_text": TEST_TEXT})
+    mock_llm_chain.invoke.assert_called_once_with({
+        "schema": json.dumps(obj=TEST_SCHEMA),
+        "input_text": TEST_TEXT,
+    })
     if skip_validation:
         mock_validate.assert_not_called()
     else:
@@ -165,7 +159,7 @@ def test__extract_structured_data_from_text_with_invalid_json_output(
     mocker.patch("logging.getLogger", return_value=mock_logger)
     mock_llm_chain = mocker.MagicMock()
     mocker.patch("sdeul.extraction.json.dumps")
-    mocker.patch("sdeul.extraction.PromptTemplate", return_value=mock_llm_chain)
+    mocker.patch("sdeul.extraction.ChatPromptTemplate", return_value=mock_llm_chain)
     mocker.patch("sdeul.extraction.JsonCodeOutputParser", return_value=mock_llm_chain)
     mock_llm_chain.__or__.return_value = mock_llm_chain
     mock_llm_chain.invoke.return_value = "Invalid JSON output"

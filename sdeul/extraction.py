@@ -6,15 +6,15 @@ from typing import TYPE_CHECKING, Any
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-from langchain.prompts import PromptTemplate
 from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
-from .constants import EXTRACTION_TEMPLATE
+from .constants import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 from .llm import JsonCodeOutputParser, create_llm_instance
 from .utility import (
     log_execution_time,
@@ -149,14 +149,16 @@ def _extract_structured_data_from_text(
 ) -> Any:
     logger = logging.getLogger(_extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
-    prompt = PromptTemplate(
-        template=EXTRACTION_TEMPLATE,
-        input_variables=["input_text"],
-        partial_variables={"schema": json.dumps(obj=schema)},
-    )
+    prompt = ChatPromptTemplate([
+        ("system", SYSTEM_PROMPT),
+        ("user", USER_PROMPT_TEMPLATE),
+    ])
     llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()  # pyright: ignore[reportUnknownVariableType]
     logger.info("LLM chain: %s", llm_chain)
-    parsed_output_data = llm_chain.invoke({"input_text": input_text})
+    parsed_output_data = llm_chain.invoke({
+        "schema": json.dumps(obj=schema),
+        "input_text": input_text,
+    })
     logger.info("LLM output: %s", parsed_output_data)
     if skip_validation:
         logger.info("Skip validation using JSON Schema.")
