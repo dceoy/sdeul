@@ -11,7 +11,7 @@ from conftest import TEST_LLM_OUTPUT, TEST_SCHEMA, TEST_TEXT
 from jsonschema import ValidationError
 from pytest_mock import MockerFixture
 
-from sdeul.constants import EXTRACTION_INPUT_VARIABLES, EXTRACTION_TEMPLATE
+from sdeul.constants import EXTRACTION_TEMPLATE
 from sdeul.extraction import (
     _extract_structured_data_from_text,
     extract_json_from_text_file,
@@ -144,7 +144,7 @@ def test__extract_structured_data_from_text(
     assert result == TEST_LLM_OUTPUT
     mock_prompt_template.assert_called_once_with(
         template=EXTRACTION_TEMPLATE,
-        input_variables=EXTRACTION_INPUT_VARIABLES,
+        input_variables=["input_text"],
         partial_variables={"schema": json.dumps(obj=TEST_SCHEMA)},
     )
     mock_llm_chain.invoke.assert_called_once_with({"input_text": TEST_TEXT})

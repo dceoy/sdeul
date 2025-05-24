@@ -1,6 +1,16 @@
 """Constants for the JSON schema extraction task."""
 
 EXTRACTION_TEMPLATE = """\
+Instructions:
+- You are a structured data extraction engine.
+- Extract ONLY the relevant entities defined by the provided JSON schema from the input text.
+- Generate the extracted entities in JSON format according to the schema.
+- Include ONLY the fields specified in the schema.
+- For required fields in the schema, set the value to null if the information cannot be found in the input text.
+- For optional fields not found in the input text, omit them from the output.
+- Output the complete JSON data in a markdown code block.
+- Provide complete, unabridged code in all responses without omitting any parts.
+
 Input text:
 ```
 {input_text}
@@ -10,17 +20,7 @@ Provided JSON schema:
 ```json
 {schema}
 ```
-
-Instructions:
-- Extract only the relevant entities defined by the provided JSON schema from the input text.
-- Generate the extracted entities in JSON format according to the schema.
-- If a property is not present in the schema, DO NOT include it in the output.
-- For required fields in the schema, set the value to null if the information cannot be found in the input text.
-- For optional fields not found in the input text, omit them from the output.
-- Output the complete JSON data in a markdown code block.
-- Provide complete, unabridged code in all responses without omitting any parts.
 """  # noqa: E501
-EXTRACTION_INPUT_VARIABLES = ["input_text"]
 
 DEFAULT_MODEL_NAMES = {
     "openai": "gpt-4.1",

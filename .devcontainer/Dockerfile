@@ -30,3 +30,7 @@ RUN \
 
 RUN \
       chown -R vscode:vscode /usr/local
+
+HEALTHCHECK NONE
+
+USER vscode

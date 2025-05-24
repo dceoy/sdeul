@@ -14,7 +14,7 @@ from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
-from .constants import EXTRACTION_INPUT_VARIABLES, EXTRACTION_TEMPLATE
+from .constants import EXTRACTION_TEMPLATE
 from .llm import JsonCodeOutputParser, create_llm_instance
 from .utility import (
     log_execution_time,
@@ -151,7 +151,7 @@ def _extract_structured_data_from_text(
     logger.info("Start extracting structured data from the input text.")
     prompt = PromptTemplate(
         template=EXTRACTION_TEMPLATE,
-        input_variables=EXTRACTION_INPUT_VARIABLES,
+        input_variables=["input_text"],
         partial_variables={"schema": json.dumps(obj=schema)},
     )
     llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()  # pyright: ignore[reportUnknownVariableType]
