@@ -1,10 +1,20 @@
 {
-  "name": "sdeul-devcontainer",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  "name": "devcontainer-sdeul",
+  "build": {
+    "context": "..",
+    "dockerfile": "./Dockerfile",
+    "target": "devcontainer",
+    "args": {
+      "PYTHON_VERSION": "3.13"
+    }
   },
-  "postCreateCommand": "pip install -U pip poetry && poetry install",
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached"
+  ],
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=consistent",
+  "containerUser": "vscode",
   "customizations": {
     "vscode": {
       "settings": {
@@ -13,13 +23,25 @@
         "editor.formatOnSave": true
       },
       "extensions": [
+        "bierner.markdown-mermaid",
+        "charliermarsh.ruff",
+        "github.codespaces",
+        "github.copilot",
+        "github.copilot-chat",
+        "github.github-vscode-theme",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "ms-azuretools.vscode-docker",
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ms-azuretools.vscode-docker",
         "ms-toolsai.jupyter",
-        "charliermarsh.ruff"
+        "saoudrizwan.claude-dev",
+        "vscodevim.vim"
       ]
     }
   },
-  "remoteUser": "vscode"
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli": {}
+  },
+  "postCreateCommand": "git config --global --add safe.directory /workspaces && poetry install"
 }
