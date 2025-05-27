@@ -1806,19 +1806,19 @@ xai = ["langchain-xai"]
 
 [[package]]
 name = "langchain-aws"
-version = "0.2.23"
+version = "0.2.24"
 description = "An integration package connecting AWS and LangChain"
 optional = false
-python-versions = "<4.0,>=3.9"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "langchain_aws-0.2.23-py3-none-any.whl", hash = "sha256:ce16b024d64a87db44189dfd02e3437baf0d99d039e2e14e45de1d8289def0be"},
-    {file = "langchain_aws-0.2.23.tar.gz", hash = "sha256:8609dfe17eae189bcffed9e0e3d1fdfa918836fdc8d1ae51d8933d9c60f4945b"},
+    {file = "langchain_aws-0.2.24-py3-none-any.whl", hash = "sha256:464df2e6535001e5424786c493906d2e5d4a01bd1906e9e8d4da1404e13bd25c"},
+    {file = "langchain_aws-0.2.24.tar.gz", hash = "sha256:1ef09f3b84b94e5cc816b21ade391b4c3b14aba3ad8dc75968fac50ffe6bbd1a"},
 ]
 
 [package.dependencies]
 boto3 = ">=1.37.24"
-langchain-core = ">=0.3.59,<0.4.0"
+langchain-core = ">=0.3.62,<0.4.0"
 numpy = [
     {version = ">=1,<2", markers = "python_version < \"3.12\""},
     {version = ">=1.26.0,<3", markers = "python_version >= \"3.12\""},
@@ -1856,14 +1856,14 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<10"
 
 [[package]]
 name = "langchain-core"
-version = "0.3.61"
+version = "0.3.62"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "langchain_core-0.3.61-py3-none-any.whl", hash = "sha256:62cddbda7fb6085b6096bb4f3ad69642ebb0585bde7b210edc61dd0af33f2ea4"},
-    {file = "langchain_core-0.3.61.tar.gz", hash = "sha256:67ba08d4cf58616050047ef3a07887a72607fea9b6b4522dff9e7579a1adbe75"},
+    {file = "langchain_core-0.3.62-py3-none-any.whl", hash = "sha256:242cef42be32baa5c7cd03df719d21093323b5271fff9efbe0ca9a0dfa8ee2bf"},
+    {file = "langchain_core-0.3.62.tar.gz", hash = "sha256:e75e483b0b602a2fdcfbe349be7efb7f1c1c04b20f8d51c7892e78fbecc8a823"},
 ]
 
 [package.dependencies]
