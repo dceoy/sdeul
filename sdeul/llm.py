@@ -88,10 +88,13 @@ def create_llm_instance(
     openai_api_key: str | None = None,
     openai_api_base: str | None = None,
     openai_organization: str | None = None,
-    temperature: float = 0.8,
+    temperature: float = 0.0,
     top_p: float = 0.95,
+    top_k: int = 64,
+    repeat_penalty: float = 1.1,
+    repeat_last_n: int = 64,
+    n_ctx: int = 8192,
     max_tokens: int = 8192,
-    n_ctx: int = 512,
     seed: int = -1,
     n_batch: int = 8,
     n_gpu_layers: int = -1,
@@ -113,42 +116,36 @@ def create_llm_instance(
 
     Args:
         ollama_model_name (str | None): Name of the Ollama model to use.
-            Defaults to None.
         ollama_base_url (str | None): Base URL for the Ollama API.
-            Defaults to None.
         llamacpp_model_file_path (str | None): Path to the llama.cpp model file.
-            Defaults to None.
         groq_model_name (str | None): Name of the Groq model to use.
-            Defaults to None.
-        groq_api_key (str | None): API key for Groq. Defaults to None.
+        groq_api_key (str | None): API key for Groq.
         bedrock_model_id (str | None): ID of the Amazon Bedrock model to use.
-            Defaults to None.
         google_model_name (str | None): Name of the Google Generative AI model
-            to use. Defaults to None.
+            to use.
         google_api_key (str | None): API key for Google Generative AI.
-            Defaults to None.
         openai_model_name (str | None): Name of the OpenAI model to use.
-            Defaults to None.
-        openai_api_key (str | None): API key for OpenAI. Defaults to None.
-        openai_api_base (str | None): Base URL for OpenAI API. Defaults to None.
-        openai_organization (str | None): OpenAI organization ID. Defaults to None.
-        temperature (float): Sampling temperature for the model. Defaults to 0.8.
-        top_p (float): Top-p value for sampling. Defaults to 0.95.
-        max_tokens (int): Maximum number of tokens to generate. Defaults to 8192.
-        n_ctx (int): Token context window size. Defaults to 512.
-        seed (int): Random seed for reproducibility. Defaults to -1.
-        n_batch (int): Number of batch tokens. Defaults to 8.
-        n_gpu_layers (int): Number of GPU layers to use. Defaults to -1.
+        openai_api_key (str | None): API key for OpenAI.
+        openai_api_base (str | None): Base URL for OpenAI API.
+        openai_organization (str | None): OpenAI organization ID.
+        temperature (float): Sampling temperature for the model.
+        top_p (float): Top-p value for sampling.
+        top_k (int): Top-k value for sampling.
+        repeat_penalty (float): Penalty for repeating tokens.
+        repeat_last_n (int): Number of tokens to look back when applying the repeat
+            penalty.
+        n_ctx (int): Token context window size.
+        max_tokens (int): Maximum number of tokens to generate.
+        seed (int): Random seed for reproducibility.
+        n_batch (int): Number of batch tokens.
+        n_gpu_layers (int): Number of GPU layers to use.
         token_wise_streaming (bool): Whether to enable token-wise streaming.
-            Defaults to False.
         timeout (int | None): Timeout for the API calls in seconds.
-            Defaults to None.
-        max_retries (int): Maximum number of retries for API calls. Defaults to 2.
+        max_retries (int): Maximum number of retries for API calls.
         aws_credentials_profile_name (str | None): AWS credentials profile name.
-            Defaults to None.
-        aws_region (str | None): AWS region for Bedrock. Defaults to None.
+        aws_region (str | None): AWS region for Bedrock.
         bedrock_endpoint_base_url (str | None): Base URL for Amazon Bedrock
-            endpoint. Defaults to None.
+            endpoint.
 
     Returns:
         ChatOllama | LlamaCpp | ChatGroq | ChatBedrockConverse |
@@ -172,6 +169,9 @@ def create_llm_instance(
             base_url=ollama_base_url,
             temperature=temperature,
             top_p=top_p,
+            top_k=top_k,
+            repeat_penalty=repeat_penalty,
+            repeat_last_n=repeat_last_n,
             num_ctx=n_ctx,
             seed=seed,
         )
@@ -181,8 +181,11 @@ def create_llm_instance(
             path=llamacpp_model_file_path,
             temperature=temperature,
             top_p=top_p,
-            max_tokens=max_tokens,
+            top_k=top_k,
+            repeat_penalty=repeat_penalty,
+            last_n_tokens_size=repeat_last_n,
             n_ctx=n_ctx,
+            max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
             n_gpu_layers=n_gpu_layers,
@@ -224,6 +227,7 @@ def create_llm_instance(
             model=m,
             temperature=temperature,
             top_p=top_p,
+            top_k=top_k,
             max_tokens=max_tokens,
             timeout=timeout,
             max_retries=max_retries,
@@ -251,10 +255,13 @@ def create_llm_instance(
 
 def _read_llm_file(
     path: str,
-    temperature: float = 0.8,
+    temperature: float = 0.0,
     top_p: float = 0.95,
-    max_tokens: int = 256,
-    n_ctx: int = 512,
+    top_k: int = 64,
+    repeat_penalty: float = 1.1,
+    last_n_tokens_size: int = 64,
+    n_ctx: int = 8192,
+    max_tokens: int = 8192,
     seed: int = -1,
     n_batch: int = 8,
     n_gpu_layers: int = -1,
@@ -267,8 +274,11 @@ def _read_llm_file(
         model_path=path,
         temperature=temperature,
         top_p=top_p,
-        max_tokens=max_tokens,
+        top_k=top_k,
+        repeat_penalty=repeat_penalty,
+        last_n_tokens_size=last_n_tokens_size,
         n_ctx=n_ctx,
+        max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
         n_gpu_layers=n_gpu_layers,

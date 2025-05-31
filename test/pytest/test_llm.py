@@ -82,10 +82,13 @@ def test_jsoncodeoutputparser__detect_json_code_block_with_invalid_input() -> No
 
 def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     llamacpp_model_file_path = "/path/to/model"
-    temperature = 0.8
+    temperature = 0.0
     top_p = 0.95
+    top_k = 64
+    repeat_penalty = 1.1
+    repeat_last_n = 64
+    n_ctx = 8192
     max_tokens = 8192
-    n_ctx = 512
     seed = -1
     n_batch = 8
     n_gpu_layers = -1
@@ -98,8 +101,11 @@ def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
         llamacpp_model_file_path=llamacpp_model_file_path,
         temperature=temperature,
         top_p=top_p,
-        max_tokens=max_tokens,
+        top_k=top_k,
+        repeat_penalty=repeat_penalty,
+        repeat_last_n=repeat_last_n,
         n_ctx=n_ctx,
+        max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
         n_gpu_layers=n_gpu_layers,
@@ -110,8 +116,11 @@ def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
         path=llamacpp_model_file_path,
         temperature=temperature,
         top_p=top_p,
-        max_tokens=max_tokens,
+        top_k=top_k,
+        repeat_penalty=repeat_penalty,
+        last_n_tokens_size=repeat_last_n,
         n_ctx=n_ctx,
+        max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
         n_gpu_layers=n_gpu_layers,
@@ -184,8 +193,9 @@ def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
 
 def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
     google_model_name = "dummy-google-model"
-    temperature = 0.8
+    temperature = 0.0
     top_p = 0.95
+    top_k = 64
     max_tokens = 8192
     timeout = None
     max_retries = 2
@@ -200,6 +210,7 @@ def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
         google_model_name=google_model_name,
         temperature=temperature,
         top_p=top_p,
+        top_k=top_k,
         max_tokens=max_tokens,
         timeout=timeout,
         max_retries=max_retries,
@@ -209,6 +220,7 @@ def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
         model=google_model_name,
         temperature=temperature,
         top_p=top_p,
+        top_k=top_k,
         max_tokens=max_tokens,
         timeout=timeout,
         max_retries=max_retries,
@@ -279,8 +291,11 @@ def test__read_llm_file(
     llm_file_path = "llm.gguf"
     temperature = 0.8
     top_p = 0.95
-    max_tokens = 256
+    top_k = 64
     n_ctx = 512
+    repeat_penalty = 1.1
+    last_n_tokens_size = 64
+    max_tokens = 256
     seed = -1
     n_batch = 8
     n_gpu_layers = -1
@@ -314,8 +329,11 @@ def test__read_llm_file(
             model_path=llm_file_path,
             temperature=temperature,
             top_p=top_p,
-            max_tokens=max_tokens,
+            top_k=top_k,
+            repeat_penalty=repeat_penalty,
+            last_n_tokens_size=last_n_tokens_size,
             n_ctx=n_ctx,
+            max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
             n_gpu_layers=n_gpu_layers,
@@ -327,8 +345,11 @@ def test__read_llm_file(
             model_path=llm_file_path,
             temperature=temperature,
             top_p=top_p,
-            max_tokens=max_tokens,
+            top_k=top_k,
+            repeat_penalty=repeat_penalty,
+            last_n_tokens_size=last_n_tokens_size,
             n_ctx=n_ctx,
+            max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
             n_gpu_layers=n_gpu_layers,
@@ -360,9 +381,12 @@ def test__llama_log_callback(
 def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
     ollama_model_name = "dummy-ollama-model"
     ollama_base_url = "http://localhost:11434"
-    temperature = 0.8
+    temperature = 0.0
     top_p = 0.95
-    n_ctx = 512
+    top_k = 64
+    repeat_penalty = 1.1
+    repeat_last_n = 64
+    n_ctx = 8192
     seed = -1
     mocker.patch("sdeul.llm.override_env_vars")
     llm = mocker.MagicMock()
@@ -373,6 +397,9 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
         ollama_base_url=ollama_base_url,
         temperature=temperature,
         top_p=top_p,
+        top_k=top_k,
+        repeat_penalty=repeat_penalty,
+        repeat_last_n=repeat_last_n,
         n_ctx=n_ctx,
         seed=seed,
     )
@@ -382,6 +409,9 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
         base_url=ollama_base_url,
         temperature=temperature,
         top_p=top_p,
+        top_k=top_k,
+        repeat_penalty=repeat_penalty,
+        repeat_last_n=repeat_last_n,
         num_ctx=n_ctx,
         seed=seed,
     )

@@ -46,10 +46,13 @@ def extract_json_from_text_file(
     output_json_file_path: str | None = None,
     compact_json: bool = False,
     skip_validation: bool = False,
-    temperature: float = 0.8,
+    temperature: float = 0.0,
     top_p: float = 0.95,
-    max_tokens: int = 8192,
+    top_k: int = 64,
+    repeat_penalty: float = 1.1,
+    repeat_last_n: int = 64,
     n_ctx: int = 512,
+    max_tokens: int = 8192,
     seed: int = -1,
     n_batch: int = 8,
     n_gpu_layers: int = -1,
@@ -80,10 +83,13 @@ def extract_json_from_text_file(
         output_json_file_path: Path to the output JSON file.
         compact_json: Flag to output the JSON in compact format.
         skip_validation: Flag to skip JSON validation.
-        temperature: Temperature of the model.
-        top_p: Top-p of the model.
-        max_tokens: Maximum number of tokens.
+        temperature: Temperature for sampling.
+        top_p: Top-p value for sampling.
+        top_k: Top-k value for sampling.
+        repeat_penalty: Penalty for repeating tokens.
+        repeat_last_n: Number of last tokens to look back when applying repeat penalty.
         n_ctx: Context size.
+        max_tokens: Maximum number of tokens.
         seed: Seed of the model.
         n_batch: Batch size.
         n_gpu_layers: Number of GPU layers.
@@ -109,8 +115,11 @@ def extract_json_from_text_file(
         openai_organization=openai_organization,
         temperature=temperature,
         top_p=top_p,
-        max_tokens=max_tokens,
+        top_k=top_k,
+        repeat_penalty=repeat_penalty,
+        repeat_last_n=repeat_last_n,
         n_ctx=n_ctx,
+        max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
         n_gpu_layers=n_gpu_layers,

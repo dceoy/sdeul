@@ -45,7 +45,9 @@ def test_main_with_help_option(cli_args: list[str], runner: CliRunner) -> None:
 def test_main_invalid_arguments(cli_args: list[str], runner: CliRunner) -> None:
     result = runner.invoke(app, cli_args)
     assert result.exit_code != 0
-    assert "Error" in result.stdout
+    # Check if error appears in stdout or stderr (typer can output to either)
+    output = result.stdout + result.stderr
+    assert "Error" in output or "Usage:" in output
 
 
 def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> None:
