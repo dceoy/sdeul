@@ -1,21 +1,107 @@
-# SDEUL Development Guidelines
+# CLAUDE.md
 
-## Build/Test Commands
-- Install: `pip install -e .` or `poetry install`
-- Lint: `ruff check .`
-- Type check: `pyright .`
-- Run all tests: `pytest`
-- Run single test: `pytest test/pytest/test_file.py::TestClass::test_function -v`
-- Run bats tests: `bats test/bats/test_*.bats`
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Code Style Guidelines
-- Use Google docstring style; all public functions/classes must have docs
-- Type annotations required with strict typing (`typeCheckingMode = "strict"`)
-- Line length: 88 characters max
-- Imports: sorted using isort (handled by ruff)
-- Error handling: Use explicit exception types; avoid bare excepts
-- Naming: snake_case for variables/functions, PascalCase for classes
-- Keep test coverage at 100% (`fail_under = 100` in coverage settings)
-- Use pathlib instead of os.path where possible
-- Prefer f-strings over string formatting or concatenation
-- Follow ruff linting rules defined in pyproject.toml
+## Project Overview
+
+SDEUL (Structural Data Extractor using LLMs) is a Python tool that extracts structured data from text using various Large Language Models (LLMs) and validates it against a JSON Schema.
+
+## Development Commands
+
+### Environment Setup
+
+```sh
+# Install dependencies
+poetry install
+
+# Activate virtual environment
+poetry shell
+```
+
+### Testing
+
+```sh
+# Run pytest tests
+poetry run pytest
+
+# Run specific pytest test
+poetry run pytest test/pytest/test_extraction.py -v
+
+# Run tests with coverage report
+poetry run pytest --cov=sdeul --cov-report=term-missing
+
+# Run bats tests
+bats test/bats/test_cli.bats
+bats test/bats/test_openai.bats  # Requires OpenAI API key
+bats test/bats/test_bedrock.bats  # Requires AWS credentials
+bats test/bats/test_google.bats  # Requires Google API key
+bats test/bats/test_groq.bats  # Requires Groq API key
+bats test/bats/test_ollama.bats  # Requires Ollama running
+bats test/bats/test_llamacpp.bats  # Requires LLM file
+```
+
+### Code Quality
+
+```sh
+# Run linting
+poetry run ruff check .
+
+# Run linting with auto-fix
+poetry run ruff check --fix .
+
+# Run type checking
+poetry run pyright
+```
+
+### Building and Packaging
+
+```sh
+# Build the package
+poetry build
+
+# Install locally
+pip install -e .
+```
+
+## Architecture
+
+### Core Components
+
+1. **CLI Interface (`cli.py`)**: Defines the command-line interface using Typer with two main commands:
+   - `extract`: Extracts structured data from text using LLMs
+   - `validate`: Validates JSON files against a JSON Schema
+
+2. **Extraction Module (`extraction.py`)**: Contains the main functionality for:
+   - Reading input text and JSON Schema
+   - Creating appropriate LLM instances
+   - Generating structured data with the LLM
+   - Validating the output against the schema
+
+3. **LLM Module (`llm.py`)**: Handles:
+   - Creating LLM instances based on provider (OpenAI, Google, AWS Bedrock, Groq, Ollama, LLamaCpp)
+   - Parsing LLM outputs (extracting JSON from responses)
+
+4. **Utility Functions (`utility.py`)**: Provides helper functions for:
+   - File I/O operations
+   - Logging configuration
+   - Environment variables management
+
+5. **Validation Module (`validation.py`)**: Validates JSON data against JSON Schema
+
+### Data Flow
+
+1. User provides a JSON Schema and input text
+2. CLI parses arguments and calls extraction function
+3. The extraction function:
+   - Reads the schema and input text
+   - Creates an appropriate LLM instance based on user parameters
+   - Prompts the LLM using a system prompt and user template
+   - Parses the LLM output to extract valid JSON
+   - Validates the output against the schema
+   - Writes or prints the resulting structured data
+
+### Key Design Patterns
+
+- **Factory Pattern**: In `llm.py` to create appropriate LLM instances
+- **Decorator Pattern**: Used for timing function execution with `@log_execution_time`
+- **Adapter Pattern**: Each LLM provider has a consistent interface regardless of underlying implementation
