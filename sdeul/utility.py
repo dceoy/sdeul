@@ -15,7 +15,7 @@ import os
 import time
 from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 import boto3
 from botocore.exceptions import NoCredentialsError
@@ -24,8 +24,10 @@ from rich import print
 if TYPE_CHECKING:
     from mypy_boto3_sts.client import STSClient
 
+T = TypeVar("T")
 
-def log_execution_time(func: Callable[..., Any]) -> Callable[..., Any]:
+
+def log_execution_time(func: Callable[..., T]) -> Callable[..., T]:
     """Decorator to log the execution time of a function.
 
     This decorator logs the start, completion, and execution time of a function.
@@ -39,7 +41,7 @@ def log_execution_time(func: Callable[..., Any]) -> Callable[..., Any]:
     """
 
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args: object, **kwargs: object) -> T:
         logger = logging.getLogger(log_execution_time.__name__)
         logger.debug("Call function `%s` with parameters: %s", func.__name__, vars())
         start_time = time.time()
@@ -82,7 +84,7 @@ def configure_logging(
     logging.basicConfig(format=format, level=lv)
 
 
-def read_json_file(path: str) -> Any:
+def read_json_file(path: str) -> Any:  # noqa: ANN401
     """Read and parse a JSON file.
 
     Reads a JSON file from the specified path and returns the parsed data.
@@ -179,7 +181,7 @@ def override_env_vars(**kwargs: str | None) -> None:
 
 
 def write_or_print_json_data(
-    data: Any,
+    data: Any,  # noqa: ANN401
     output_json_file_path: str | None = None,
     compact_json: bool = False,
 ) -> None:

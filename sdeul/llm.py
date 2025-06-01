@@ -44,7 +44,7 @@ class JsonCodeOutputParser(StrOutputParser):
     markdown code blocks and plain JSON text.
     """
 
-    def parse(self, text: str) -> Any:
+    def parse(self, text: str) -> Any:  # noqa: ANN401
         """Parse JSON from LLM output text.
 
         Extracts JSON code blocks from the input text and parses them into

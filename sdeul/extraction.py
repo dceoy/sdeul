@@ -182,7 +182,7 @@ def _extract_structured_data_from_text(
     | ChatGoogleGenerativeAI
     | ChatOpenAI,
     skip_validation: bool = False,
-) -> Any:
+) -> Any:  # noqa: ANN401
     """Extract structured data from text using an LLM and JSON schema.
 
     This function uses a Language Learning Model to extract structured data

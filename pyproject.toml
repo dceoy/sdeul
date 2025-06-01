@@ -89,7 +89,7 @@ select = [
   "FURB",   # refurb (FURB)
   "RUF",    # Ruff-specific rules (RUF)
   "YTT",    # flake8-2020 (YTT)
-  # "ANN",    # flake8-annotations (ANN)
+  "ANN",    # flake8-annotations (ANN)
   "ASYNC",  # flake8-async (ASYNC)
   "BLE",    # flake8-blind-except (BLE)
   # "FBT",    # flake8-boolean-trap (FBT)
