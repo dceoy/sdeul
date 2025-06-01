@@ -11,7 +11,6 @@ import logging
 import os
 
 import pytest
-from conftest import TEST_LLM_OUTPUT, TEST_LLM_OUTPUT_JSON, TEST_LLM_OUTPUT_MD
 from langchain_core.exceptions import OutputParserException
 from pytest_mock import MockerFixture
 
@@ -21,6 +20,8 @@ from sdeul.llm import (
     _read_llm_file,
     create_llm_instance,
 )
+
+from .conftest import TEST_LLM_OUTPUT, TEST_LLM_OUTPUT_JSON, TEST_LLM_OUTPUT_MD
 
 
 def test_jsoncodeoutputparser_parse(mocker: MockerFixture) -> None:

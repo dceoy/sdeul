@@ -176,6 +176,7 @@ addopts = [
   "--capture=no",
   "--numprocesses=auto"
 ]
+pythonpaths = ["."]
 testpaths = ["test/unit"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]

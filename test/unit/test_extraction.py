@@ -8,7 +8,6 @@
 import json
 
 import pytest
-from conftest import TEST_LLM_OUTPUT, TEST_SCHEMA, TEST_TEXT
 from jsonschema import ValidationError
 from pytest_mock import MockerFixture
 
@@ -16,6 +15,8 @@ from sdeul.extraction import (
     _extract_structured_data_from_text,
     extract_json_from_text_file,
 )
+
+from .conftest import TEST_LLM_OUTPUT, TEST_SCHEMA, TEST_TEXT
 
 
 def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
