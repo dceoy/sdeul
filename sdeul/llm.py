@@ -97,7 +97,8 @@ def create_llm_instance(
     max_tokens: int = 8192,
     seed: int = -1,
     n_batch: int = 8,
-    n_gpu_layers: int = -1,
+    n_threads: int | None = None,
+    n_gpu_layers: int | None = -1,
     token_wise_streaming: bool = False,
     timeout: int | None = None,
     max_retries: int = 2,
@@ -137,8 +138,9 @@ def create_llm_instance(
         n_ctx (int): Token context window size.
         max_tokens (int): Maximum number of tokens to generate.
         seed (int): Random seed for reproducibility.
-        n_batch (int): Number of batch tokens.
-        n_gpu_layers (int): Number of GPU layers to use.
+        n_batch (int): Number of tokens to process in parallel for llama.cpp.
+        n_threads (int): Number of threads to use for llama.cpp.
+        n_gpu_layers (int): Number of GPU layers to use for llama.cpp.
         token_wise_streaming (bool): Whether to enable token-wise streaming.
         timeout (int | None): Timeout for the API calls in seconds.
         max_retries (int): Maximum number of retries for API calls.
@@ -188,6 +190,7 @@ def create_llm_instance(
             max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
+            n_threads=n_threads,
             n_gpu_layers=n_gpu_layers,
             token_wise_streaming=token_wise_streaming,
         )
@@ -255,16 +258,17 @@ def create_llm_instance(
 
 def _read_llm_file(
     path: str,
-    temperature: float = 0.0,
+    temperature: float = 0.8,
     top_p: float = 0.95,
-    top_k: int = 64,
+    top_k: int = 40,
     repeat_penalty: float = 1.1,
     last_n_tokens_size: int = 64,
-    n_ctx: int = 8192,
-    max_tokens: int = 8192,
+    n_ctx: int = 512,
+    max_tokens: int = 256,
     seed: int = -1,
     n_batch: int = 8,
-    n_gpu_layers: int = -1,
+    n_threads: int | None = None,
+    n_gpu_layers: int | None = None,
     token_wise_streaming: bool = False,
 ) -> LlamaCpp:
     logger = logging.getLogger(_read_llm_file.__name__)
@@ -281,6 +285,7 @@ def _read_llm_file(
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
+        n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
         verbose=(token_wise_streaming or logger.level <= logging.DEBUG),
         callback_manager=(

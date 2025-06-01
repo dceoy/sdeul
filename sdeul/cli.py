@@ -1,5 +1,7 @@
 """Structural Data Extractor using LLMs."""
 
+from multiprocessing import cpu_count
+
 import typer
 from rich import print
 
@@ -88,6 +90,11 @@ def extract(
         8,
         "--n-batch",
         help="Set the number of batch tokens.",
+    ),
+    n_threads: int = typer.Option(
+        -1,
+        "--n-threads",
+        help="Set the number of threads to use.",
     ),
     n_gpu_layers: int = typer.Option(
         -1,
@@ -194,6 +201,7 @@ def extract(
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
+        n_threads=(n_threads if n_threads > 0 else cpu_count()),
         n_gpu_layers=n_gpu_layers,
         openai_model_name=openai_model_name,
         google_model_name=google_model_name,

@@ -55,6 +55,7 @@ def extract_json_from_text_file(
     max_tokens: int = 8192,
     seed: int = -1,
     n_batch: int = 8,
+    n_threads: int = 1,
     n_gpu_layers: int = -1,
     token_wise_streaming: bool = False,
     timeout: int | None = None,
@@ -91,7 +92,8 @@ def extract_json_from_text_file(
         n_ctx: Context size.
         max_tokens: Maximum number of tokens.
         seed: Seed of the model.
-        n_batch: Batch size.
+        n_batch: Number of tokens to process in parallel.
+        n_threads: Number of threads to use.
         n_gpu_layers: Number of GPU layers.
         token_wise_streaming: Flag to enable token-wise streaming.
         timeout: Timeout of the model.
@@ -122,6 +124,7 @@ def extract_json_from_text_file(
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
+        n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
         token_wise_streaming=token_wise_streaming,
         timeout=timeout,
