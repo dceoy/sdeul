@@ -31,13 +31,13 @@ poetry run pytest test/pytest/test_extraction.py -v
 poetry run pytest --cov=sdeul --cov-report=term-missing
 
 # Run bats tests
-bats test/bats/test_cli.bats
-bats test/bats/test_openai.bats  # Requires OpenAI API key
-bats test/bats/test_bedrock.bats  # Requires AWS credentials
-bats test/bats/test_google.bats  # Requires Google API key
-bats test/bats/test_groq.bats  # Requires Groq API key
-bats test/bats/test_ollama.bats  # Requires Ollama running
-bats test/bats/test_llamacpp.bats  # Requires LLM file
+bats test/cli/test_cli.bats
+bats test/cli/test_openai.bats  # Requires OpenAI API key
+bats test/cli/test_bedrock.bats  # Requires AWS credentials
+bats test/cli/test_google.bats  # Requires Google API key
+bats test/cli/test_groq.bats  # Requires Groq API key
+bats test/cli/test_ollama.bats  # Requires Ollama running
+bats test/cli/test_llamacpp.bats  # Requires LLM file
 ```
 
 ### Code Quality

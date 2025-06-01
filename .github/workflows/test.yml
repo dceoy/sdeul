@@ -99,16 +99,16 @@ jobs:
           poetry install --no-interaction
       - name: Test CLI
         run: |
-          bats --verbose-run ./test/bats/test_cli.bats
+          bats --verbose-run ./test/cli/test_cli.bats
       - name: Test a command using Groq
         if: inputs.groq-model != null
         env:
           GROQ_MODEL: ${{ inputs.groq-model }}
         run: |
-          bats --verbose-run ./test/bats/test_groq.bats
+          bats --verbose-run ./test/cli/test_groq.bats
       - name: Run a specified Bats test file
         if: inputs.model-file-url != null
         env:
           MODEL_FILE_URL: ${{ inputs.model-file-url }}
         run: |
-          bats --verbose-run ./test/bats/test_llamacpp.bats
+          bats --verbose-run ./test/cli/test_llamacpp.bats
