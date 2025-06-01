@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+"""Tests for the validation module."""
+
 # pyright: reportPrivateUsage=false
 
 from json.decoder import JSONDecodeError

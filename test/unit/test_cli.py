@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+"""Tests for the CLI module."""
+
 # pyright: reportPrivateUsage=false
 
 import pytest

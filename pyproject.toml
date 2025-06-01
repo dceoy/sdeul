@@ -100,7 +100,7 @@ select = [
   "T10",    # flake8-debugger (T10)
   "DJ",     # flake8-django (DJ)
   "EM",     # flake8-errmsg (EM)
-  # "EXE",    # flake8-executable (EXE)
+  "EXE",    # flake8-executable (EXE)
   # "FA",     # flake8-future-annotations (FA)
   "ISC",    # flake8-implicit-str-concat (ISC)
   "ICN",    # flake8-import-conventions (ICN)
@@ -151,7 +151,6 @@ max-locals = 30
   "D104",     # undocumented-public-package
 ]
 "test/**.py" = [
-  "D100",     # undocumented-public-module
   "D101",     # undocumented-public-class
   "D102",     # undocumented-public-method
   "D103",     # undocumented-public-function
@@ -177,7 +176,7 @@ addopts = [
   "--capture=no",
   "--numprocesses=auto"
 ]
-testpaths = ["test/pytest"]
+testpaths = ["test/unit"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

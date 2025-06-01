@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""Tests for the utility module."""
 
 import json
 import logging

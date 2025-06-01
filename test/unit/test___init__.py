@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""Tests for the __init__ module."""
 
 from importlib import reload
 

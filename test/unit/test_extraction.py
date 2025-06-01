@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+"""Tests for the extraction module."""
+
 # pyright: reportMissingImports=false
 # pyright: reportUnknownVariableType=false
 # pyright: reportPrivateUsage=false

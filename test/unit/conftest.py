@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""Pytest configuration file."""
 
 import json
 
