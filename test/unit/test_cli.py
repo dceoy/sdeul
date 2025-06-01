@@ -25,7 +25,7 @@ def test__version_callback(value: bool, mocker: MockerFixture) -> None:
             _version_callback(value)
         mock_print.assert_called_once_with(dummy_version)
     else:
-        _version_callback(False)
+        _version_callback(value)
         mock_print.assert_not_called()
 
 
@@ -97,7 +97,7 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
             "schema.json",
             "input.txt",
         ],
-        ["extract", "--model-file=llm.gguf", "schema.json", "input.txt"],
+        ["extract", "--llamacpp-model-file=llm.gguf", "schema.json", "input.txt"],
         ["extract", "--ollama-model=llama3.1", "schema.json", "input.txt"],
         [
             "extract",
@@ -108,7 +108,7 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
         ],
         [
             "extract",
-            "--model-file=llm.gguf",
+            "--llamacpp-model-file=llm.gguf",
             "--temperature=0.5",
             "--top-p=0.2",
             "--max-tokens=4000",

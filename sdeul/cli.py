@@ -65,151 +65,108 @@ def main(
 
 @app.command()
 def extract(
-    json_schema_file_path: str = typer.Argument(..., help="JSON Schema file path."),
-    text_file_path: str = typer.Argument(..., help="Input text file path."),
-    output_json_file_path: str | None = typer.Option(
-        None,
-        "--output-json-file",
+    json_schema_file: str = typer.Argument(..., help="JSON Schema file path."),
+    text_file: str = typer.Argument(..., help="Input text file path."),
+    output_json_file: str | None = typer.Option(
+        default=None,
         help="Output JSON file path.",
     ),
     compact_json: bool = typer.Option(
-        False,
-        "--compact-json",
+        default=False,
         help="Compact instead of pretty-printed output.",
     ),
     skip_validation: bool = typer.Option(
-        False,
-        "--skip-validation",
+        default=False,
         help="Skip output validation using JSON Schema.",
     ),
     temperature: float = typer.Option(
-        0,
-        "--temperature",
+        default=0.0,
         help="Set the temperature for sampling.",
     ),
-    top_p: float = typer.Option(
-        0.95,
-        "--top-p",
-        help="Set the top-p value for sampling.",
-    ),
-    top_k: int = typer.Option(
-        64,
-        "--top-k",
-        help="Set the top-k value for sampling.",
-    ),
+    top_p: float = typer.Option(default=0.95, help="Set the top-p value for sampling."),
+    top_k: int = typer.Option(default=64, help="Set the top-k value for sampling."),
     repeat_penalty: float = typer.Option(
-        1.1, "--repetition-penalty", help="Set the penalty to apply to repeated tokens."
+        default=1.1, help="Set the penalty to apply to repeated tokens."
     ),
     repeat_last_n: int = typer.Option(
-        64,
-        "--repeat-last-n",
+        default=64,
         help="Set the number of tokens to look back when applying the repeat penalty.",
     ),
-    n_ctx: int = typer.Option(
-        8192,
-        "--n-ctx",
-        help="Set the token context window.",
-    ),
+    n_ctx: int = typer.Option(default=8192, help="Set the token context window."),
     max_tokens: int = typer.Option(
-        8192,
-        "--max-tokens",
-        help="Set the max tokens to generate.",
+        default=8192, help="Set the max tokens to generate."
     ),
-    seed: int = typer.Option(-1, "--seed", help="Set the random seed."),
-    n_batch: int = typer.Option(
-        8,
-        "--n-batch",
-        help="Set the number of batch tokens.",
-    ),
-    n_threads: int = typer.Option(
-        -1,
-        "--n-threads",
-        help="Set the number of threads to use.",
-    ),
-    n_gpu_layers: int = typer.Option(
-        -1,
-        "--n-gpu-layers",
-        help="Set the number of GPU layers.",
-    ),
-    openai_model_name: str | None = typer.Option(
-        None,
-        "--openai-model",
+    seed: int = typer.Option(default=-1, help="Set the random seed."),
+    n_batch: int = typer.Option(default=8, help="Set the number of batch tokens."),
+    n_threads: int = typer.Option(default=-1, help="Set the number of threads to use."),
+    n_gpu_layers: int = typer.Option(default=-1, help="Set the number of GPU layers."),
+    openai_model: str | None = typer.Option(
+        default=None,
         envvar="OPENAI_MODEL",
         help="Use the OpenAI model.",
     ),
-    google_model_name: str | None = typer.Option(
-        None,
-        "--google-model",
+    google_model: str | None = typer.Option(
+        default=None,
         envvar="GOOGLE_MODEL",
         help="Use the Google Generative AI model.",
     ),
-    groq_model_name: str | None = typer.Option(
-        None,
-        "--groq-model",
+    groq_model: str | None = typer.Option(
+        default=None,
         envvar="GROQ_MODEL",
         help="Use the Groq model.",
     ),
-    bedrock_model_id: str | None = typer.Option(
-        None,
-        "--bedrock-model",
+    bedrock_model: str | None = typer.Option(
+        default=None,
         envvar="BEDROCK_MODEL",
         help="Use the Amazon Bedrock model.",
     ),
-    ollama_model_name: str | None = typer.Option(
-        None,
-        "--ollama-model",
+    ollama_model: str | None = typer.Option(
+        default=None,
         envvar="OLLAMA_MODEL",
         help="Use the Ollama model.",
     ),
     ollama_base_url: str | None = typer.Option(
-        None,
-        "--ollama-base-url",
+        default=None,
         envvar="OLLAMA_BASE_URL",
         help="Override the Ollama base URL.",
     ),
-    llamacpp_model_file_path: str | None = typer.Option(
-        None,
-        "--model-file",
+    llamacpp_model_file: str | None = typer.Option(
+        default=None,
+        envvar="LLAMACPP_MODEL_FILE",
         help="Use the model GGUF file for llama.cpp.",
     ),
     openai_api_key: str | None = typer.Option(
-        None,
-        "--openai-api-key",
+        default=None,
         envvar="OPENAI_API_KEY",
         help="Override the OpenAI API key.",
     ),
     openai_api_base: str | None = typer.Option(
-        None,
-        "--openai-api-base",
+        default=None,
         envvar="OPENAI_API_BASE",
         help="Override the OpenAI API base URL.",
     ),
     openai_organization: str | None = typer.Option(
-        None,
-        "--openai-organization",
+        default=None,
         envvar="OPENAI_ORGANIZATION",
         help="Override the OpenAI organization ID.",
     ),
     google_api_key: str | None = typer.Option(
-        None,
-        "--google-api-key",
+        default=None,
         envvar="GOOGLE_API_KEY",
         help="Override the Google API key.",
     ),
     groq_api_key: str | None = typer.Option(
-        None,
-        "--groq-api-key",
+        default=None,
         envvar="GROQ_API_KEY",
         help="Override the Groq API key.",
     ),
-    aws_credentials_profile_name: str | None = typer.Option(
-        None,
-        "--aws-profile",
+    aws_credentials_profile: str | None = typer.Option(
+        default=None,
         envvar="AWS_PROFILE",
         help="Set the AWS credentials profile name for Amazon Bedrock.",
     ),
-    debug: bool = typer.Option(False, "--debug", help="Execute with debug messages."),
-    info: bool = typer.Option(False, "--info", help="Execute with info messages."),
+    debug: bool = typer.Option(default=False, help="Execute with debug messages."),
+    info: bool = typer.Option(default=False, help="Execute with info messages."),
 ) -> None:
     """Extract structured JSON data from text using Language Learning Models.
 
@@ -219,10 +176,10 @@ def extract(
     stdout.
 
     Args:
-        json_schema_file_path: Path to the JSON schema file that defines the
+        json_schema_file: Path to the JSON schema file that defines the
             structure of the expected output.
-        text_file_path: Path to the input text file containing unstructured data.
-        output_json_file_path: Optional path to save the extracted JSON output.
+        text_file: Path to the input text file containing unstructured data.
+        output_json_file: Optional path to save the extracted JSON output.
             If not provided, output is printed to stdout.
         compact_json: Output JSON in compact format instead of pretty-printed.
         skip_validation: Skip validation of the extracted data against the schema.
@@ -237,27 +194,27 @@ def extract(
         n_batch: Number of tokens to process in parallel (llama.cpp only).
         n_threads: Number of CPU threads to use (llama.cpp only).
         n_gpu_layers: Number of layers to offload to GPU (llama.cpp only).
-        openai_model_name: OpenAI model to use.
-        google_model_name: Google model to use.
-        groq_model_name: Groq model to use.
-        bedrock_model_id: Amazon Bedrock model ID to use.
-        ollama_model_name: Ollama model to use.
+        openai_model: OpenAI model to use.
+        google_model: Google model to use.
+        groq_model: Groq model to use.
+        bedrock_model: Amazon Bedrock model ID to use.
+        ollama_model: Ollama model to use.
         ollama_base_url: Custom Ollama API base URL.
-        llamacpp_model_file_path: Path to local GGUF model file for llama.cpp.
+        llamacpp_model_file: Path to local GGUF model file for llama.cpp.
         openai_api_key: OpenAI API key (overrides environment variable).
         openai_api_base: Custom OpenAI API base URL.
         openai_organization: OpenAI organization ID.
         google_api_key: Google API key (overrides environment variable).
         groq_api_key: Groq API key (overrides environment variable).
-        aws_credentials_profile_name: AWS profile name for Bedrock access.
+        aws_credentials_profile: AWS profile name for Bedrock access.
         debug: Enable debug logging level.
         info: Enable info logging level.
     """
     configure_logging(debug=debug, info=info)
     extract_json_from_text_file(
-        json_schema_file_path=json_schema_file_path,
-        text_file_path=text_file_path,
-        output_json_file_path=output_json_file_path,
+        json_schema_file_path=json_schema_file,
+        text_file_path=text_file,
+        output_json_file_path=output_json_file,
         compact_json=compact_json,
         skip_validation=skip_validation,
         temperature=temperature,
@@ -271,28 +228,28 @@ def extract(
         n_batch=n_batch,
         n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
-        openai_model_name=openai_model_name,
-        google_model_name=google_model_name,
-        groq_model_name=groq_model_name,
-        bedrock_model_id=bedrock_model_id,
-        ollama_model_name=ollama_model_name,
-        llamacpp_model_file_path=llamacpp_model_file_path,
+        openai_model_name=openai_model,
+        google_model_name=google_model,
+        groq_model_name=groq_model,
+        bedrock_model_id=bedrock_model,
+        ollama_model_name=ollama_model,
+        llamacpp_model_file_path=llamacpp_model_file,
         openai_api_key=openai_api_key,
         openai_api_base=openai_api_base,
         openai_organization=openai_organization,
         google_api_key=google_api_key,
         groq_api_key=groq_api_key,
         ollama_base_url=ollama_base_url,
-        aws_credentials_profile_name=aws_credentials_profile_name,
+        aws_credentials_profile_name=aws_credentials_profile,
     )
 
 
 @app.command()
 def validate(
-    json_schema_file_path: str = typer.Argument(..., help="JSON Schema file path."),
-    json_file_paths: list[str] = typer.Argument(..., help="JSON file paths."),
-    debug: bool = typer.Option(False, "--debug", help="Set DEBUG log level."),
-    info: bool = typer.Option(False, "--info", help="Set INFO log level."),
+    json_schema_file: str = typer.Argument(..., help="JSON Schema file path."),
+    json_files: list[str] = typer.Argument(..., help="JSON file paths."),
+    debug: bool = typer.Option(default=False, help="Set DEBUG log level."),
+    info: bool = typer.Option(default=False, help="Set INFO log level."),
 ) -> None:
     """Validate JSON files against a JSON Schema.
 
@@ -301,8 +258,8 @@ def validate(
     code if any files are invalid.
 
     Args:
-        json_schema_file_path: Path to the JSON schema file used for validation.
-        json_file_paths: List of paths to JSON files to validate.
+        json_schema_file: Path to the JSON schema file used for validation.
+        json_files: List of paths to JSON files to validate.
         debug: Enable debug logging level.
         info: Enable info logging level.
 
@@ -312,6 +269,6 @@ def validate(
     """
     configure_logging(debug=debug, info=info)
     validate_json_files_using_json_schema(
-        json_schema_file_path=json_schema_file_path,
-        json_file_paths=json_file_paths,
+        json_schema_file_path=json_schema_file,
+        json_file_paths=json_files,
     )

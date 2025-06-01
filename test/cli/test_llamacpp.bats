@@ -19,7 +19,7 @@ teardown_file() {
 
 @test "pass with \"sdeul extract --model-file\"" {
   run poetry run sdeul extract \
-    --model-file="${MODEL_FILE_PATH}" \
+    --llamacpp-model-file="${MODEL_FILE_PATH}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt
   [[ "${status}" -eq 0 ]]

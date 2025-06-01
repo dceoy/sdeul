@@ -16,7 +16,7 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Topic :: Software Development"
+  "Topic :: Software Development",
 ]
 packages = [
   {include = "sdeul", from = "."}
@@ -92,7 +92,7 @@ select = [
   "ANN",    # flake8-annotations (ANN)
   "ASYNC",  # flake8-async (ASYNC)
   "BLE",    # flake8-blind-except (BLE)
-  # "FBT",    # flake8-boolean-trap (FBT)
+  "FBT",    # flake8-boolean-trap (FBT)
   "A",      # flake8-builtins (A)
   "COM",    # flake8-commas (COM)
   # "CPY",    # flake8-copyright (CPY)
@@ -127,7 +127,7 @@ select = [
   "TRY",    # tryceratops (TRY)
   "FAST",   # FastAPI (FAST)
   "AIR",    # Airflow (AIR)
-  "DOC"     # pydoclint (DOC)
+  "DOC",    # pydoclint (DOC)
 ]
 ignore = [
   "B008",     # function-call-in-default-argument
@@ -137,6 +137,8 @@ ignore = [
   "ISC001",   # single-line-implicit-string-concatenation
   "PIE790",   # unnecessary-placeholder
   "TRY003",   # raise-vanilla-args
+  "FBT001",   # boolean-type-hint-positional-argument
+  "FBT002",   # boolean-default-value-positional-argument
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -174,7 +176,7 @@ addopts = [
   "--junitxml=junit/test-results.xml",
   "--doctest-modules",
   "--capture=no",
-  "--numprocesses=auto"
+  "--numprocesses=auto",
 ]
 pythonpaths = ["."]
 testpaths = ["test/unit"]
