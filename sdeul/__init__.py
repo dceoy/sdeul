@@ -1,4 +1,15 @@
-"""Initialization file for the package."""
+"""Structural Data Extractor using LLMs (sdeul) package.
+
+This package provides functionality for extracting structured JSON data from
+unstructured text using various Language Learning Models (LLMs) including
+OpenAI, Google, Groq, Amazon Bedrock, Ollama, and local models via llama.cpp.
+
+The package includes:
+- CLI interface for data extraction and JSON validation
+- Support for multiple LLM providers
+- JSON Schema validation
+- Text extraction from various sources
+"""
 
 from importlib.metadata import version
 

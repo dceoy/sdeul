@@ -1,4 +1,14 @@
-"""Constants for the JSON schema extraction task."""
+"""Constants and configuration for the JSON schema extraction task.
+
+This module contains system prompts, templates, and default model configurations
+used throughout the sdeul package for structured data extraction from text
+using various Language Learning Models.
+
+Constants:
+    SYSTEM_PROMPT: Core instruction prompt for LLMs to extract structured JSON
+    USER_PROMPT_TEMPLATE: Template for formatting user input and schema
+    DEFAULT_MODEL_NAMES: Default model names for each LLM provider
+"""
 
 SYSTEM_PROMPT = """\
 # Role

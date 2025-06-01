@@ -1,4 +1,13 @@
-"""Functions for extracting JSON from text."""
+"""Functions for extracting structured JSON data from unstructured text.
+
+This module provides the core functionality for extracting JSON data from text
+files using various Language Learning Models. It handles the complete workflow
+from reading input files to generating validated JSON output.
+
+Functions:
+    extract_json_from_text_file: Main function for extracting JSON from text files
+    _extract_structured_data_from_text: Internal function for LLM-based extraction
+"""
 
 import json
 import logging
@@ -64,43 +73,48 @@ def extract_json_from_text_file(
     aws_region: str | None = None,
     bedrock_endpoint_base_url: str | None = None,
 ) -> None:
-    """Extract JSON from input text.
+    """Extract structured JSON data from a text file using an LLM.
+
+    Reads a text file and JSON schema, then uses a Language Learning Model
+    to extract structured data that conforms to the provided schema. The
+    extracted data can be validated and output to a file or stdout.
 
     Args:
-        text_file_path: Path to the input text file.
-        json_schema_file_path: Path to the JSON schema file.
-        ollama_model_name: Name of the Ollama model.
-        ollama_base_url: Base URL of the Ollama API.
-        llamacpp_model_file_path: Path to the LlamaCpp model file.
-        groq_model_name: Name of the Groq model.
-        groq_api_key: API key
-        bedrock_model_id: Bedrock model ID.
-        google_model_name: Name of the Google model.
-        google_api_key: API key of the Google model.
-        openai_model_name: Name of the OpenAI model.
-        openai_api_key: API key of the OpenAI model.
-        openai_api_base: Base URL of the OpenAI API.
-        openai_organization: Organization of the OpenAI.
-        output_json_file_path: Path to the output JSON file.
-        compact_json: Flag to output the JSON in compact format.
-        skip_validation: Flag to skip JSON validation.
-        temperature: Temperature for sampling.
-        top_p: Top-p value for sampling.
-        top_k: Top-k value for sampling.
-        repeat_penalty: Penalty for repeating tokens.
-        repeat_last_n: Number of last tokens to look back when applying repeat penalty.
-        n_ctx: Context size.
-        max_tokens: Maximum number of tokens.
-        seed: Seed of the model.
-        n_batch: Number of tokens to process in parallel.
-        n_threads: Number of threads to use.
-        n_gpu_layers: Number of GPU layers.
-        token_wise_streaming: Flag to enable token-wise streaming.
-        timeout: Timeout of the model.
-        max_retries: Maximum number of retries.
-        aws_credentials_profile_name: Name of the AWS credentials profile.
-        aws_region: AWS region.
-        bedrock_endpoint_base_url: Base URL of the Amazon Bedrock endpoint.
+        text_file_path: Path to the input text file containing unstructured data.
+        json_schema_file_path: Path to the JSON schema file defining output structure.
+        ollama_model_name: Ollama model name.
+        ollama_base_url: Custom Ollama API base URL.
+        llamacpp_model_file_path: Path to local GGUF model file for llama.cpp.
+        groq_model_name: Groq model name.
+        groq_api_key: Groq API key (overrides environment variable).
+        bedrock_model_id: Amazon Bedrock model ID.
+        google_model_name: Google Generative AI model name.
+        google_api_key: Google API key (overrides environment variable).
+        openai_model_name: OpenAI model name.
+        openai_api_key: OpenAI API key (overrides environment variable).
+        openai_api_base: Custom OpenAI API base URL.
+        openai_organization: OpenAI organization ID.
+        output_json_file_path: Optional path to save extracted JSON. If None,
+            prints to stdout.
+        compact_json: If True, outputs JSON in compact format without indentation.
+        skip_validation: If True, skips JSON schema validation of extracted data.
+        temperature: Sampling temperature for randomness (0.0-2.0).
+        top_p: Top-p value for nucleus sampling (0.0-1.0).
+        top_k: Top-k value for limiting token choices.
+        repeat_penalty: Penalty for repeating tokens (1.0 = no penalty).
+        repeat_last_n: Number of tokens to consider for repeat penalty.
+        n_ctx: Token context window size.
+        max_tokens: Maximum number of tokens to generate.
+        seed: Random seed for reproducible output (-1 for random).
+        n_batch: Number of tokens to process in parallel (llama.cpp only).
+        n_threads: Number of CPU threads to use (llama.cpp only).
+        n_gpu_layers: Number of layers to offload to GPU (llama.cpp only).
+        token_wise_streaming: Enable token-wise streaming output (llama.cpp only).
+        timeout: API request timeout in seconds.
+        max_retries: Maximum number of API request retries.
+        aws_credentials_profile_name: AWS credentials profile name for Bedrock.
+        aws_region: AWS region for Bedrock service.
+        bedrock_endpoint_base_url: Custom Bedrock endpoint URL.
     """
     llm = create_llm_instance(
         ollama_model_name=ollama_model_name,
@@ -159,6 +173,25 @@ def _extract_structured_data_from_text(
     | ChatOpenAI,
     skip_validation: bool = False,
 ) -> Any:
+    """Extract structured data from text using an LLM and JSON schema.
+
+    This function uses a Language Learning Model to extract structured data
+    from unstructured text according to a provided JSON schema. The extracted
+    data is optionally validated against the schema.
+
+    Args:
+        input_text: The unstructured text to extract data from.
+        schema: JSON schema defining the structure of the expected output.
+        llm: The Language Learning Model instance to use for extraction.
+        skip_validation: Whether to skip JSON schema validation of the output.
+
+    Returns:
+        Any: The extracted structured data as a Python object.
+
+    Raises:
+        ValidationError: If validation is enabled and the extracted data
+            doesn't conform to the provided schema.
+    """
     logger = logging.getLogger(_extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
     prompt = ChatPromptTemplate([

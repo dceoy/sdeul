@@ -1,4 +1,20 @@
-"""Structural Data Extractor using LLMs."""
+"""Command Line Interface for Structural Data Extractor using LLMs.
+
+This module provides the main CLI application for sdeul, including commands
+for extracting structured JSON data from text and validating JSON files
+against schemas. It supports multiple LLM providers and various configuration
+options.
+
+Commands:
+    extract: Extract structured JSON data from text files
+    validate: Validate JSON files against JSON schemas
+
+Functions:
+    main: Main CLI callback function
+    extract: CLI command for data extraction
+    validate: CLI command for JSON validation
+    _version_callback: Callback for version option
+"""
 
 from multiprocessing import cpu_count
 
@@ -14,6 +30,14 @@ app = typer.Typer()
 
 
 def _version_callback(value: bool) -> None:
+    """Callback function for the --version option.
+
+    Args:
+        value: Whether the version option was provided.
+
+    Raises:
+        typer.Exit: Always exits after printing version if value is True.
+    """
     if value:
         print(__version__)
         raise typer.Exit
@@ -29,7 +53,15 @@ def main(
         help="Show version information and exit.",
     ),
 ) -> None:
-    """Structural Data Extractor using LLMs."""
+    """Structural Data Extractor using Language Learning Models.
+
+    sdeul is a command-line tool for extracting structured JSON data from
+    unstructured text using various Language Learning Models including
+    OpenAI, Google, Groq, Amazon Bedrock, Ollama, and local models.
+
+    Args:
+        version: Show version information and exit.
+    """
     pass
 
 
@@ -105,34 +137,31 @@ def extract(
         None,
         "--openai-model",
         envvar="OPENAI_MODEL",
-        help="Use the OpenAI model. (e.g., gpt-4o-mini)",
+        help="Use the OpenAI model.",
     ),
     google_model_name: str | None = typer.Option(
         None,
         "--google-model",
         envvar="GOOGLE_MODEL",
-        help="Use the Google Generative AI model. (e.g., gemini-1.5-flash)",
+        help="Use the Google Generative AI model.",
     ),
     groq_model_name: str | None = typer.Option(
         None,
         "--groq-model",
         envvar="GROQ_MODEL",
-        help="Use the Groq model. (e.g., llama-3.1-70b-versatile)",
+        help="Use the Groq model.",
     ),
     bedrock_model_id: str | None = typer.Option(
         None,
         "--bedrock-model",
         envvar="BEDROCK_MODEL",
-        help=(
-            "Use the Amazon Bedrock model."
-            " (e.g., anthropic.claude-3-5-sonnet-20240620-v1:0)"
-        ),
+        help="Use the Amazon Bedrock model.",
     ),
     ollama_model_name: str | None = typer.Option(
         None,
         "--ollama-model",
         envvar="OLLAMA_MODEL",
-        help="Use the Ollama model. (e.g., gemma3)",
+        help="Use the Ollama model.",
     ),
     ollama_base_url: str | None = typer.Option(
         None,
@@ -184,7 +213,48 @@ def extract(
     debug: bool = typer.Option(False, "--debug", help="Execute with debug messages."),
     info: bool = typer.Option(False, "--info", help="Execute with info messages."),
 ) -> None:
-    """Extract data as JSON."""
+    """Extract structured JSON data from text using Language Learning Models.
+
+    This command takes an input text file and a JSON schema, then uses a
+    selected Language Learning Model to extract structured data that conforms
+    to the provided schema. The output can be saved to a file or printed to
+    stdout.
+
+    Args:
+        json_schema_file_path: Path to the JSON schema file that defines the
+            structure of the expected output.
+        text_file_path: Path to the input text file containing unstructured data.
+        output_json_file_path: Optional path to save the extracted JSON output.
+            If not provided, output is printed to stdout.
+        compact_json: Output JSON in compact format instead of pretty-printed.
+        skip_validation: Skip validation of the extracted data against the schema.
+        temperature: Controls randomness in the model's output (0.0-2.0).
+        top_p: Controls diversity via nucleus sampling (0.0-1.0).
+        top_k: Controls diversity by limiting token choices.
+        repeat_penalty: Penalty for repeating tokens (1.0 = no penalty).
+        repeat_last_n: Number of tokens to consider for repeat penalty.
+        n_ctx: Size of the token context window.
+        max_tokens: Maximum number of tokens to generate.
+        seed: Random seed for reproducible output (-1 for random).
+        n_batch: Number of tokens to process in parallel (llama.cpp only).
+        n_threads: Number of CPU threads to use (llama.cpp only).
+        n_gpu_layers: Number of layers to offload to GPU (llama.cpp only).
+        openai_model_name: OpenAI model to use.
+        google_model_name: Google model to use.
+        groq_model_name: Groq model to use.
+        bedrock_model_id: Amazon Bedrock model ID to use.
+        ollama_model_name: Ollama model to use.
+        ollama_base_url: Custom Ollama API base URL.
+        llamacpp_model_file_path: Path to local GGUF model file for llama.cpp.
+        openai_api_key: OpenAI API key (overrides environment variable).
+        openai_api_base: Custom OpenAI API base URL.
+        openai_organization: OpenAI organization ID.
+        google_api_key: Google API key (overrides environment variable).
+        groq_api_key: Groq API key (overrides environment variable).
+        aws_credentials_profile_name: AWS profile name for Bedrock access.
+        debug: Enable debug logging level.
+        info: Enable info logging level.
+    """
     configure_logging(debug=debug, info=info)
     extract_json_from_text_file(
         json_schema_file_path=json_schema_file_path,
@@ -226,7 +296,22 @@ def validate(
     debug: bool = typer.Option(False, "--debug", help="Set DEBUG log level."),
     info: bool = typer.Option(False, "--info", help="Set INFO log level."),
 ) -> None:
-    """Validate JSON files using JSON Schema."""
+    """Validate JSON files against a JSON Schema.
+
+    This command validates one or more JSON files against a provided JSON schema.
+    It reports validation results for each file and exits with a non-zero status
+    code if any files are invalid.
+
+    Args:
+        json_schema_file_path: Path to the JSON schema file used for validation.
+        json_file_paths: List of paths to JSON files to validate.
+        debug: Enable debug logging level.
+        info: Enable info logging level.
+
+    Exit Codes:
+        0: All files are valid
+        N: N files failed validation (where N > 0)
+    """
     configure_logging(debug=debug, info=info)
     validate_json_files_using_json_schema(
         json_schema_file_path=json_schema_file_path,

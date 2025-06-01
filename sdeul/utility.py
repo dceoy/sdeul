@@ -1,4 +1,13 @@
-"""Utility functions."""
+"""Utility functions for file I/O, logging, and AWS operations.
+
+This module provides utility functions for common operations including:
+- Execution time logging decorator
+- Logging configuration
+- File reading and writing operations
+- AWS credentials checking
+- Environment variable management
+- JSON data output formatting
+"""
 
 import json
 import logging
@@ -19,11 +28,14 @@ if TYPE_CHECKING:
 def log_execution_time(func: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator to log the execution time of a function.
 
+    This decorator logs the start, completion, and execution time of a function.
+    It also logs exceptions if they occur during execution.
+
     Args:
         func: The function to be decorated.
 
     Returns:
-        The decorated function.
+        The decorated function with execution time logging.
     """
 
     @wraps(func)
@@ -51,12 +63,15 @@ def configure_logging(
     info: bool = False,
     format: str = "%(asctime)s [%(levelname)-8s] <%(name)s> %(message)s",
 ) -> None:
-    """Configure the logging module.
+    """Configure the logging module with the specified level and format.
+
+    Sets up the logging configuration based on the specified debug and info flags.
+    The logging level is determined by the flags: DEBUG > INFO > WARNING.
 
     Args:
-        debug: Enable the debug level.
-        info: Enable the info level.
-        format: The format of the log message.
+        debug: If True, sets logging level to DEBUG.
+        info: If True and debug is False, sets logging level to INFO.
+        format: The format string for log messages.
     """
     if debug:
         lv = logging.DEBUG
@@ -68,13 +83,16 @@ def configure_logging(
 
 
 def read_json_file(path: str) -> Any:
-    """Read a JSON file.
+    """Read and parse a JSON file.
+
+    Reads a JSON file from the specified path and returns the parsed data.
+    Logs the operation and the loaded data at appropriate levels.
 
     Args:
         path: The path to the JSON file.
 
     Returns:
-        The data in the JSON file.
+        The parsed JSON data as a Python object.
     """
     logger = logging.getLogger(read_json_file.__name__)
     logger.info("Read a JSON file: %s", path)
@@ -85,13 +103,16 @@ def read_json_file(path: str) -> Any:
 
 
 def read_text_file(path: str) -> str:
-    """Read a text file.
+    """Read the contents of a text file.
+
+    Reads a text file from the specified path and returns its contents as a string.
+    Uses UTF-8 encoding for reading the file.
 
     Args:
         path: The path to the text file.
 
     Returns:
-        The data in the text file.
+        The contents of the text file as a string.
     """
     logger = logging.getLogger(read_text_file.__name__)
     logger.info("Read a text file: %s", path)
@@ -102,11 +123,14 @@ def read_text_file(path: str) -> str:
 
 
 def write_file(path: str, data: str) -> None:
-    """Write data in a file.
+    """Write string data to a file.
+
+    Writes the provided string data to a file at the specified path.
+    Uses UTF-8 encoding and creates parent directories if they don't exist.
 
     Args:
-        path: The path to the file.
-        data: The data to be written in the file.
+        path: The path where the file should be written.
+        data: The string data to write to the file.
     """
     logger = logging.getLogger(write_file.__name__)
     logger.info("Write data in a file: %s", path)
@@ -115,10 +139,13 @@ def write_file(path: str, data: str) -> None:
 
 
 def has_aws_credentials() -> bool:
-    """Check if the AWS credentials are available.
+    """Check if AWS credentials are available and valid.
+
+    Attempts to call AWS STS get_caller_identity to verify that valid AWS
+    credentials are configured in the environment.
 
     Returns:
-        True if the AWS credentials are available, False otherwise.
+        True if AWS credentials are available and valid, False otherwise.
     """
     logger = logging.getLogger(has_aws_credentials.__name__)
     sts: STSClient = boto3.client("sts")  # pyright: ignore[reportUnknownMemberType]
@@ -133,10 +160,14 @@ def has_aws_credentials() -> bool:
 
 
 def override_env_vars(**kwargs: str | None) -> None:
-    """Override the environment variables.
+    """Override environment variables with provided values.
+
+    Sets environment variables from the provided keyword arguments, but only
+    for non-None values. Logs each operation for debugging purposes.
 
     Args:
-        kwargs: The key-value pairs of the environment variables to be overridden.
+        **kwargs: Key-value pairs where keys are environment variable names
+            and values are the values to set. None values are ignored.
     """
     logger = logging.getLogger(override_env_vars.__name__)
     for k, v in kwargs.items():
@@ -152,12 +183,17 @@ def write_or_print_json_data(
     output_json_file_path: str | None = None,
     compact_json: bool = False,
 ) -> None:
-    """Write or print JSON data.
+    """Write JSON data to a file or print to stdout.
+
+    Serializes the provided data to JSON format and either writes it to a file
+    or prints it to stdout. The JSON can be formatted as pretty-printed or compact.
 
     Args:
-        data: Data to output as JSON.
-        output_json_file_path: Path to the output JSON file.
-        compact_json: Flag to output the JSON in compact format.
+        data: The data to serialize and output as JSON.
+        output_json_file_path: Optional path to write the JSON file. If None,
+            the JSON is printed to stdout.
+        compact_json: If True, outputs JSON in compact format without indentation.
+            If False, outputs pretty-printed JSON with 2-space indentation.
     """
     output_json_string = json.dumps(
         obj=data, indent=(None if compact_json else 2), ensure_ascii=False

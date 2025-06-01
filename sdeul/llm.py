@@ -1,4 +1,17 @@
-"""Functions for LLM."""
+"""Functions for Language Learning Model (LLM) integration and management.
+
+This module provides functionality for creating and managing various LLM instances
+including OpenAI, Google Generative AI, Groq, Amazon Bedrock, Ollama, and local
+models via llama.cpp. It also includes custom output parsers for JSON extraction.
+
+Classes:
+    JsonCodeOutputParser: Custom parser for extracting JSON from LLM responses
+
+Functions:
+    create_llm_instance: Factory function for creating LLM instances
+    _read_llm_file: Helper function for loading local llama.cpp models
+    _llama_log_callback: Callback function for llama.cpp logging
+"""
 
 import ctypes
 import json
@@ -24,19 +37,28 @@ from .utility import has_aws_credentials, override_env_vars
 
 
 class JsonCodeOutputParser(StrOutputParser):
-    """Detect and parse the JSON code block in the output of an LLM call."""
+    """Parser for extracting and validating JSON from LLM text output.
+
+    This parser detects JSON code blocks in LLM responses and parses them into
+    Python objects. It handles various JSON formatting patterns including
+    markdown code blocks and plain JSON text.
+    """
 
     def parse(self, text: str) -> Any:
-        """Parse the output text.
+        """Parse JSON from LLM output text.
+
+        Extracts JSON code blocks from the input text and parses them into
+        Python objects. Handles various JSON formatting patterns.
 
         Args:
-            text: The output text.
+            text: The raw text output from an LLM that may contain JSON.
 
         Returns:
-            The parsed output.
+            The parsed JSON data as a Python object (dict, list, etc.).
 
         Raises:
-            OutputParserException: The JSON code block is not detected or invalid.
+            OutputParserException: If no valid JSON code block is detected
+                or if the detected JSON is malformed.
         """
         logger = logging.getLogger(f"{self.__class__.__name__}.{self.parse.__name__}")
         logger.debug("text: %s", text)
@@ -53,16 +75,20 @@ class JsonCodeOutputParser(StrOutputParser):
 
     @staticmethod
     def _detect_json_code_block(text: str) -> str:
-        """Detect the JSON code block in the output text.
+        """Detect and extract JSON code from text output.
+
+        Attempts to identify JSON content in various formats including
+        markdown code blocks (```json), generic code blocks (```),
+        and plain JSON text starting with brackets or quotes.
 
         Args:
-            text: The output text.
+            text: The text output that may contain JSON code.
 
         Returns:
-            The detected JSON code.
+            The extracted JSON code as a string.
 
         Raises:
-            OutputParserException: The JSON code block is not detected.
+            OutputParserException: If no valid JSON code block is detected.
         """
         if "```json" in text:
             return text.split("```json", 1)[1].split("```", 1)[0].strip()
@@ -271,6 +297,26 @@ def _read_llm_file(
     n_gpu_layers: int | None = None,
     token_wise_streaming: bool = False,
 ) -> LlamaCpp:
+    """Load a local LLM model file using llama.cpp.
+
+    Args:
+        path: Path to the model file (GGUF format).
+        temperature: Sampling temperature for randomness in generation.
+        top_p: Top-p value for nucleus sampling.
+        top_k: Top-k value for sampling.
+        repeat_penalty: Penalty applied to repeated tokens.
+        last_n_tokens_size: Number of tokens to consider for repeat penalty.
+        n_ctx: Token context window size.
+        max_tokens: Maximum number of tokens to generate.
+        seed: Random seed for reproducible generation.
+        n_batch: Number of tokens to process in parallel.
+        n_threads: Number of threads to use for processing.
+        n_gpu_layers: Number of layers to offload to GPU.
+        token_wise_streaming: Whether to enable token-wise streaming output.
+
+    Returns:
+        LlamaCpp: Configured LlamaCpp model instance.
+    """
     logger = logging.getLogger(_read_llm_file.__name__)
     llama_log_set(_llama_log_callback, ctypes.c_void_p(0))
     logger.info("Read the model file: %s", path)
@@ -300,5 +346,15 @@ def _read_llm_file(
 
 @llama_log_callback
 def _llama_log_callback(level: int, text: bytes, user_data: ctypes.c_void_p) -> None:  # noqa: ARG001
+    """Callback function for handling llama.cpp logging output.
+
+    This function is used as a callback for llama.cpp to redirect its log
+    messages to stderr when debug logging is enabled.
+
+    Args:
+        level: Log level from llama.cpp (unused).
+        text: Log message as bytes.
+        user_data: User data pointer (unused).
+    """
     if logging.root.level < logging.WARNING:
         print(text.decode("utf-8"), end="", flush=True, file=sys.stderr)  # noqa: T201
