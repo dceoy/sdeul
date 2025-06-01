@@ -123,7 +123,11 @@ def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
+        n_threads=None,
         n_gpu_layers=n_gpu_layers,
+        f16_kv=True,
+        use_mlock=True,
+        use_mmap=True,
         token_wise_streaming=token_wise_streaming,
     )
 
@@ -291,7 +295,7 @@ def test__read_llm_file(
     llm_file_path = "llm.gguf"
     temperature = 0.8
     top_p = 0.95
-    top_k = 64
+    top_k = 40
     n_ctx = 512
     repeat_penalty = 1.1
     last_n_tokens_size = 64
@@ -336,7 +340,11 @@ def test__read_llm_file(
             max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
+            n_threads=None,
             n_gpu_layers=n_gpu_layers,
+            f16_kv=True,
+            use_mlock=False,
+            use_mmap=True,
             verbose=expected_verbose,
             callback_manager=mock_callback_manager,
         )
@@ -352,7 +360,11 @@ def test__read_llm_file(
             max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
+            n_threads=None,
             n_gpu_layers=n_gpu_layers,
+            f16_kv=True,
+            use_mlock=False,
+            use_mmap=True,
             verbose=expected_verbose,
             callback_manager=None,
         )

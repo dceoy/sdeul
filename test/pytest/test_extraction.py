@@ -33,7 +33,11 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     max_tokens = 8192
     seed = -1
     n_batch = 8
+    n_threads = 2
     n_gpu_layers = -1
+    f16_kv = True
+    use_mlock = False
+    use_mmap = True
     token_wise_streaming = False
     timeout = None
     max_retries = 2
@@ -76,20 +80,24 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
+        n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
+        f16_kv=f16_kv,
+        use_mlock=use_mlock,
+        use_mmap=use_mmap,
         token_wise_streaming=token_wise_streaming,
         timeout=timeout,
         max_retries=max_retries,
     )
     mock_create_llm_instance.assert_called_once_with(
+        ollama_model_name=None,
+        ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
         groq_model_name=None,
         groq_api_key=None,
         bedrock_model_id=None,
         google_model_name=None,
         google_api_key=None,
-        ollama_model_name=None,
-        ollama_base_url=ollama_base_url,
         openai_model_name=None,
         openai_api_key=None,
         openai_api_base=None,
@@ -103,7 +111,11 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
+        n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
+        f16_kv=f16_kv,
+        use_mlock=use_mlock,
+        use_mmap=use_mmap,
         token_wise_streaming=token_wise_streaming,
         timeout=timeout,
         max_retries=max_retries,

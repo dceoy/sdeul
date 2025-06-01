@@ -125,6 +125,9 @@ def create_llm_instance(
     n_batch: int = 8,
     n_threads: int | None = None,
     n_gpu_layers: int | None = -1,
+    f16_kv: bool = True,
+    use_mlock: bool = True,
+    use_mmap: bool = True,
     token_wise_streaming: bool = False,
     timeout: int | None = None,
     max_retries: int = 2,
@@ -167,6 +170,10 @@ def create_llm_instance(
         n_batch (int): Number of tokens to process in parallel for llama.cpp.
         n_threads (int): Number of threads to use for llama.cpp.
         n_gpu_layers (int): Number of GPU layers to use for llama.cpp.
+        f16_kv (bool): Whether to use half-precision for key/value cache of llama.cpp.
+        use_mlock (bool): Whether to force the system to keep the model in RAM for
+            llama.cpp.
+        use_mmap (bool): Whether to keep the model loaded in RAM for llama.cpp.
         token_wise_streaming (bool): Whether to enable token-wise streaming.
         timeout (int | None): Timeout for the API calls in seconds.
         max_retries (int): Maximum number of retries for API calls.
@@ -218,6 +225,9 @@ def create_llm_instance(
             n_batch=n_batch,
             n_threads=n_threads,
             n_gpu_layers=n_gpu_layers,
+            f16_kv=f16_kv,
+            use_mlock=use_mlock,
+            use_mmap=use_mmap,
             token_wise_streaming=token_wise_streaming,
         )
     elif groq_model_name or (
@@ -295,6 +305,9 @@ def _read_llm_file(
     n_batch: int = 8,
     n_threads: int | None = None,
     n_gpu_layers: int | None = None,
+    f16_kv: bool = True,
+    use_mlock: bool = False,
+    use_mmap: bool = True,
     token_wise_streaming: bool = False,
 ) -> LlamaCpp:
     """Load a local LLM model file using llama.cpp.
@@ -312,6 +325,9 @@ def _read_llm_file(
         n_batch: Number of tokens to process in parallel.
         n_threads: Number of threads to use for processing.
         n_gpu_layers: Number of layers to offload to GPU.
+        f16_kv: Whether to use half-precision for key/value cache.
+        use_mlock: Whether to force system to keep model in RAM.
+        use_mmap: Whether to keep the model loaded in RAM
         token_wise_streaming: Whether to enable token-wise streaming output.
 
     Returns:
@@ -333,6 +349,9 @@ def _read_llm_file(
         n_batch=n_batch,
         n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
+        f16_kv=f16_kv,
+        use_mlock=use_mlock,
+        use_mmap=use_mmap,
         verbose=(token_wise_streaming or logger.level <= logging.DEBUG),
         callback_manager=(
             CallbackManager([StreamingStdOutCallbackHandler()])

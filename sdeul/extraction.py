@@ -11,6 +11,7 @@ Functions:
 
 import json
 import logging
+from multiprocessing import cpu_count
 from typing import TYPE_CHECKING, Any
 
 from jsonschema import validate
@@ -64,8 +65,11 @@ def extract_json_from_text_file(
     max_tokens: int = 8192,
     seed: int = -1,
     n_batch: int = 8,
-    n_threads: int = 1,
+    n_threads: int = -1,
     n_gpu_layers: int = -1,
+    f16_kv: bool = True,
+    use_mlock: bool = False,
+    use_mmap: bool = True,
     token_wise_streaming: bool = False,
     timeout: int | None = None,
     max_retries: int = 2,
@@ -109,6 +113,9 @@ def extract_json_from_text_file(
         n_batch: Number of tokens to process in parallel (llama.cpp only).
         n_threads: Number of CPU threads to use (llama.cpp only).
         n_gpu_layers: Number of layers to offload to GPU (llama.cpp only).
+        f16_kv: Use half-precision for key/value cache (llama.cpp only).
+        use_mlock: Force system to keep model in RAM (llama.cpp only).
+        use_mmap: Keep the model loaded in RAM (llama.cpp only).
         token_wise_streaming: Enable token-wise streaming output (llama.cpp only).
         timeout: API request timeout in seconds.
         max_retries: Maximum number of API request retries.
@@ -138,8 +145,11 @@ def extract_json_from_text_file(
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
-        n_threads=n_threads,
+        n_threads=(n_threads if n_threads > 0 else cpu_count()),
         n_gpu_layers=n_gpu_layers,
+        f16_kv=f16_kv,
+        use_mlock=use_mlock,
+        use_mmap=use_mmap,
         token_wise_streaming=token_wise_streaming,
         timeout=timeout,
         max_retries=max_retries,

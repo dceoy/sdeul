@@ -16,8 +16,6 @@ Functions:
     _version_callback: Callback for version option
 """
 
-from multiprocessing import cpu_count
-
 import typer
 from rich import print
 
@@ -271,7 +269,7 @@ def extract(
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
-        n_threads=(n_threads if n_threads > 0 else cpu_count()),
+        n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
         openai_model_name=openai_model_name,
         google_model_name=google_model_name,
