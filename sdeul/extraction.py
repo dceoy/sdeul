@@ -6,7 +6,7 @@ from reading input files to generating validated JSON output.
 
 Functions:
     extract_json_from_text_file: Main function for extracting JSON from text files
-    _extract_structured_data_from_text: Internal function for LLM-based extraction
+    extract_structured_data_from_text: Function for LLM-based extraction
 """
 
 import json
@@ -159,7 +159,7 @@ def extract_json_from_text_file(
     )
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
-    parsed_output_data = _extract_structured_data_from_text(
+    parsed_output_data = extract_structured_data_from_text(
         input_text=input_text,
         schema=schema,
         llm=llm,
@@ -172,7 +172,7 @@ def extract_json_from_text_file(
     )
 
 
-def _extract_structured_data_from_text(
+def extract_structured_data_from_text(
     input_text: str,
     schema: dict[str, Any],
     llm: ChatOllama
@@ -202,7 +202,7 @@ def _extract_structured_data_from_text(
         ValidationError: If validation is enabled and the extracted data
             doesn't conform to the provided schema.
     """
-    logger = logging.getLogger(_extract_structured_data_from_text.__name__)
+    logger = logging.getLogger(extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
     prompt = ChatPromptTemplate([
         ("system", SYSTEM_PROMPT),

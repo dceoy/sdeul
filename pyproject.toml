@@ -38,6 +38,7 @@ llama-cpp-python = "^0.3.0"
 boto3-stubs = {extras = ["sts"], version = "^1.35.24"}
 typer = ">=0.15,<0.17"
 fastapi = "^0.115.12"
+uvicorn = {extras = ["standard"], version = "^0.32.1"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.8.2,<0.12.0"
@@ -58,6 +59,7 @@ types-jsonschema = "^4.23.0.20240813"
 
 [tool.poetry.scripts]
 sdeul = "sdeul.cli:app"
+sdeul-api = "sdeul.api:run_server"
 
 [tool.ruff]
 line-length = 88
