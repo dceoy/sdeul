@@ -148,7 +148,6 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
         HTTPException: If extraction fails or no model is specified.
     """
     try:
-        # Create LLM instance
         llm = create_llm_instance(
             ollama_model_name=request.ollama_model,
             ollama_base_url=request.ollama_base_url,
@@ -183,20 +182,16 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             aws_region=request.aws_region,
             bedrock_endpoint_base_url=request.bedrock_endpoint_url,
         )
-
-        # Extract data
         extracted_data = extract_structured_data_from_text(
             input_text=request.text,
             schema=request.json_schema,
             llm=llm,
             skip_validation=request.skip_validation,
         )
-
-        return ExtractResponse(
+        response = ExtractResponse(
             data=extracted_data,
             validated=not request.skip_validation,
         )
-
     except ValueError as e:
         logger.exception("Invalid request")
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -208,6 +203,9 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
     except Exception as e:
         logger.exception("Extraction failed")
         raise HTTPException(status_code=500, detail=f"Extraction failed: {e!s}") from e
+    else:
+        logger.info("Data extracted successfully")
+        return response
 
 
 @app.post("/validate")

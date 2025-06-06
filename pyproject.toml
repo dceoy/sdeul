@@ -160,6 +160,7 @@ max-locals = 30
   "D102",     # undocumented-public-method
   "D103",     # undocumented-public-function
   "S101",     # assert
+  "S104",     # hardcoded-bind-all-interfaces
   "PLC2701",  # import-private-name
   "SLF001",   # private-member-access
 ]
