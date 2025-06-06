@@ -8,11 +8,13 @@ options.
 Commands:
     extract: Extract structured JSON data from text files
     validate: Validate JSON files against JSON schemas
+    serve: Run the FastAPI server for the REST API
 
 Functions:
     main: Main CLI callback function
     extract: CLI command for data extraction
     validate: CLI command for JSON validation
+    serve: CLI command for running the API server
     _version_callback: Callback for version option
 """
 
@@ -20,6 +22,7 @@ import typer
 from rich import print
 
 from . import __version__
+from .api import run_server
 from .extraction import extract_json_from_text_file
 from .utility import configure_logging
 from .validation import validate_json_files_using_json_schema
@@ -272,3 +275,37 @@ def validate(
         json_schema_file_path=json_schema_file,
         json_file_paths=json_files,
     )
+
+
+@app.command()
+def serve(
+    host: str = typer.Option(
+        default="0.0.0.0",  # noqa: S104
+        help="Host to run the server on.",
+    ),
+    port: int = typer.Option(
+        default=8000,
+        help="Port to run the server on.",
+    ),
+    reload: bool = typer.Option(
+        default=True,
+        help="Enable auto-reload on code changes.",
+    ),
+    debug: bool = typer.Option(default=False, help="Set DEBUG log level."),
+    info: bool = typer.Option(default=False, help="Set INFO log level."),
+) -> None:
+    """Run the FastAPI server for the SDEUL REST API.
+
+    This command starts a FastAPI server that provides REST API endpoints
+    for extracting structured JSON data from text and validating JSON data
+    against schemas.
+
+    Args:
+        host: The host IP address to bind the server to.
+        port: The port number to run the server on.
+        reload: Enable automatic reloading when code changes are detected.
+        debug: Enable debug logging level.
+        info: Enable info logging level.
+    """
+    configure_logging(debug=debug, info=info)
+    run_server(host=host, port=port, reload=reload)

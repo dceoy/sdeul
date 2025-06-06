@@ -164,3 +164,26 @@ def test_validate_command(
         info=("--info" in cli_args),
     )
     mock_validate_json_files_using_json_schema.assert_called_once()
+
+
+def test_serve_command(runner: CliRunner, mocker: MockerFixture) -> None:
+    """Test the serve command."""
+    mock_configure_logging = mocker.patch("sdeul.cli.configure_logging")
+    mock_run_server = mocker.patch("sdeul.cli.run_server")
+    result = runner.invoke(app, ["serve"])
+    assert result.exit_code == 0
+    mock_configure_logging.assert_called_once_with(debug=False, info=False)
+    mock_run_server.assert_called_once_with(host="0.0.0.0", port=8000, reload=True)
+
+
+def test_serve_command_with_options(runner: CliRunner, mocker: MockerFixture) -> None:
+    """Test the serve command with custom options."""
+    mock_configure_logging = mocker.patch("sdeul.cli.configure_logging")
+    mock_run_server = mocker.patch("sdeul.cli.run_server")
+    result = runner.invoke(
+        app,
+        ["serve", "--host", "localhost", "--port", "9000", "--no-reload", "--debug"],
+    )
+    assert result.exit_code == 0
+    mock_configure_logging.assert_called_once_with(debug=True, info=False)
+    mock_run_server.assert_called_once_with(host="localhost", port=9000, reload=False)

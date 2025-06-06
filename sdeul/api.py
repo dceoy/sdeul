@@ -241,11 +241,21 @@ async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-def run_server() -> None:
-    """Run the FastAPI server using uvicorn."""
+def run_server(
+    host: str = "0.0.0.0",  # noqa: S104
+    port: int = 8000,
+    reload: bool = True,
+) -> None:
+    """Run the FastAPI server using uvicorn.
+
+    Args:
+        host: The host to run the server on.
+        port: The port to run the server on.
+        reload: Whether to enable auto-reload on code changes.
+    """
     uvicorn.run(
         "sdeul.api:app",
-        host="0.0.0.0",  # noqa: S104
-        port=8000,
-        reload=True,
+        host=host,
+        port=port,
+        reload=reload,
     )

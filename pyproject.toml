@@ -59,7 +59,6 @@ types-jsonschema = "^4.23.0.20240813"
 
 [tool.poetry.scripts]
 sdeul = "sdeul.cli:app"
-sdeul-api = "sdeul.api:run_server"
 
 [tool.ruff]
 line-length = 88

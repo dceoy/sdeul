@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 from jsonschema import ValidationError as JsonSchemaValidationError
+from pydantic import ValidationError
 from pytest_mock import MockerFixture
 
 from sdeul.api import (
@@ -21,7 +22,24 @@ from sdeul.api import (
     run_server,
 )
 
-from .conftest import TEST_LLM_OUTPUT, TEST_SCHEMA, TEST_TEXT
+from .conftest import (
+    TEST_LLM_OUTPUT,
+    TEST_MAX_RETRIES,
+    TEST_MAX_TOKENS,
+    TEST_SCHEMA,
+    TEST_TEMPERATURE,
+    TEST_TEXT,
+    TEST_TIMEOUT,
+    TEST_TOP_P,
+)
+
+# HTTP status codes
+_HTTP_200_OK = 200
+_HTTP_400_BAD_REQUEST = 400
+_HTTP_422_UNPROCESSABLE_ENTITY = 422
+_HTTP_500_INTERNAL_SERVER_ERROR = 500
+
+# Test parameter values
 
 
 @pytest.fixture
@@ -49,7 +67,7 @@ def validate_request_data() -> dict[str, Any]:
 
 def test_health_endpoint(client: TestClient) -> None:
     response = client.get("/health")
-    assert response.status_code == 200
+    assert response.status_code == _HTTP_200_OK
     assert response.json() == {"status": "healthy"}
 
 
@@ -70,7 +88,7 @@ def test_extract_endpoint_success(
 
     response = client.post("/extract", json=extract_request_data)
 
-    assert response.status_code == 200
+    assert response.status_code == _HTTP_200_OK
     response_data = response.json()
     assert response_data["data"] == TEST_LLM_OUTPUT
     assert response_data["validated"] is True
@@ -101,7 +119,7 @@ def test_extract_endpoint_with_skip_validation(
 
     response = client.post("/extract", json=extract_request_data)
 
-    assert response.status_code == 200
+    assert response.status_code == _HTTP_200_OK
     response_data = response.json()
     assert response_data["data"] == TEST_LLM_OUTPUT
     assert response_data["validated"] is False
@@ -126,7 +144,7 @@ def test_extract_endpoint_value_error(
 
     response = client.post("/extract", json=extract_request_data)
 
-    assert response.status_code == 400
+    assert response.status_code == _HTTP_400_BAD_REQUEST
     assert "Invalid model configuration" in response.json()["detail"]
 
 
@@ -146,7 +164,7 @@ def test_extract_endpoint_validation_error(
 
     response = client.post("/extract", json=extract_request_data)
 
-    assert response.status_code == 422
+    assert response.status_code == _HTTP_422_UNPROCESSABLE_ENTITY
     assert "Validation error" in response.json()["detail"]
 
 
@@ -164,7 +182,7 @@ def test_extract_endpoint_generic_error(
 
     response = client.post("/extract", json=extract_request_data)
 
-    assert response.status_code == 500
+    assert response.status_code == _HTTP_500_INTERNAL_SERVER_ERROR
     assert "Extraction failed" in response.json()["detail"]
 
 
@@ -177,7 +195,7 @@ def test_extract_endpoint_invalid_request_data(client: TestClient) -> None:
     response = client.post("/extract", json=invalid_data)
 
     # Should return 422 for validation error
-    assert response.status_code == 400
+    assert response.status_code == _HTTP_400_BAD_REQUEST
 
 
 def test_extract_endpoint_with_different_models(
@@ -228,7 +246,7 @@ def test_extract_endpoint_with_different_models(
 
     for request_data in test_cases:
         response = client.post("/extract", json=request_data)
-        assert response.status_code == 200
+        assert response.status_code == _HTTP_200_OK
         response_data = response.json()
         assert response_data["data"] == TEST_LLM_OUTPUT
         assert response_data["validated"] is True
@@ -243,7 +261,7 @@ def test_validate_endpoint_success(
 ) -> None:
     response = client.post("/validate", json=validate_request_data)
 
-    assert response.status_code == 200
+    assert response.status_code == _HTTP_200_OK
     response_data = response.json()
     assert response_data["valid"] is True
     assert response_data["error"] is None
@@ -257,7 +275,7 @@ def test_validate_endpoint_validation_error(client: TestClient) -> None:
 
     response = client.post("/validate", json=invalid_data)
 
-    assert response.status_code == 200
+    assert response.status_code == _HTTP_200_OK
     response_data = response.json()
     assert response_data["valid"] is False
     assert response_data["error"] is not None
@@ -276,7 +294,7 @@ def test_validate_endpoint_generic_error(
 
     response = client.post("/validate", json=validate_request_data)
 
-    assert response.status_code == 500
+    assert response.status_code == _HTTP_500_INTERNAL_SERVER_ERROR
     assert "Validation error" in response.json()["detail"]
 
 
@@ -289,15 +307,15 @@ def test_validate_endpoint_invalid_request_data(client: TestClient) -> None:
     response = client.post("/validate", json=invalid_data)
 
     # Should return 422 for validation error
-    assert response.status_code == 422
+    assert response.status_code == _HTTP_422_UNPROCESSABLE_ENTITY
 
 
 @pytest.mark.parametrize(
-    "temperature,top_p,top_k,max_tokens",
+    ("temperature", "top_p", "top_k", "max_tokens"),
     [
         (0.0, 0.95, 64, 8192),  # Default values
-        (1.0, 0.8, 40, 4096),   # Custom values
-        (2.0, 1.0, 1, 1),       # Edge values
+        (1.0, 0.8, 40, 4096),  # Custom values
+        (2.0, 1.0, 1, 1),  # Edge values
     ],
 )
 def test_extract_request_model_parameters(
@@ -325,7 +343,7 @@ def test_extract_request_model_parameters(
 
 def test_extract_request_model_invalid_parameters() -> None:
     # Test invalid temperature (> 2.0)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError, match="less than or equal to 2"):
         ExtractRequest(
             text=TEST_TEXT,
             json_schema=TEST_SCHEMA,
@@ -334,7 +352,7 @@ def test_extract_request_model_invalid_parameters() -> None:
         )
 
     # Test invalid top_p (> 1.0)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError, match="less than or equal to 1"):
         ExtractRequest(
             text=TEST_TEXT,
             json_schema=TEST_SCHEMA,
@@ -343,7 +361,7 @@ def test_extract_request_model_invalid_parameters() -> None:
         )
 
     # Test invalid top_k (< 1)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError, match="greater than or equal to 1"):
         ExtractRequest(
             text=TEST_TEXT,
             json_schema=TEST_SCHEMA,
@@ -352,7 +370,7 @@ def test_extract_request_model_invalid_parameters() -> None:
         )
 
     # Test invalid max_tokens (< 1)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError, match="greater than or equal to 1"):
         ExtractRequest(
             text=TEST_TEXT,
             json_schema=TEST_SCHEMA,
@@ -453,7 +471,7 @@ def test_extract_endpoint_with_all_parameters(
 
     response = client.post("/extract", json=request_data)
 
-    assert response.status_code == 200
+    assert response.status_code == _HTTP_200_OK
     response_data = response.json()
     assert response_data["data"] == TEST_LLM_OUTPUT
     assert response_data["validated"] is False  # skip_validation is True
@@ -465,8 +483,8 @@ def test_extract_endpoint_with_all_parameters(
     # Check key parameters
     assert call_kwargs["openai_model_name"] == "gpt-4"
     assert call_kwargs["openai_api_key"] == "test-key"
-    assert call_kwargs["temperature"] == 0.7
-    assert call_kwargs["top_p"] == 0.9
-    assert call_kwargs["max_tokens"] == 2048
-    assert call_kwargs["timeout"] == 30
-    assert call_kwargs["max_retries"] == 3
+    assert call_kwargs["temperature"] == TEST_TEMPERATURE
+    assert call_kwargs["top_p"] == TEST_TOP_P
+    assert call_kwargs["max_tokens"] == TEST_MAX_TOKENS
+    assert call_kwargs["timeout"] == TEST_TIMEOUT
+    assert call_kwargs["max_retries"] == TEST_MAX_RETRIES
