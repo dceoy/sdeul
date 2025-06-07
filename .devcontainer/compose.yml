@@ -13,7 +13,8 @@ services:
     volumes:
       - ..:/workspace:consistent
       - ${HOME}/.claude:/home/vscode/.claude:cached
-      - ${HOME}/.aws:/home/vscode/.aws:ro
+      - ${HOME}/.aws/config:/home/vscode/.aws/config:ro
+      - ${HOME}/.aws/credentials:/home/vscode/.aws/credentials:ro
     working_dir: /workspace
     environment:
       CLAUDE_CODE_USE_BEDROCK: 1

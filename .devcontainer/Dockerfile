@@ -25,6 +25,14 @@ RUN \
       && apt-get -yqq install --no-install-recommends --no-install-suggests \
         npm
 
+RUN \
+      --mount=type=cache,target=/root/.cache \
+      curl -fsSL -o /tmp/awscliv2.zip \
+        "https://awscli.amazonaws.com/awscli-exe-linux-$([ "$(uname -m)" = 'x86_64' ] && echo 'x86_64' || echo 'aarch64').zip" \
+      && unzip /tmp/awscliv2.zip -d /tmp \
+      && /tmp/aws/install \
+      && rm -rf /tmp/awscliv2.zip /tmp/aws
+
 # hadolint ignore=DL3016
 RUN \
       --mount=type=cache,target=/root/.cache \
