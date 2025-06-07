@@ -3847,6 +3847,42 @@ files = [
 types-setuptools = "*"
 
 [[package]]
+name = "types-colorama"
+version = "0.4.15.20240311"
+description = "Typing stubs for colorama"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "types-colorama-0.4.15.20240311.tar.gz", hash = "sha256:a28e7f98d17d2b14fb9565d32388e419f4108f557a7d939a66319969b2b99c7a"},
+    {file = "types_colorama-0.4.15.20240311-py3-none-any.whl", hash = "sha256:6391de60ddc0db3f147e31ecb230006a6823e81e380862ffca1e4695c13a0b8e"},
+]
+
+[[package]]
+name = "types-decorator"
+version = "5.2.0.20250324"
+description = "Typing stubs for decorator"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_decorator-5.2.0.20250324-py3-none-any.whl", hash = "sha256:0740cee7ce57cf9cf2b306114a1588984255f706efa0f35b54b2cff290a110e2"},
+    {file = "types_decorator-5.2.0.20250324.tar.gz", hash = "sha256:8fbd72b0dadc56176e48e5187de744e76fe45bcc91a25874baa75662412155d3"},
+]
+
+[[package]]
+name = "types-docutils"
+version = "0.21.0.20250604"
+description = "Typing stubs for docutils"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_docutils-0.21.0.20250604-py3-none-any.whl", hash = "sha256:bfa8628176c06a80cdd1d6f3fb32e972e042db53538596488dfe0e9c5962b222"},
+    {file = "types_docutils-0.21.0.20250604.tar.gz", hash = "sha256:5a9cc7f5a4c5ef694aa0abc61111e0b1376a53dee90d65757f77f31acfcca8f2"},
+]
+
+[[package]]
 name = "types-jsonschema"
 version = "4.24.0.20250528"
 description = "Typing stubs for jsonschema"
@@ -3862,6 +3898,18 @@ files = [
 referencing = "*"
 
 [[package]]
+name = "types-pexpect"
+version = "4.9.0.20250516"
+description = "Typing stubs for pexpect"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_pexpect-4.9.0.20250516-py3-none-any.whl", hash = "sha256:84cbd7ae9da577c0d2629d4e4fd53cf074cd012296e01fd4fa1031e01973c28a"},
+    {file = "types_pexpect-4.9.0.20250516.tar.gz", hash = "sha256:7baed9ee566fa24034a567cbec56a5cff189a021344e84383b14937b35d83881"},
+]
+
+[[package]]
 name = "types-protobuf"
 version = "6.30.2.20250516"
 description = "Typing stubs for protobuf"
@@ -3872,6 +3920,21 @@ files = [
     {file = "types_protobuf-6.30.2.20250516-py3-none-any.whl", hash = "sha256:8c226d05b5e8b2623111765fa32d6e648bbc24832b4c2fddf0fa340ba5d5b722"},
     {file = "types_protobuf-6.30.2.20250516.tar.gz", hash = "sha256:aecd1881770a9bb225ede66872ef7f0da4505edd0b193108edd9892e48d49a41"},
 ]
+
+[[package]]
+name = "types-pygments"
+version = "2.19.0.20250516"
+description = "Typing stubs for Pygments"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_pygments-2.19.0.20250516-py3-none-any.whl", hash = "sha256:db27de8b59591389cd7d14792483892c021c73b8389ef55fef40a48aa371fbcc"},
+    {file = "types_pygments-2.19.0.20250516.tar.gz", hash = "sha256:b53fd07e197f0e7be38ee19598bd99c78be5ca5f9940849c843be74a2f81ab58"},
+]
+
+[package.dependencies]
+types-docutils = "*"
 
 [[package]]
 name = "types-pyopenssl"
@@ -4506,4 +4569,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "2f8218cde9dcb3c718f15a656dc1ea864c6e1e455fe1fe2e59d5886c4bf672b8"
+content-hash = "c011b961ddacd374cc1ae5fc7efa68d44c51d660471960f0804bb6352fa66480"
