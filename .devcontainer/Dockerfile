@@ -21,15 +21,24 @@ RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
       apt-get -y update \
-      && apt-get -y upgrade
+      && apt-get -y upgrade \
+      && apt-get -yqq install --no-install-recommends --no-install-suggests \
+        npm
 
+# hadolint ignore=DL3016
 RUN \
       --mount=type=cache,target=/root/.cache \
       /usr/local/bin/python -m pip install --prefix /usr/local --upgrade \
-        pip poetry
+        pip poetry \
+      && npm install -g @anthropic-ai/claude-code @openai/codex
 
 RUN \
       chown -R vscode:vscode /usr/local
+
+RUN \
+      echo '.DS_Store' > "${HOME}/.gitignore" \
+      && git config --global core.excludesfile "${HOME}/.gitignore" \
+      && git config --global core.pager ''
 
 HEALTHCHECK NONE
 

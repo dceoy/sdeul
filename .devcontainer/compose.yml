@@ -1,0 +1,27 @@
+---
+services:
+  sdeul-devcontainer:
+    container_name: sdeul-devcontainer
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: devcontainer
+      args:
+        PYTHON_VERSION: '3.13'
+    image: dceoy/sdeul:devcontainer
+    user: vscode
+    volumes:
+      - ..:/workspace:consistent
+      - ${HOME}/.claude:/home/vscode/.claude:cached
+      - ${HOME}/.aws:/home/vscode/.aws:ro
+    working_dir: /workspace
+    environment:
+      CLAUDE_CODE_USE_BEDROCK: 1
+      ANTHROPIC_MODEL: us.anthropic.claude-opus-4-20250514-v1:0
+      ANTHROPIC_SMALL_FAST_MODEL: us.anthropic.claude-sonnet-4-20250514-v1:0
+      DISABLE_PROMPT_CACHING: 0
+    entrypoint:
+      - /usr/bin/zsh
+    command:
+      - -lc
+      - sleep infinity
