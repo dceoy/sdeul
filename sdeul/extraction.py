@@ -84,44 +84,54 @@ def extract_json_from_text_file(
     extracted data can be validated and output to a file or stdout.
 
     Args:
-        text_file_path: Path to the input text file containing unstructured data.
-        json_schema_file_path: Path to the JSON schema file defining output structure.
-        ollama_model_name: Ollama model name.
-        ollama_base_url: Custom Ollama API base URL.
-        llamacpp_model_file_path: Path to local GGUF model file for llama.cpp.
-        groq_model_name: Groq model name.
-        groq_api_key: Groq API key (overrides environment variable).
-        bedrock_model_id: Amazon Bedrock model ID.
-        google_model_name: Google Generative AI model name.
-        google_api_key: Google API key (overrides environment variable).
-        openai_model_name: OpenAI model name.
-        openai_api_key: OpenAI API key (overrides environment variable).
-        openai_api_base: Custom OpenAI API base URL.
-        openai_organization: OpenAI organization ID.
-        output_json_file_path: Optional path to save extracted JSON. If None,
-            prints to stdout.
-        compact_json: If True, outputs JSON in compact format without indentation.
-        skip_validation: If True, skips JSON schema validation of extracted data.
-        temperature: Sampling temperature for randomness (0.0-2.0).
-        top_p: Top-p value for nucleus sampling (0.0-1.0).
-        top_k: Top-k value for limiting token choices.
-        repeat_penalty: Penalty for repeating tokens (1.0 = no penalty).
-        repeat_last_n: Number of tokens to consider for repeat penalty.
-        n_ctx: Token context window size.
-        max_tokens: Maximum number of tokens to generate.
-        seed: Random seed for reproducible output (-1 for random).
-        n_batch: Number of tokens to process in parallel (llama.cpp only).
-        n_threads: Number of CPU threads to use (llama.cpp only).
-        n_gpu_layers: Number of layers to offload to GPU (llama.cpp only).
-        f16_kv: Use half-precision for key/value cache (llama.cpp only).
-        use_mlock: Force system to keep model in RAM (llama.cpp only).
-        use_mmap: Keep the model loaded in RAM (llama.cpp only).
-        token_wise_streaming: Enable token-wise streaming output (llama.cpp only).
-        timeout: API request timeout in seconds.
-        max_retries: Maximum number of API request retries.
-        aws_credentials_profile_name: AWS credentials profile name for Bedrock.
-        aws_region: AWS region for Bedrock service.
-        bedrock_endpoint_base_url: Custom Bedrock endpoint URL.
+        text_file_path (str): Path to the input text file containing
+            unstructured data.
+        json_schema_file_path (str): Path to the JSON schema file defining
+            output structure.
+        ollama_model_name (str | None): Ollama model name.
+        ollama_base_url (str | None): Custom Ollama API base URL.
+        llamacpp_model_file_path (str | None): Path to local GGUF model file
+            for llama.cpp.
+        groq_model_name (str | None): Groq model name.
+        groq_api_key (str | None): Groq API key (overrides environment
+            variable).
+        bedrock_model_id (str | None): Amazon Bedrock model ID.
+        google_model_name (str | None): Google Generative AI model name.
+        google_api_key (str | None): Google API key (overrides environment
+            variable).
+        openai_model_name (str | None): OpenAI model name.
+        openai_api_key (str | None): OpenAI API key (overrides environment
+            variable).
+        openai_api_base (str | None): Custom OpenAI API base URL.
+        openai_organization (str | None): OpenAI organization ID.
+        output_json_file_path (str | None): Optional path to save extracted JSON.
+            If None, prints to stdout.
+        compact_json (bool): If True, outputs JSON in compact format without
+            indentation.
+        skip_validation (bool): If True, skips JSON schema validation of
+            extracted data.
+        temperature (float): Sampling temperature for randomness (0.0-2.0).
+        top_p (float): Top-p value for nucleus sampling (0.0-1.0).
+        top_k (int): Top-k value for limiting token choices.
+        repeat_penalty (float): Penalty for repeating tokens (1.0 = no penalty).
+        repeat_last_n (int): Number of tokens to consider for repeat penalty.
+        n_ctx (int): Token context window size.
+        max_tokens (int): Maximum number of tokens to generate.
+        seed (int): Random seed for reproducible output (-1 for random).
+        n_batch (int): Number of tokens to process in parallel (llama.cpp only).
+        n_threads (int): Number of CPU threads to use (llama.cpp only).
+        n_gpu_layers (int): Number of layers to offload to GPU (llama.cpp only).
+        f16_kv (bool): Use half-precision for key/value cache (llama.cpp only).
+        use_mlock (bool): Force system to keep model in RAM (llama.cpp only).
+        use_mmap (bool): Keep the model loaded in RAM (llama.cpp only).
+        token_wise_streaming (bool): Enable token-wise streaming output
+            (llama.cpp only).
+        timeout (int | None): API request timeout in seconds.
+        max_retries (int): Maximum number of API request retries.
+        aws_credentials_profile_name (str | None): AWS credentials profile name
+            for Bedrock.
+        aws_region (str | None): AWS region for Bedrock service.
+        bedrock_endpoint_base_url (str | None): Custom Bedrock endpoint URL.
     """
     llm = create_llm_instance(
         ollama_model_name=ollama_model_name,
@@ -190,10 +200,14 @@ def extract_structured_data_from_text(
     data is optionally validated against the schema.
 
     Args:
-        input_text: The unstructured text to extract data from.
-        schema: JSON schema defining the structure of the expected output.
-        llm: The Language Learning Model instance to use for extraction.
-        skip_validation: Whether to skip JSON schema validation of the output.
+        input_text (str): The unstructured text to extract data from.
+        schema (dict[str, Any]): JSON schema defining the structure of the
+            expected output.
+        llm (ChatOllama | LlamaCpp | ChatGroq | ChatBedrockConverse |
+            ChatGoogleGenerativeAI | ChatOpenAI): The Language Learning Model
+            instance to use for extraction.
+        skip_validation (bool): Whether to skip JSON schema validation of
+            the output.
 
     Returns:
         Any: The extracted structured data as a Python object.

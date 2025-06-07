@@ -138,8 +138,8 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
     Learning Model to extract structured data that conforms to the provided schema.
 
     Args:
-        request: The extraction request containing text, schema, and model
-            configuration.
+        request (ExtractRequest): The extraction request containing text, schema,
+            and model configuration.
 
     Returns:
         ExtractResponse: The extracted data and validation status.
@@ -213,7 +213,8 @@ async def validate_data(request: ValidateRequest) -> ValidateResponse:
     """Validate JSON data against a JSON Schema.
 
     Args:
-        request: The validation request containing data and schema.
+        request (ValidateRequest): The validation request containing data
+            and schema.
 
     Returns:
         ValidateResponse: The validation result.
@@ -236,7 +237,7 @@ async def health_check() -> dict[str, str]:
     """Health check endpoint.
 
     Returns:
-        dict: Health status.
+        dict[str, str]: Health status.
     """
     return {"status": "healthy"}
 
@@ -249,9 +250,9 @@ def run_server(
     """Run the FastAPI server using uvicorn.
 
     Args:
-        host: The host to run the server on.
-        port: The port to run the server on.
-        reload: Whether to enable auto-reload on code changes.
+        host (str): The host to run the server on.
+        port (int): The port to run the server on.
+        reload (bool): Whether to enable auto-reload on code changes.
     """
     uvicorn.run(
         "sdeul.api:app",
