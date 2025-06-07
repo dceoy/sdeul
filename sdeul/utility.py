@@ -34,10 +34,10 @@ def log_execution_time(func: Callable[..., T]) -> Callable[..., T]:
     It also logs exceptions if they occur during execution.
 
     Args:
-        func: The function to be decorated.
+        func (Callable[..., T]): The function to be decorated.
 
     Returns:
-        The decorated function with execution time logging.
+        Callable[..., T]: The decorated function with execution time logging.
     """
 
     @wraps(func)
@@ -71,9 +71,9 @@ def configure_logging(
     The logging level is determined by the flags: DEBUG > INFO > WARNING.
 
     Args:
-        debug: If True, sets logging level to DEBUG.
-        info: If True and debug is False, sets logging level to INFO.
-        format: The format string for log messages.
+        debug (bool): If True, sets logging level to DEBUG.
+        info (bool): If True and debug is False, sets logging level to INFO.
+        format (str): The format string for log messages.
     """
     if debug:
         lv = logging.DEBUG
@@ -91,10 +91,10 @@ def read_json_file(path: str) -> Any:  # noqa: ANN401
     Logs the operation and the loaded data at appropriate levels.
 
     Args:
-        path: The path to the JSON file.
+        path (str): The path to the JSON file.
 
     Returns:
-        The parsed JSON data as a Python object.
+        Any: The parsed JSON data as a Python object.
     """
     logger = logging.getLogger(read_json_file.__name__)
     logger.info("Read a JSON file: %s", path)
@@ -111,10 +111,10 @@ def read_text_file(path: str) -> str:
     Uses UTF-8 encoding for reading the file.
 
     Args:
-        path: The path to the text file.
+        path (str): The path to the text file.
 
     Returns:
-        The contents of the text file as a string.
+        str: The contents of the text file as a string.
     """
     logger = logging.getLogger(read_text_file.__name__)
     logger.info("Read a text file: %s", path)
@@ -131,8 +131,8 @@ def write_file(path: str, data: str) -> None:
     Uses UTF-8 encoding and creates parent directories if they don't exist.
 
     Args:
-        path: The path where the file should be written.
-        data: The string data to write to the file.
+        path (str): The path where the file should be written.
+        data (str): The string data to write to the file.
     """
     logger = logging.getLogger(write_file.__name__)
     logger.info("Write data in a file: %s", path)
@@ -147,7 +147,7 @@ def has_aws_credentials() -> bool:
     credentials are configured in the environment.
 
     Returns:
-        True if AWS credentials are available and valid, False otherwise.
+        bool: True if AWS credentials are available and valid, False otherwise.
     """
     logger = logging.getLogger(has_aws_credentials.__name__)
     sts: STSClient = boto3.client("sts")  # pyright: ignore[reportUnknownMemberType]
@@ -168,8 +168,9 @@ def override_env_vars(**kwargs: str | None) -> None:
     for non-None values. Logs each operation for debugging purposes.
 
     Args:
-        **kwargs: Key-value pairs where keys are environment variable names
-            and values are the values to set. None values are ignored.
+        **kwargs (str | None): Key-value pairs where keys are environment
+            variable names and values are the values to set. None values
+            are ignored.
     """
     logger = logging.getLogger(override_env_vars.__name__)
     for k, v in kwargs.items():
@@ -191,11 +192,12 @@ def write_or_print_json_data(
     or prints it to stdout. The JSON can be formatted as pretty-printed or compact.
 
     Args:
-        data: The data to serialize and output as JSON.
-        output_json_file_path: Optional path to write the JSON file. If None,
-            the JSON is printed to stdout.
-        compact_json: If True, outputs JSON in compact format without indentation.
-            If False, outputs pretty-printed JSON with 2-space indentation.
+        data (Any): The data to serialize and output as JSON.
+        output_json_file_path (str | None): Optional path to write the JSON file.
+            If None, the JSON is printed to stdout.
+        compact_json (bool): If True, outputs JSON in compact format without
+            indentation. If False, outputs pretty-printed JSON with 2-space
+            indentation.
     """
     output_json_string = json.dumps(
         obj=data, indent=(None if compact_json else 2), ensure_ascii=False

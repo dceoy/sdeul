@@ -1,20 +1,8 @@
 {
-  "name": "devcontainer-sdeul",
-  "build": {
-    "context": "..",
-    "dockerfile": "./Dockerfile",
-    "target": "devcontainer",
-    "args": {
-      "PYTHON_VERSION": "3.13"
-    }
-  },
-  "mounts": [
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached"
-  ],
+  "name": "sdeul-devcontainer",
+  "dockerComposeFile": "./compose.yml",
+  "service": "sdeul-devcontainer",
   "workspaceFolder": "/workspace",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=consistent",
-  "containerUser": "vscode",
   "customizations": {
     "vscode": {
       "settings": {
@@ -43,5 +31,5 @@
   "features": {
     "ghcr.io/devcontainers/features/aws-cli": {}
   },
-  "postCreateCommand": "git config --global --add safe.directory /workspaces && poetry install"
+  "postCreateCommand": "git config --global core.pager '' && git config --global --add safe.directory /workspace && poetry install"
 }

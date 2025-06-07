@@ -34,8 +34,8 @@ def validate_json_files_using_json_schema(
     indicating the number of invalid files.
 
     Args:
-        json_file_paths: List of paths to JSON files to validate.
-        json_schema_file_path: Path to the JSON schema file for validation.
+        json_file_paths (list[str]): List of paths to JSON files to validate.
+        json_schema_file_path (str): Path to the JSON schema file for validation.
 
     Raises:
         FileNotFoundError: If any of the JSON files or the schema file
@@ -67,8 +67,8 @@ def _validate_json_file(path: str, json_schema: dict[str, Any]) -> str | None:
     """Validate a single JSON file against a JSON schema.
 
     Args:
-        path: Path to the JSON file to validate.
-        json_schema: JSON schema to validate against.
+        path (str): Path to the JSON file to validate.
+        json_schema (dict[str, Any]): JSON schema to validate against.
 
     Returns:
         str | None: Error message if validation fails, None if successful.
