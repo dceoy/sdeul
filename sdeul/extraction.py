@@ -16,13 +16,8 @@ from typing import TYPE_CHECKING, Any
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-from langchain_aws import ChatBedrockConverse
-from langchain_community.llms import LlamaCpp
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
-from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
 
 from .constants import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 from .llm import JsonCodeOutputParser, create_llm_instance
@@ -185,12 +180,7 @@ def extract_json_from_text_file(
 def extract_structured_data_from_text(
     input_text: str,
     schema: dict[str, Any],
-    llm: ChatOllama
-    | LlamaCpp
-    | ChatGroq
-    | ChatBedrockConverse
-    | ChatGoogleGenerativeAI
-    | ChatOpenAI,
+    llm: BaseChatModel,
     skip_validation: bool = False,
 ) -> Any:  # noqa: ANN401
     """Extract structured data from text using an LLM and JSON schema.
@@ -203,9 +193,7 @@ def extract_structured_data_from_text(
         input_text (str): The unstructured text to extract data from.
         schema (dict[str, Any]): JSON schema defining the structure of the
             expected output.
-        llm (ChatOllama | LlamaCpp | ChatGroq | ChatBedrockConverse |
-            ChatGoogleGenerativeAI | ChatOpenAI): The Language Learning Model
-            instance to use for extraction.
+        llm (BaseChatModel): The Language Learning Model instance to use for extraction.
         skip_validation (bool): Whether to skip JSON schema validation of
             the output.
 
