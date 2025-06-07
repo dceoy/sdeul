@@ -27,17 +27,12 @@ Usage
 
     ```sh
     # Use OpenAI API
-    $ sdeul extract --openai-model='gpt-4o-mini' \
+    $ sdeul extract --openai-model='gpt-4.1' \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
     # Use Amazon Bedrock API
-    $ sdeul extract --bedrock-model='us.anthropic.claude-3-7-sonnet-20250219-v1:0' \
-        test/data/medication_history.schema.json \
-        test/data/patient_medication_record.txt
-
-    # Use Groq API
-    $ sdeul extract --groq-model='llama-3.3-70b-versatile' \
+    $ sdeul extract --bedrock-model='us.anthropic.claude-sonnet-4-20250514-v1:0' \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
@@ -46,8 +41,8 @@ Usage
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
-    # Use a GGUF file
-    $ sdeul extract --model-file='google_gemma-3-27b-it-Q4_K_M.gguf' \
+    # Use a Llama.cpp GGUF model file
+    $ sdeul extract --llamacpp-model-file='local_llm.gguf' \
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
     ```
@@ -79,8 +74,6 @@ Usage
     }
     ```
 
-Run `sdeul --help` for more details.
-
 ### REST API
 
 SDEUL also provides a REST API for extracting structured data and validating JSON.
@@ -88,14 +81,7 @@ SDEUL also provides a REST API for extracting structured data and validating JSO
 1.  Start the API server:
 
     ```sh
-    # Using the installed package
-    $ sdeul-api
-
-    # Or using uvicorn directly
-    $ uvicorn sdeul.api:app --reload
-
-    # Or using the run script
-    $ python run_api.py
+    $ sdeul serve
     ```
 
 2.  The API will be available at `http://localhost:8000` with the following endpoints:
