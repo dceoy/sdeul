@@ -51,10 +51,10 @@ class JsonCodeOutputParser(StrOutputParser):
         Python objects. Handles various JSON formatting patterns.
 
         Args:
-            text: The raw text output from an LLM that may contain JSON.
+            text (str): The raw text output from an LLM that may contain JSON.
 
         Returns:
-            The parsed JSON data as a Python object (dict, list, etc.).
+            Any: The parsed JSON data as a Python object (dict, list, etc.).
 
         Raises:
             OutputParserException: If no valid JSON code block is detected
@@ -82,10 +82,10 @@ class JsonCodeOutputParser(StrOutputParser):
         and plain JSON text starting with brackets or quotes.
 
         Args:
-            text: The text output that may contain JSON code.
+            text (str): The text output that may contain JSON code.
 
         Returns:
-            The extracted JSON code as a string.
+            str: The extracted JSON code as a string.
 
         Raises:
             OutputParserException: If no valid JSON code block is detected.
@@ -162,17 +162,18 @@ def create_llm_instance(
         top_p (float): Top-p value for sampling.
         top_k (int): Top-k value for sampling.
         repeat_penalty (float): Penalty for repeating tokens.
-        repeat_last_n (int): Number of tokens to look back when applying the repeat
-            penalty.
+        repeat_last_n (int): Number of tokens to look back when applying
+            the repeat penalty.
         n_ctx (int): Token context window size.
         max_tokens (int): Maximum number of tokens to generate.
         seed (int): Random seed for reproducibility.
         n_batch (int): Number of tokens to process in parallel for llama.cpp.
-        n_threads (int): Number of threads to use for llama.cpp.
-        n_gpu_layers (int): Number of GPU layers to use for llama.cpp.
-        f16_kv (bool): Whether to use half-precision for key/value cache of llama.cpp.
-        use_mlock (bool): Whether to force the system to keep the model in RAM for
-            llama.cpp.
+        n_threads (int | None): Number of threads to use for llama.cpp.
+        n_gpu_layers (int | None): Number of GPU layers to use for llama.cpp.
+        f16_kv (bool): Whether to use half-precision for key/value cache
+            of llama.cpp.
+        use_mlock (bool): Whether to force the system to keep the model in RAM
+            for llama.cpp.
         use_mmap (bool): Whether to keep the model loaded in RAM for llama.cpp.
         token_wise_streaming (bool): Whether to enable token-wise streaming.
         timeout (int | None): Timeout for the API calls in seconds.
@@ -184,11 +185,11 @@ def create_llm_instance(
 
     Returns:
         ChatOllama | LlamaCpp | ChatGroq | ChatBedrockConverse |
-        ChatGoogleGenerativeAI | ChatOpenAI:
-            An instance of the selected LLM.
+        ChatGoogleGenerativeAI | ChatOpenAI: An instance of the selected LLM.
 
     Raises:
-        RuntimeError: If the model cannot be determined.
+        ValueError: If no valid model configuration is provided or if the model
+            cannot be determined.
     """
     logger = logging.getLogger(create_llm_instance.__name__)
     override_env_vars(
@@ -289,7 +290,7 @@ def create_llm_instance(
         )
     else:
         error_message = "The model cannot be determined."
-        raise RuntimeError(error_message)
+        raise ValueError(error_message)
 
 
 def _read_llm_file(
@@ -313,22 +314,23 @@ def _read_llm_file(
     """Load a local LLM model file using llama.cpp.
 
     Args:
-        path: Path to the model file (GGUF format).
-        temperature: Sampling temperature for randomness in generation.
-        top_p: Top-p value for nucleus sampling.
-        top_k: Top-k value for sampling.
-        repeat_penalty: Penalty applied to repeated tokens.
-        last_n_tokens_size: Number of tokens to consider for repeat penalty.
-        n_ctx: Token context window size.
-        max_tokens: Maximum number of tokens to generate.
-        seed: Random seed for reproducible generation.
-        n_batch: Number of tokens to process in parallel.
-        n_threads: Number of threads to use for processing.
-        n_gpu_layers: Number of layers to offload to GPU.
-        f16_kv: Whether to use half-precision for key/value cache.
-        use_mlock: Whether to force system to keep model in RAM.
-        use_mmap: Whether to keep the model loaded in RAM
-        token_wise_streaming: Whether to enable token-wise streaming output.
+        path (str): Path to the model file (GGUF format).
+        temperature (float): Sampling temperature for randomness in generation.
+        top_p (float): Top-p value for nucleus sampling.
+        top_k (int): Top-k value for sampling.
+        repeat_penalty (float): Penalty applied to repeated tokens.
+        last_n_tokens_size (int): Number of tokens to consider for repeat penalty.
+        n_ctx (int): Token context window size.
+        max_tokens (int): Maximum number of tokens to generate.
+        seed (int): Random seed for reproducible generation.
+        n_batch (int): Number of tokens to process in parallel.
+        n_threads (int | None): Number of threads to use for processing.
+        n_gpu_layers (int | None): Number of layers to offload to GPU.
+        f16_kv (bool): Whether to use half-precision for key/value cache.
+        use_mlock (bool): Whether to force system to keep model in RAM.
+        use_mmap (bool): Whether to keep the model loaded in RAM.
+        token_wise_streaming (bool): Whether to enable token-wise streaming
+            output.
 
     Returns:
         LlamaCpp: Configured LlamaCpp model instance.
@@ -371,9 +373,9 @@ def _llama_log_callback(level: int, text: bytes, user_data: ctypes.c_void_p) -> 
     messages to stderr when debug logging is enabled.
 
     Args:
-        level: Log level from llama.cpp (unused).
-        text: Log message as bytes.
-        user_data: User data pointer (unused).
+        level (int): Log level from llama.cpp (unused).
+        text (bytes): Log message as bytes.
+        user_data (ctypes.c_void_p): User data pointer (unused).
     """
     if logging.root.level < logging.WARNING:
         print(text.decode("utf-8"), end="", flush=True, file=sys.stderr)  # noqa: T201

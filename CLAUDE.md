@@ -28,7 +28,7 @@ poetry run pytest
 poetry run pytest test/pytest/test_extraction.py -v
 
 # Run tests with coverage report
-poetry run pytest --cov=sdeul --cov-report=term-missing
+poetry run pytest
 
 # Run bats tests
 bats test/cli/test_cli.bats
@@ -50,7 +50,7 @@ poetry run ruff check .
 poetry run ruff check --fix .
 
 # Run type checking
-poetry run pyright
+poetry run pyright .
 ```
 
 ### Building and Packaging

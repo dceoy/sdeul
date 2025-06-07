@@ -8,11 +8,13 @@ options.
 Commands:
     extract: Extract structured JSON data from text files
     validate: Validate JSON files against JSON schemas
+    serve: Run the FastAPI server for the REST API
 
 Functions:
     main: Main CLI callback function
     extract: CLI command for data extraction
     validate: CLI command for JSON validation
+    serve: CLI command for running the API server
     _version_callback: Callback for version option
 """
 
@@ -20,6 +22,7 @@ import typer
 from rich import print
 
 from . import __version__
+from .api import run_server
 from .extraction import extract_json_from_text_file
 from .utility import configure_logging
 from .validation import validate_json_files_using_json_schema
@@ -31,7 +34,7 @@ def _version_callback(value: bool) -> None:
     """Callback function for the --version option.
 
     Args:
-        value: Whether the version option was provided.
+        value (bool): Whether the version option was provided.
 
     Raises:
         typer.Exit: Always exits after printing version if value is True.
@@ -58,7 +61,7 @@ def main(
     OpenAI, Google, Groq, Amazon Bedrock, Ollama, and local models.
 
     Args:
-        version: Show version information and exit.
+        version (bool): Show version information and exit.
     """
     pass
 
@@ -176,39 +179,44 @@ def extract(
     stdout.
 
     Args:
-        json_schema_file: Path to the JSON schema file that defines the
+        json_schema_file (str): Path to the JSON schema file that defines the
             structure of the expected output.
-        text_file: Path to the input text file containing unstructured data.
-        output_json_file: Optional path to save the extracted JSON output.
-            If not provided, output is printed to stdout.
-        compact_json: Output JSON in compact format instead of pretty-printed.
-        skip_validation: Skip validation of the extracted data against the schema.
-        temperature: Controls randomness in the model's output (0.0-2.0).
-        top_p: Controls diversity via nucleus sampling (0.0-1.0).
-        top_k: Controls diversity by limiting token choices.
-        repeat_penalty: Penalty for repeating tokens (1.0 = no penalty).
-        repeat_last_n: Number of tokens to consider for repeat penalty.
-        n_ctx: Size of the token context window.
-        max_tokens: Maximum number of tokens to generate.
-        seed: Random seed for reproducible output (-1 for random).
-        n_batch: Number of tokens to process in parallel (llama.cpp only).
-        n_threads: Number of CPU threads to use (llama.cpp only).
-        n_gpu_layers: Number of layers to offload to GPU (llama.cpp only).
-        openai_model: OpenAI model to use.
-        google_model: Google model to use.
-        groq_model: Groq model to use.
-        bedrock_model: Amazon Bedrock model ID to use.
-        ollama_model: Ollama model to use.
-        ollama_base_url: Custom Ollama API base URL.
-        llamacpp_model_file: Path to local GGUF model file for llama.cpp.
-        openai_api_key: OpenAI API key (overrides environment variable).
-        openai_api_base: Custom OpenAI API base URL.
-        openai_organization: OpenAI organization ID.
-        google_api_key: Google API key (overrides environment variable).
-        groq_api_key: Groq API key (overrides environment variable).
-        aws_credentials_profile: AWS profile name for Bedrock access.
-        debug: Enable debug logging level.
-        info: Enable info logging level.
+        text_file (str): Path to the input text file containing unstructured data.
+        output_json_file (str | None): Optional path to save the extracted JSON
+            output. If not provided, output is printed to stdout.
+        compact_json (bool): Output JSON in compact format instead of
+            pretty-printed.
+        skip_validation (bool): Skip validation of the extracted data against
+            the schema.
+        temperature (float): Controls randomness in the model's output (0.0-2.0).
+        top_p (float): Controls diversity via nucleus sampling (0.0-1.0).
+        top_k (int): Controls diversity by limiting token choices.
+        repeat_penalty (float): Penalty for repeating tokens (1.0 = no penalty).
+        repeat_last_n (int): Number of tokens to consider for repeat penalty.
+        n_ctx (int): Size of the token context window.
+        max_tokens (int): Maximum number of tokens to generate.
+        seed (int): Random seed for reproducible output (-1 for random).
+        n_batch (int): Number of tokens to process in parallel (llama.cpp only).
+        n_threads (int): Number of CPU threads to use (llama.cpp only).
+        n_gpu_layers (int): Number of layers to offload to GPU (llama.cpp only).
+        openai_model (str | None): OpenAI model to use.
+        google_model (str | None): Google model to use.
+        groq_model (str | None): Groq model to use.
+        bedrock_model (str | None): Amazon Bedrock model ID to use.
+        ollama_model (str | None): Ollama model to use.
+        ollama_base_url (str | None): Custom Ollama API base URL.
+        llamacpp_model_file (str | None): Path to local GGUF model file for
+            llama.cpp.
+        openai_api_key (str | None): OpenAI API key (overrides environment
+            variable).
+        openai_api_base (str | None): Custom OpenAI API base URL.
+        openai_organization (str | None): OpenAI organization ID.
+        google_api_key (str | None): Google API key (overrides environment
+            variable).
+        groq_api_key (str | None): Groq API key (overrides environment variable).
+        aws_credentials_profile (str | None): AWS profile name for Bedrock access.
+        debug (bool): Enable debug logging level.
+        info (bool): Enable info logging level.
     """
     configure_logging(debug=debug, info=info)
     extract_json_from_text_file(
@@ -258,10 +266,10 @@ def validate(
     code if any files are invalid.
 
     Args:
-        json_schema_file: Path to the JSON schema file used for validation.
-        json_files: List of paths to JSON files to validate.
-        debug: Enable debug logging level.
-        info: Enable info logging level.
+        json_schema_file (str): Path to the JSON schema file used for validation.
+        json_files (list[str]): List of paths to JSON files to validate.
+        debug (bool): Enable debug logging level.
+        info (bool): Enable info logging level.
 
     Exit Codes:
         0: All files are valid
@@ -272,3 +280,37 @@ def validate(
         json_schema_file_path=json_schema_file,
         json_file_paths=json_files,
     )
+
+
+@app.command()
+def serve(
+    host: str = typer.Option(
+        default="0.0.0.0",  # noqa: S104
+        help="Host to run the server on.",
+    ),
+    port: int = typer.Option(
+        default=8000,
+        help="Port to run the server on.",
+    ),
+    reload: bool = typer.Option(
+        default=True,
+        help="Enable auto-reload on code changes.",
+    ),
+    debug: bool = typer.Option(default=False, help="Set DEBUG log level."),
+    info: bool = typer.Option(default=False, help="Set INFO log level."),
+) -> None:
+    """Run the FastAPI server for the SDEUL REST API.
+
+    This command starts a FastAPI server that provides REST API endpoints
+    for extracting structured JSON data from text and validating JSON data
+    against schemas.
+
+    Args:
+        host (str): The host IP address to bind the server to.
+        port (int): The port number to run the server on.
+        reload (bool): Enable automatic reloading when code changes are detected.
+        debug (bool): Enable debug logging level.
+        info (bool): Enable info logging level.
+    """
+    configure_logging(debug=debug, info=info)
+    run_server(host=host, port=port, reload=reload)
