@@ -83,6 +83,14 @@ class ExtractRequest(BaseModel):
     google_model: str | None = Field(default=None, description="Google model name")
     google_api_key: str | None = Field(default=None, description="Google API key")
 
+    anthropic_model: str | None = Field(
+        default=None, description="Anthropic model name"
+    )
+    anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
+    anthropic_api_base: str | None = Field(
+        default=None, description="Anthropic API base URL"
+    )
+
     groq_model: str | None = Field(default=None, description="Groq model name")
     groq_api_key: str | None = Field(default=None, description="Groq API key")
 
@@ -157,6 +165,9 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             bedrock_model_id=request.bedrock_model,
             google_model_name=request.google_model,
             google_api_key=request.google_api_key,
+            anthropic_model_name=request.anthropic_model,
+            anthropic_api_key=request.anthropic_api_key,
+            anthropic_api_base=request.anthropic_api_base,
             openai_model_name=request.openai_model,
             openai_api_key=request.openai_api_key,
             openai_api_base=request.openai_api_base,
