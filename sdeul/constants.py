@@ -53,6 +53,7 @@ Provided JSON schema:
 DEFAULT_MODEL_NAMES = {
     "openai": "gpt-4.1",
     "google": "gemini-2.5-pro",
+    "anthropic": "claude-3-5-sonnet-20241022",
     "bedrock": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
     "groq": "meta-llama/llama-4-maverick-17b-128e-instruct",
 }

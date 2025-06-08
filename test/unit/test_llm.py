@@ -163,6 +163,49 @@ def test_create_llm_instance_with_groq(mocker: MockerFixture) -> None:
     )
 
 
+def test_create_llm_instance_with_anthropic(mocker: MockerFixture) -> None:
+    anthropic_model_name = "claude-3-5-sonnet-20241022"
+    anthropic_api_key = "dummy-api-key"
+    anthropic_api_base = "https://api.anthropic.com"
+    temperature = 0.8
+    top_p = 0.95
+    top_k = 64
+    max_tokens = 8192
+    timeout = 600
+    max_retries = 2
+    stop = None
+    mocker.patch("sdeul.llm.override_env_vars")
+    llm = mocker.MagicMock()
+    mock_chat_anthropic = mocker.patch(
+        "sdeul.llm.ChatAnthropic",
+        return_value=llm,
+    )
+
+    result = create_llm_instance(
+        anthropic_model_name=anthropic_model_name,
+        anthropic_api_key=anthropic_api_key,
+        anthropic_api_base=anthropic_api_base,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        max_tokens=max_tokens,
+        timeout=timeout,
+        max_retries=max_retries,
+    )
+    assert result == llm
+    mock_chat_anthropic.assert_called_once_with(
+        model_name=anthropic_model_name,
+        base_url=anthropic_api_base,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        max_tokens_to_sample=max_tokens,
+        timeout=timeout,
+        max_retries=max_retries,
+        stop=stop,
+    )
+
+
 def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     bedrock_model_id = "dummy-bedrock-model"
     temperature = 0.8
@@ -230,6 +273,52 @@ def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
         max_tokens=max_tokens,
         timeout=timeout,
         max_retries=max_retries,
+    )
+
+
+def test_create_llm_instance_with_anthropic_env_var(mocker: MockerFixture) -> None:
+    temperature = 0.0
+    top_p = 0.95
+    top_k = 64
+    max_tokens = 8192
+    timeout = None
+    max_retries = 2
+    stop = None
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+
+    # Mock os.environ.get to control which API keys are "available"
+    def mock_environ_get(key: str, default: str | None = None) -> str | None:
+        if key == "ANTHROPIC_API_KEY":
+            return "dummy-key"
+        return default
+
+    mocker.patch("os.environ.get", side_effect=mock_environ_get)
+    llm = mocker.MagicMock()
+    mock_chat_anthropic = mocker.patch(
+        "sdeul.llm.ChatAnthropic",
+        return_value=llm,
+    )
+
+    result = create_llm_instance(
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        max_tokens=max_tokens,
+        timeout=timeout,
+        max_retries=max_retries,
+    )
+    assert result == llm
+    mock_chat_anthropic.assert_called_once_with(
+        model_name="claude-3-5-sonnet-20241022",  # Default model
+        base_url=None,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        max_tokens_to_sample=max_tokens,
+        timeout=timeout,
+        max_retries=max_retries,
+        stop=stop,
     )
 
 

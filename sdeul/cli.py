@@ -113,6 +113,11 @@ def extract(
         envvar="GOOGLE_MODEL",
         help="Use the Google Generative AI model.",
     ),
+    anthropic_model: str | None = typer.Option(
+        default=None,
+        envvar="ANTHROPIC_MODEL",
+        help="Use the Anthropic model.",
+    ),
     groq_model: str | None = typer.Option(
         default=None,
         envvar="GROQ_MODEL",
@@ -158,6 +163,16 @@ def extract(
         envvar="GOOGLE_API_KEY",
         help="Override the Google API key.",
     ),
+    anthropic_api_key: str | None = typer.Option(
+        default=None,
+        envvar="ANTHROPIC_API_KEY",
+        help="Override the Anthropic API key.",
+    ),
+    anthropic_api_base: str | None = typer.Option(
+        default=None,
+        envvar="ANTHROPIC_API_BASE",
+        help="Override the Anthropic API base URL.",
+    ),
     groq_api_key: str | None = typer.Option(
         default=None,
         envvar="GROQ_API_KEY",
@@ -201,6 +216,7 @@ def extract(
         n_gpu_layers (int): Number of layers to offload to GPU (llama.cpp only).
         openai_model (str | None): OpenAI model to use.
         google_model (str | None): Google model to use.
+        anthropic_model (str | None): Anthropic model to use.
         groq_model (str | None): Groq model to use.
         bedrock_model (str | None): Amazon Bedrock model ID to use.
         ollama_model (str | None): Ollama model to use.
@@ -213,6 +229,9 @@ def extract(
         openai_organization (str | None): OpenAI organization ID.
         google_api_key (str | None): Google API key (overrides environment
             variable).
+        anthropic_api_key (str | None): Anthropic API key (overrides environment
+            variable).
+        anthropic_api_base (str | None): Custom Anthropic API base URL.
         groq_api_key (str | None): Groq API key (overrides environment variable).
         aws_credentials_profile (str | None): AWS profile name for Bedrock access.
         debug (bool): Enable debug logging level.
@@ -238,6 +257,7 @@ def extract(
         n_gpu_layers=n_gpu_layers,
         openai_model_name=openai_model,
         google_model_name=google_model,
+        anthropic_model_name=anthropic_model,
         groq_model_name=groq_model,
         bedrock_model_id=bedrock_model,
         ollama_model_name=ollama_model,
@@ -246,6 +266,8 @@ def extract(
         openai_api_base=openai_api_base,
         openai_organization=openai_organization,
         google_api_key=google_api_key,
+        anthropic_api_key=anthropic_api_key,
+        anthropic_api_base=anthropic_api_base,
         groq_api_key=groq_api_key,
         ollama_base_url=ollama_base_url,
         aws_credentials_profile_name=aws_credentials_profile,

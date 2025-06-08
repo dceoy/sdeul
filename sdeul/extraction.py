@@ -44,6 +44,9 @@ def extract_json_from_text_file(
     bedrock_model_id: str | None = None,
     google_model_name: str | None = None,
     google_api_key: str | None = None,
+    anthropic_model_name: str | None = None,
+    anthropic_api_key: str | None = None,
+    anthropic_api_base: str | None = None,
     openai_model_name: str | None = None,
     openai_api_key: str | None = None,
     openai_api_base: str | None = None,
@@ -94,6 +97,10 @@ def extract_json_from_text_file(
         google_model_name (str | None): Google Generative AI model name.
         google_api_key (str | None): Google API key (overrides environment
             variable).
+        anthropic_model_name (str | None): Anthropic model name.
+        anthropic_api_key (str | None): Anthropic API key (overrides environment
+            variable).
+        anthropic_api_base (str | None): Custom Anthropic API base URL.
         openai_model_name (str | None): OpenAI model name.
         openai_api_key (str | None): OpenAI API key (overrides environment
             variable).
@@ -137,6 +144,9 @@ def extract_json_from_text_file(
         bedrock_model_id=bedrock_model_id,
         google_model_name=google_model_name,
         google_api_key=google_api_key,
+        anthropic_model_name=anthropic_model_name,
+        anthropic_api_key=anthropic_api_key,
+        anthropic_api_base=anthropic_api_base,
         openai_model_name=openai_model_name,
         openai_api_key=openai_api_key,
         openai_api_base=openai_api_base,

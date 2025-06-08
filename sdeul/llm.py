@@ -23,6 +23,7 @@ from typing import Any
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.schema import StrOutputParser
+from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrockConverse
 from langchain_community.llms import LlamaCpp
 from langchain_core.exceptions import OutputParserException
@@ -101,7 +102,7 @@ class JsonCodeOutputParser(StrOutputParser):
             raise OutputParserException(m, llm_output=text)
 
 
-def create_llm_instance(
+def create_llm_instance(  # noqa: PLR0911
     ollama_model_name: str | None = None,
     ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
@@ -110,6 +111,9 @@ def create_llm_instance(
     bedrock_model_id: str | None = None,
     google_model_name: str | None = None,
     google_api_key: str | None = None,
+    anthropic_model_name: str | None = None,
+    anthropic_api_key: str | None = None,
+    anthropic_api_base: str | None = None,
     openai_model_name: str | None = None,
     openai_api_key: str | None = None,
     openai_api_base: str | None = None,
@@ -140,6 +144,7 @@ def create_llm_instance(
     | ChatGroq
     | ChatBedrockConverse
     | ChatGoogleGenerativeAI
+    | ChatAnthropic
     | ChatOpenAI
 ):
     """Create an instance of a Language Learning Model (LLM).
@@ -154,6 +159,9 @@ def create_llm_instance(
         google_model_name (str | None): Name of the Google Generative AI model
             to use.
         google_api_key (str | None): API key for Google Generative AI.
+        anthropic_model_name (str | None): Name of the Anthropic model to use.
+        anthropic_api_key (str | None): API key for Anthropic.
+        anthropic_api_base (str | None): Base URL for Anthropic API.
         openai_model_name (str | None): Name of the OpenAI model to use.
         openai_api_key (str | None): API key for OpenAI.
         openai_api_base (str | None): Base URL for OpenAI API.
@@ -185,7 +193,8 @@ def create_llm_instance(
 
     Returns:
         ChatOllama | LlamaCpp | ChatGroq | ChatBedrockConverse |
-        ChatGoogleGenerativeAI | ChatOpenAI: An instance of the selected LLM.
+        ChatGoogleGenerativeAI | ChatAnthropic | ChatOpenAI: An instance of the
+        selected LLM.
 
     Raises:
         ValueError: If no valid model configuration is provided or if the model
@@ -195,6 +204,7 @@ def create_llm_instance(
     override_env_vars(
         GROQ_API_KEY=groq_api_key,
         GOOGLE_API_KEY=google_api_key,
+        ANTHROPIC_API_KEY=anthropic_api_key,
         OPENAI_API_KEY=openai_api_key,
     )
     if ollama_model_name:
@@ -232,7 +242,14 @@ def create_llm_instance(
             token_wise_streaming=token_wise_streaming,
         )
     elif groq_model_name or (
-        (not any([bedrock_model_id, google_model_name, openai_model_name]))
+        (
+            not any([
+                bedrock_model_id,
+                google_model_name,
+                anthropic_model_name,
+                openai_model_name,
+            ])
+        )
         and os.environ.get("GROQ_API_KEY")
     ):
         logger.info("Use GROQ: %s", groq_model_name)
@@ -246,7 +263,8 @@ def create_llm_instance(
             stop_sequences=None,
         )
     elif bedrock_model_id or (
-        (not any([google_model_name, openai_model_name])) and has_aws_credentials()
+        (not any([google_model_name, anthropic_model_name, openai_model_name]))
+        and has_aws_credentials()
     ):
         logger.info("Use Amazon Bedrock: %s", bedrock_model_id)
         m = bedrock_model_id or DEFAULT_MODEL_NAMES["bedrock"]
@@ -259,7 +277,8 @@ def create_llm_instance(
             credentials_profile_name=aws_credentials_profile_name,
         )
     elif google_model_name or (
-        (not openai_model_name) and os.environ.get("GOOGLE_API_KEY")
+        (not any([anthropic_model_name, openai_model_name]))
+        and os.environ.get("GOOGLE_API_KEY")
     ):
         logger.info("Use Google Generative AI: %s", google_model_name)
         m = google_model_name or DEFAULT_MODEL_NAMES["google"]
@@ -271,6 +290,23 @@ def create_llm_instance(
             max_tokens=max_tokens,
             timeout=timeout,
             max_retries=max_retries,
+        )
+    elif anthropic_model_name or (
+        (not openai_model_name) and os.environ.get("ANTHROPIC_API_KEY")
+    ):
+        logger.info("Use Anthropic: %s", anthropic_model_name)
+        logger.info("Anthropic API base: %s", anthropic_api_base)
+        m = anthropic_model_name or DEFAULT_MODEL_NAMES["anthropic"]
+        return ChatAnthropic(
+            model_name=m,
+            base_url=anthropic_api_base,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_tokens_to_sample=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            stop=None,
         )
     elif openai_model_name or os.environ.get("OPENAI_API_KEY"):
         logger.info("Use OpenAI: %s", openai_model_name)
