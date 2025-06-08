@@ -17,6 +17,7 @@ services:
       - ${HOME}/.aws/credentials:/home/vscode/.aws/credentials:ro
     working_dir: /workspace
     environment:
+      AWS_PROFILE: bedrock
       CLAUDE_CODE_USE_BEDROCK: 1
       ANTHROPIC_MODEL: us.anthropic.claude-opus-4-20250514-v1:0
       ANTHROPIC_SMALL_FAST_MODEL: us.anthropic.claude-sonnet-4-20250514-v1:0

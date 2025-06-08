@@ -44,9 +44,9 @@ RUN \
       chown -R vscode:vscode /usr/local
 
 RUN \
-      echo '.DS_Store' > "${HOME}/.gitignore" \
-      && git config --global core.excludesfile "${HOME}/.gitignore" \
-      && git config --global core.pager ''
+      git config --global core.excludesfile "${HOME}/.gitignore" \
+      && git config --global core.pager '' \
+      && mkdir "${HOME}/.aws"
 
 HEALTHCHECK NONE
 

@@ -11,6 +11,7 @@
         "editor.formatOnSave": true
       },
       "extensions": [
+        "anthropic.claude-code",
         "bierner.markdown-mermaid",
         "charliermarsh.ruff",
         "github.codespaces",
