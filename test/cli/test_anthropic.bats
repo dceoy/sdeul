@@ -11,7 +11,7 @@ teardown_file() {
 }
 
 @test "pass with \"sdeul extract --anthropic-model\"" {
-  run poetry run sdeul extract \
+  run uv run sdeul extract \
     --anthropic-model="${ANTHROPIC_MODEL}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt

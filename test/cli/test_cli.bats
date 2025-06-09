@@ -10,17 +10,17 @@ teardown_file() {
 }
 
 @test "pass with \"sdeul --version\"" {
-  run poetry run sdeul --version
+  run uv run sdeul --version
   [[ "${status}" -eq 0 ]]
 }
 
 @test "pass with \"sdeul --help\"" {
-  run poetry run sdeul --help
+  run uv run sdeul --help
   [[ "${status}" -eq 0 ]]
 }
 
 @test "pass with \"sdeul validate\"" {
-  run poetry run sdeul validate \
+  run uv run sdeul validate \
     ./test/data/medication_history.schema.json \
     ./test/data/medication_history.json
   [[ "${status}" -eq 0 ]]

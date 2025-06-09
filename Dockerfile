@@ -13,9 +13,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=utf-8
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=1
-ENV POETRY_HOME='/opt/poetry'
-ENV POETRY_VIRTUALENVS_CREATE=false
-ENV POETRY_NO_INTERACTION=true
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 ENV CMAKE_ARGS=-DGGML_NATIVE=OFF
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -50,14 +49,14 @@ RUN \
       && curl -SL -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
       && /usr/bin/python /tmp/get-pip.py \
       && /usr/bin/python -m pip install --prefix /usr --upgrade \
-        pip poetry \
+        pip uv \
       && rm -f /tmp/get-pip.py
 
 RUN \
       --mount=type=cache,target=/root/.cache \
       --mount=type=bind,source=.,target=/mnt/host \
       cp -a /mnt/host /tmp/sdeul \
-      && /usr/bin/python -m poetry --directory=/tmp/sdeul build --format=wheel \
+      && /usr/bin/python -m uv --directory=/tmp/sdeul build --wheel \
       && /usr/bin/python -m pip install --prefix /usr \
         /tmp/sdeul/dist/sdeul-*.whl
 
@@ -124,9 +123,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=utf-8
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=1
-ENV POETRY_HOME='/opt/poetry'
-ENV POETRY_VIRTUALENVS_CREATE=false
-ENV POETRY_NO_INTERACTION=true
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
@@ -164,14 +162,14 @@ RUN \
       && curl -SL -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
       && /usr/bin/python /tmp/get-pip.py \
       && /usr/bin/python -m pip install --prefix /usr --upgrade \
-        pip poetry \
+        pip uv \
       && rm -f /tmp/get-pip.py
 
 RUN \
       --mount=type=cache,target=/root/.cache \
       --mount=type=bind,source=.,target=/mnt/host \
       cp -a /mnt/host /tmp/sdeul \
-      && /usr/bin/python -m poetry --directory=/tmp/sdeul build --format=wheel \
+      && /usr/bin/python -m uv --directory=/tmp/sdeul build --wheel \
       && CMAKE_ARGS="-DGGML_CUDA=on" /usr/bin/python -m pip install --prefix /usr \
         /tmp/sdeul/dist/sdeul-*.whl
 

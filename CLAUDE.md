@@ -12,23 +12,25 @@ SDEUL (Structural Data Extractor using LLMs) is a Python tool that extracts stru
 
 ```sh
 # Install dependencies
-poetry install
+uv sync
 
 # Activate virtual environment
-poetry shell
+source .venv/bin/activate  # On Unix/MacOS
+# or
+.venv\Scripts\activate  # On Windows
 ```
 
 ### Testing
 
 ```sh
 # Run pytest tests
-poetry run pytest
+uv run pytest
 
 # Run specific pytest test
-poetry run pytest test/pytest/test_extraction.py -v
+uv run pytest test/unit/test_extraction.py -v
 
 # Run tests with coverage report
-poetry run pytest
+uv run pytest
 
 # Run bats tests
 bats test/cli/test_cli.bats
@@ -44,23 +46,23 @@ bats test/cli/test_llamacpp.bats  # Requires LLM file
 
 ```sh
 # Run linting
-poetry run ruff check .
+uv run ruff check .
 
 # Run linting with auto-fix
-poetry run ruff check --fix .
+uv run ruff check --fix .
 
 # Run type checking
-poetry run pyright .
+uv run pyright .
 ```
 
 ### Building and Packaging
 
 ```sh
 # Build the package
-poetry build
+uv build
 
 # Install locally
-pip install -e .
+uv pip install -e .
 ```
 
 ## Architecture
