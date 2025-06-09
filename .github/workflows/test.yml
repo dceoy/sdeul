@@ -74,11 +74,11 @@ jobs:
           python-version: ${{ inputs.python-version || '3.x' }}
       - name: Install packages
         run: |
-          pip install -U --no-cache-dir pip poetry
-          poetry install --no-interaction
+          pip install -U --no-cache-dir pip uv
+          uv sync
       - name: Run unit tests using pytest
         run: |
-          poetry run pytest
+          uv run pytest
   cli-tests:
     runs-on: ${{ inputs.runs-on }}
     env:
@@ -95,8 +95,8 @@ jobs:
           python-version: ${{ inputs.python-version || '3.x' }}
       - name: Install packages
         run: |
-          pip install -U --no-cache-dir pip poetry
-          poetry install --no-interaction
+          pip install -U --no-cache-dir pip uv
+          uv sync
       - name: Test CLI
         run: |
           bats --verbose-run ./test/cli/test_cli.bats

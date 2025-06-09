@@ -11,7 +11,7 @@ teardown_file() {
 }
 
 @test "pass with \"sdeul extract --groq-model\"" {
-  run poetry run sdeul extract \
+  run uv run sdeul extract \
     --groq-model="${GROQ_MODEL}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt

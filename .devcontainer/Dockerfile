@@ -9,9 +9,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=utf-8
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=1
-ENV POETRY_HOME='/opt/poetry'
-ENV POETRY_VIRTUALENVS_CREATE=false
-ENV POETRY_NO_INTERACTION=true
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 ENV CMAKE_ARGS=-DGGML_NATIVE=OFF
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -37,7 +36,7 @@ RUN \
 RUN \
       --mount=type=cache,target=/root/.cache \
       /usr/local/bin/python -m pip install --prefix /usr/local --upgrade \
-        pip poetry \
+        pip uv \
       && npm install -g @anthropic-ai/claude-code @openai/codex
 
 RUN \

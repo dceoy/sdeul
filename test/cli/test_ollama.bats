@@ -12,7 +12,7 @@ teardown_file() {
 }
 
 @test "pass with \"sdeul extract --ollama-model\"" {
-  run poetry run sdeul extract \
+  run uv run sdeul extract \
     --ollama-model="${OLLAMA_MODEL}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt
@@ -20,7 +20,7 @@ teardown_file() {
 }
 
 @test "pass with \"sdeul extract --ollama-model --ollama-base-url\"" {
-  run poetry run sdeul extract \
+  run uv run sdeul extract \
     --ollama-model="${OLLAMA_MODEL}" \
     --ollama-base-url="${OLLAMA_BASE_URL}" \
     ./test/data/medication_history.schema.json \

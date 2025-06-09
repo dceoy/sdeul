@@ -11,7 +11,7 @@ teardown_file() {
 }
 
 @test "pass with \"sdeul extract --google-model\"" {
-  run poetry run sdeul extract \
+  run uv run sdeul extract \
     --google-model="${GOOGLE_MODEL}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt
