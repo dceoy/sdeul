@@ -56,8 +56,7 @@ RUN \
       --mount=type=cache,target=/root/.cache \
       --mount=type=bind,source=.,target=/mnt/host \
       cp -a /mnt/host /tmp/sdeul \
-      && cd /tmp/sdeul \
-      && /usr/bin/python -m uv build --wheel \
+      && /usr/bin/python -m uv --directory=/tmp/sdeul build --wheel \
       && /usr/bin/python -m pip install --prefix /usr \
         /tmp/sdeul/dist/sdeul-*.whl
 
@@ -170,8 +169,7 @@ RUN \
       --mount=type=cache,target=/root/.cache \
       --mount=type=bind,source=.,target=/mnt/host \
       cp -a /mnt/host /tmp/sdeul \
-      && cd /tmp/sdeul \
-      && /usr/bin/python -m uv build --wheel \
+      && /usr/bin/python -m uv --directory=/tmp/sdeul build --wheel \
       && CMAKE_ARGS="-DGGML_CUDA=on" /usr/bin/python -m pip install --prefix /usr \
         /tmp/sdeul/dist/sdeul-*.whl
 

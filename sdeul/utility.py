@@ -13,9 +13,10 @@ import json
 import logging
 import os
 import time
+from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import boto3
 from botocore.exceptions import NoCredentialsError
