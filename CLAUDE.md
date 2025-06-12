@@ -14,10 +14,8 @@ SDEUL (Structural Data Extractor using LLMs) is a Python tool that extracts stru
 # Install dependencies
 uv sync
 
-# Activate virtual environment
-source .venv/bin/activate  # On Unix/MacOS
-# or
-.venv\Scripts\activate  # On Windows
+# Activate virtual environment (if needed)
+source .venv/bin/activate
 ```
 
 ### Testing

@@ -40,13 +40,13 @@ RUN \
       && npm install -g @anthropic-ai/claude-code @openai/codex
 
 RUN \
-      chown -R vscode:vscode /usr/local
+      mkdir -p /home/vscode/.aws \
+      && chown -R vscode:vscode /usr/local /home/vscode
+
+USER vscode
 
 RUN \
       git config --global core.excludesfile "${HOME}/.gitignore" \
-      && git config --global core.pager '' \
-      && mkdir "${HOME}/.aws"
+      && git config --global core.pager ''
 
 HEALTHCHECK NONE
-
-USER vscode
