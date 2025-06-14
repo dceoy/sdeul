@@ -108,7 +108,7 @@ select = [
   "DJ",     # flake8-django (DJ)
   "EM",     # flake8-errmsg (EM)
   "EXE",    # flake8-executable (EXE)
-  # "FA",     # flake8-future-annotations (FA)
+  "FA",     # flake8-future-annotations (FA)
   "ISC",    # flake8-implicit-str-concat (ISC)
   "ICN",    # flake8-import-conventions (ICN)
   "LOG",    # flake8-logging (LOG)
