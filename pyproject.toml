@@ -138,12 +138,7 @@ select = [
 ]
 ignore = [
   "B008",     # function-call-in-default-argument
-  "A002",     # builtin-argument-shadowing
   "A004",     # builtin-import-shadowing
-  "COM812",   # missing-trailing-comma
-  "ISC001",   # single-line-implicit-string-concatenation
-  "PIE790",   # unnecessary-placeholder
-  "TRY003",   # raise-vanilla-args
   "FBT001",   # boolean-type-hint-positional-argument
   "FBT002",   # boolean-default-value-positional-argument
 ]
@@ -195,7 +190,7 @@ minversion = "6.0"
 
 [tool.coverage.run]
 source = ["sdeul"]
-omit = ["tests/*"]
+omit = ["test/*"]
 
 [tool.coverage.report]
 show_missing = true

@@ -37,37 +37,51 @@ class ExtractRequest(BaseModel):
 
     text: str = Field(..., description="Input text to extract data from")
     json_schema: dict[str, Any] = Field(
-        ..., description="JSON Schema defining the output structure"
+        ...,
+        description="JSON Schema defining the output structure",
     )
     skip_validation: bool = Field(
-        default=False, description="Skip JSON schema validation"
+        default=False,
+        description="Skip JSON schema validation",
     )
     temperature: float = Field(
-        default=0.0, ge=0.0, le=2.0, description="Sampling temperature"
+        default=0.0,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature",
     )
     top_p: float = Field(
-        default=0.95, ge=0.0, le=1.0, description="Top-p sampling parameter"
+        default=0.95,
+        ge=0.0,
+        le=1.0,
+        description="Top-p sampling parameter",
     )
     top_k: int = Field(default=64, ge=1, description="Top-k sampling parameter")
     repeat_penalty: float = Field(default=1.1, ge=1.0, description="Repeat penalty")
     repeat_last_n: int = Field(
-        default=64, ge=0, description="Tokens to consider for repeat penalty"
+        default=64,
+        ge=0,
+        description="Tokens to consider for repeat penalty",
     )
     n_ctx: int = Field(default=8192, ge=1, description="Context window size")
     max_tokens: int = Field(
-        default=8192, ge=1, description="Maximum tokens to generate"
+        default=8192,
+        ge=1,
+        description="Maximum tokens to generate",
     )
     seed: int = Field(default=-1, description="Random seed (-1 for random)")
     n_batch: int = Field(default=8, ge=1, description="Batch size for processing")
     n_threads: int = Field(default=-1, description="Number of threads (-1 for auto)")
     n_gpu_layers: int = Field(default=-1, description="GPU layers to use (-1 for auto)")
     f16_kv: bool = Field(
-        default=True, description="Use half-precision for key/value cache"
+        default=True,
+        description="Use half-precision for key/value cache",
     )
     use_mlock: bool = Field(default=False, description="Force model to stay in RAM")
     use_mmap: bool = Field(default=True, description="Use memory mapping for model")
     token_wise_streaming: bool = Field(
-        default=False, description="Enable token-wise streaming"
+        default=False,
+        description="Enable token-wise streaming",
     )
     timeout: int | None = Field(default=None, description="Request timeout in seconds")
     max_retries: int = Field(default=2, ge=0, description="Maximum number of retries")
@@ -77,18 +91,21 @@ class ExtractRequest(BaseModel):
     openai_api_key: str | None = Field(default=None, description="OpenAI API key")
     openai_api_base: str | None = Field(default=None, description="OpenAI API base URL")
     openai_organization: str | None = Field(
-        default=None, description="OpenAI organization ID"
+        default=None,
+        description="OpenAI organization ID",
     )
 
     google_model: str | None = Field(default=None, description="Google model name")
     google_api_key: str | None = Field(default=None, description="Google API key")
 
     anthropic_model: str | None = Field(
-        default=None, description="Anthropic model name"
+        default=None,
+        description="Anthropic model name",
     )
     anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
     anthropic_api_base: str | None = Field(
-        default=None, description="Anthropic API base URL"
+        default=None,
+        description="Anthropic API base URL",
     )
 
     groq_model: str | None = Field(default=None, description="Groq model name")
@@ -96,18 +113,21 @@ class ExtractRequest(BaseModel):
 
     bedrock_model: str | None = Field(default=None, description="AWS Bedrock model ID")
     aws_credentials_profile: str | None = Field(
-        default=None, description="AWS credentials profile"
+        default=None,
+        description="AWS credentials profile",
     )
     aws_region: str | None = Field(default=None, description="AWS region")
     bedrock_endpoint_url: str | None = Field(
-        default=None, description="Bedrock endpoint URL"
+        default=None,
+        description="Bedrock endpoint URL",
     )
 
     ollama_model: str | None = Field(default=None, description="Ollama model name")
     ollama_base_url: str | None = Field(default=None, description="Ollama base URL")
 
     llamacpp_model_file: str | None = Field(
-        default=None, description="Path to GGUF model file"
+        default=None,
+        description="Path to GGUF model file",
     )
 
 
@@ -116,7 +136,8 @@ class ExtractResponse(BaseModel):
 
     data: Any = Field(..., description="Extracted structured data")
     validated: bool = Field(
-        ..., description="Whether the data was validated against the schema"
+        ...,
+        description="Whether the data was validated against the schema",
     )
 
 
@@ -125,7 +146,8 @@ class ValidateRequest(BaseModel):
 
     data: Any = Field(..., description="JSON data to validate")
     json_schema: dict[str, Any] = Field(
-        ..., description="JSON Schema to validate against"
+        ...,
+        description="JSON Schema to validate against",
     )
 
 
@@ -134,7 +156,8 @@ class ValidateResponse(BaseModel):
 
     valid: bool = Field(..., description="Whether the data is valid")
     error: str | None = Field(
-        default=None, description="Validation error message if invalid"
+        default=None,
+        description="Validation error message if invalid",
     )
 
 
@@ -209,7 +232,8 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
     except JsonSchemaValidationError as e:
         logger.exception("Validation error")
         raise HTTPException(
-            status_code=422, detail=f"Validation error: {e.message}"
+            status_code=422,
+            detail=f"Validation error: {e.message}",
         ) from e
     except Exception as e:
         logger.exception("Extraction failed")

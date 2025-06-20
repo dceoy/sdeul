@@ -63,7 +63,6 @@ def main(
     Args:
         version (bool): Show version information and exit.
     """
-    pass
 
 
 @app.command()
@@ -89,7 +88,8 @@ def extract(
     top_p: float = typer.Option(default=0.95, help="Set the top-p value for sampling."),
     top_k: int = typer.Option(default=64, help="Set the top-k value for sampling."),
     repeat_penalty: float = typer.Option(
-        default=1.1, help="Set the penalty to apply to repeated tokens."
+        default=1.1,
+        help="Set the penalty to apply to repeated tokens.",
     ),
     repeat_last_n: int = typer.Option(
         default=64,
@@ -97,7 +97,8 @@ def extract(
     ),
     n_ctx: int = typer.Option(default=8192, help="Set the token context window."),
     max_tokens: int = typer.Option(
-        default=8192, help="Set the max tokens to generate."
+        default=8192,
+        help="Set the max tokens to generate.",
     ),
     seed: int = typer.Option(default=-1, help="Set the random seed."),
     n_batch: int = typer.Option(default=8, help="Set the number of batch tokens."),

@@ -64,7 +64,7 @@ def log_execution_time(func: Callable[..., T]) -> Callable[..., T]:
 def configure_logging(
     debug: bool = False,
     info: bool = False,
-    format: str = "%(asctime)s [%(levelname)-8s] <%(name)s> %(message)s",
+    format: str = "%(asctime)s [%(levelname)-8s] <%(name)s> %(message)s",  # noqa: A002
 ) -> None:
     """Configure the logging module with the specified level and format.
 
@@ -201,7 +201,9 @@ def write_or_print_json_data(
             indentation.
     """
     output_json_string = json.dumps(
-        obj=data, indent=(None if compact_json else 2), ensure_ascii=False
+        obj=data,
+        indent=(None if compact_json else 2),
+        ensure_ascii=False,
     )
     if output_json_file_path:
         write_file(path=output_json_file_path, data=output_json_string)
