@@ -38,6 +38,7 @@ from .constants import (
     DEFAULT_F16_KV,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MAX_TOKENS,
+    DEFAULT_MODEL_NAMES,
     DEFAULT_N_BATCH,
     DEFAULT_N_GPU_LAYERS,
     DEFAULT_N_THREADS,
@@ -52,7 +53,7 @@ from .constants import (
     DEFAULT_USE_MLOCK,
     DEFAULT_USE_MMAP,
 )
-from .utility import override_env_vars
+from .utility import has_aws_credentials, override_env_vars
 
 
 class JsonCodeOutputParser(StrOutputParser):
@@ -189,8 +190,6 @@ def _create_groq_llm(
     Returns:
         ChatGroq: Configured Groq LLM instance.
     """
-    from .constants import DEFAULT_MODEL_NAMES  # noqa: PLC0415
-
     logger = logging.getLogger(_create_groq_llm.__name__)
     model = model_name or DEFAULT_MODEL_NAMES["groq"]
     logger.info("Use GROQ: %s", model)
@@ -216,8 +215,6 @@ def _create_bedrock_llm(
     Returns:
         ChatBedrockConverse: Configured Bedrock LLM instance.
     """
-    from .constants import DEFAULT_MODEL_NAMES  # noqa: PLC0415
-
     logger = logging.getLogger(_create_bedrock_llm.__name__)
     model = model_id or DEFAULT_MODEL_NAMES["bedrock"]
     logger.info("Use Amazon Bedrock: %s", model)
@@ -240,8 +237,6 @@ def _create_google_llm(
     Returns:
         ChatGoogleGenerativeAI: Configured Google LLM instance.
     """
-    from .constants import DEFAULT_MODEL_NAMES  # noqa: PLC0415
-
     logger = logging.getLogger(_create_google_llm.__name__)
     model = model_name or DEFAULT_MODEL_NAMES["google"]
     logger.info("Use Google Generative AI: %s", model)
@@ -266,8 +261,6 @@ def _create_anthropic_llm(
     Returns:
         ChatAnthropic: Configured Anthropic LLM instance.
     """
-    from .constants import DEFAULT_MODEL_NAMES  # noqa: PLC0415
-
     logger = logging.getLogger(_create_anthropic_llm.__name__)
     model = model_name or DEFAULT_MODEL_NAMES["anthropic"]
     logger.info("Use Anthropic: %s", model)
@@ -296,8 +289,6 @@ def _create_openai_llm(
     Returns:
         ChatOpenAI: Configured OpenAI LLM instance.
     """
-    from .constants import DEFAULT_MODEL_NAMES  # noqa: PLC0415
-
     logger = logging.getLogger(_create_openai_llm.__name__)
     model = model_name or DEFAULT_MODEL_NAMES["openai"]
     logger.info("Use OpenAI: %s", model)
@@ -361,8 +352,6 @@ def _should_use_bedrock(
         anthropic_model_name,
         openai_model_name,
     ])
-
-    from .utility import has_aws_credentials  # noqa: PLC0415
 
     return not other_models_specified and has_aws_credentials()
 
@@ -528,21 +517,19 @@ def create_llm_instance(  # noqa: PLR0911
         "max_retries": max_retries,
     }
 
-    # Guard clauses for model selection in priority order
+    # Model selection in priority order
     if ollama_model_name:
         return _create_ollama_llm(
             ollama_model_name,
             ollama_base_url,
             **llm_kwargs,
         )
-
-    if llamacpp_model_file_path:
+    elif llamacpp_model_file_path:
         return _create_llamacpp_llm(
             llamacpp_model_file_path,
             **llm_kwargs,
         )
-
-    if _should_use_groq(
+    elif _should_use_groq(
         groq_model_name,
         bedrock_model_id,
         google_model_name,
@@ -550,8 +537,7 @@ def create_llm_instance(  # noqa: PLR0911
         openai_model_name,
     ):
         return _create_groq_llm(groq_model_name, **llm_kwargs)
-
-    if _should_use_bedrock(
+    elif _should_use_bedrock(
         bedrock_model_id,
         google_model_name,
         anthropic_model_name,
@@ -564,31 +550,28 @@ def create_llm_instance(  # noqa: PLR0911
             aws_credentials_profile_name,
             **llm_kwargs,
         )
-
-    if _should_use_google(
+    elif _should_use_google(
         google_model_name,
         anthropic_model_name,
         openai_model_name,
     ):
         return _create_google_llm(google_model_name, **llm_kwargs)
-
-    if _should_use_anthropic(anthropic_model_name, openai_model_name):
+    elif _should_use_anthropic(anthropic_model_name, openai_model_name):
         return _create_anthropic_llm(
             anthropic_model_name,
             anthropic_api_base,
             **llm_kwargs,
         )
-
-    if openai_model_name or os.environ.get("OPENAI_API_KEY"):
+    elif openai_model_name or os.environ.get("OPENAI_API_KEY"):
         return _create_openai_llm(
             openai_model_name,
             openai_api_base,
             openai_organization,
             **llm_kwargs,
         )
-
-    error_message = "The model cannot be determined."
-    raise ValueError(error_message)
+    else:
+        error_message = "The model cannot be determined."
+        raise ValueError(error_message)
 
 
 def _read_llm_file(

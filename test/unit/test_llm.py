@@ -285,12 +285,23 @@ def test_create_llm_instance_with_anthropic_env_var(mocker: MockerFixture) -> No
     max_retries = 2
     stop = None
     mocker.patch("sdeul.llm.override_env_vars")
-    mocker.patch("sdeul.utility.has_aws_credentials", return_value=False)
+    mock_has_aws = mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mock_has_aws.__name__ = "has_aws_credentials"
+    # Also mock boto3 to prevent any real AWS calls
+    mocker.patch("boto3.client")
 
     # Mock os.environ.get to control which API keys are "available"
     def mock_environ_get(key: str, default: str | None = None) -> str | None:
         if key == "ANTHROPIC_API_KEY":
             return "dummy-key"
+        # Block AWS environment variables to ensure Bedrock isn't chosen
+        if key in {
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "AWS_SESSION_TOKEN",
+            "AWS_PROFILE",
+        }:
+            return None
         return default
 
     mocker.patch("os.environ.get", side_effect=mock_environ_get)
@@ -364,7 +375,8 @@ def test_create_llm_instance_with_openai(mocker: MockerFixture) -> None:
 def test_create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
     mocker.patch("sdeul.llm.override_env_vars")
     mocker.patch.dict(os.environ, {}, clear=True)
-    mocker.patch("sdeul.utility.has_aws_credentials", return_value=False)
+    mock_has_aws = mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mock_has_aws.__name__ = "has_aws_credentials"
     with pytest.raises(ValueError, match=r"The model cannot be determined."):
         create_llm_instance()
 
