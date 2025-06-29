@@ -33,7 +33,26 @@ from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from llama_cpp import llama_log_callback, llama_log_set
 
-from .constants import DEFAULT_MODEL_NAMES
+from .constants import (
+    DEFAULT_CONTEXT_WINDOW,
+    DEFAULT_F16_KV,
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_MODEL_NAMES,
+    DEFAULT_N_BATCH,
+    DEFAULT_N_GPU_LAYERS,
+    DEFAULT_N_THREADS,
+    DEFAULT_REPEAT_LAST_N,
+    DEFAULT_REPEAT_PENALTY,
+    DEFAULT_SEED,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TIMEOUT,
+    DEFAULT_TOKEN_WISE_STREAMING,
+    DEFAULT_TOP_K,
+    DEFAULT_TOP_P,
+    DEFAULT_USE_MLOCK,
+    DEFAULT_USE_MMAP,
+)
 from .utility import has_aws_credentials, override_env_vars
 
 
@@ -102,6 +121,276 @@ class JsonCodeOutputParser(StrOutputParser):
             raise OutputParserException(m, llm_output=text)
 
 
+# Factory functions for creating LLM instances
+
+
+def _create_ollama_llm(
+    model_name: str,
+    base_url: str | None,
+    **kwargs: Any,  # noqa: ANN401
+) -> ChatOllama:
+    """Create an Ollama LLM instance.
+
+    Returns:
+        ChatOllama: Configured Ollama LLM instance.
+    """
+    logger = logging.getLogger(_create_ollama_llm.__name__)
+    logger.info("Use Ollama: %s", model_name)
+    logger.info("Ollama base URL: %s", base_url)
+    return ChatOllama(
+        model=model_name,
+        base_url=base_url,
+        temperature=kwargs["temperature"],
+        top_p=kwargs["top_p"],
+        top_k=kwargs["top_k"],
+        repeat_penalty=kwargs["repeat_penalty"],
+        repeat_last_n=kwargs["repeat_last_n"],
+        num_ctx=kwargs["n_ctx"],
+        seed=kwargs["seed"],
+    )
+
+
+def _create_llamacpp_llm(
+    model_file_path: str,
+    **kwargs: Any,  # noqa: ANN401
+) -> LlamaCpp:
+    """Create a LlamaCpp LLM instance.
+
+    Returns:
+        LlamaCpp: Configured LlamaCpp LLM instance.
+    """
+    logger = logging.getLogger(_create_llamacpp_llm.__name__)
+    logger.info("Use local LLM: %s", model_file_path)
+    return _read_llm_file(
+        path=model_file_path,
+        temperature=kwargs["temperature"],
+        top_p=kwargs["top_p"],
+        top_k=kwargs["top_k"],
+        repeat_penalty=kwargs["repeat_penalty"],
+        last_n_tokens_size=kwargs["repeat_last_n"],
+        n_ctx=kwargs["n_ctx"],
+        max_tokens=kwargs["max_tokens"],
+        seed=kwargs["seed"],
+        n_batch=kwargs["n_batch"],
+        n_threads=kwargs["n_threads"],
+        n_gpu_layers=kwargs["n_gpu_layers"],
+        f16_kv=kwargs["f16_kv"],
+        use_mlock=kwargs["use_mlock"],
+        use_mmap=kwargs["use_mmap"],
+        token_wise_streaming=kwargs["token_wise_streaming"],
+    )
+
+
+def _create_groq_llm(
+    model_name: str | None,
+    **kwargs: Any,  # noqa: ANN401
+) -> ChatGroq:
+    """Create a Groq LLM instance.
+
+    Returns:
+        ChatGroq: Configured Groq LLM instance.
+    """
+    logger = logging.getLogger(_create_groq_llm.__name__)
+    model = model_name or DEFAULT_MODEL_NAMES["groq"]
+    logger.info("Use GROQ: %s", model)
+    return ChatGroq(
+        model=model,
+        temperature=kwargs["temperature"],
+        max_tokens=kwargs["max_tokens"],
+        timeout=kwargs["timeout"],
+        max_retries=kwargs["max_retries"],
+        stop_sequences=None,
+    )
+
+
+def _create_bedrock_llm(
+    model_id: str | None,
+    aws_region: str | None,
+    endpoint_url: str | None,
+    profile_name: str | None,
+    **kwargs: Any,  # noqa: ANN401
+) -> ChatBedrockConverse:
+    """Create an Amazon Bedrock LLM instance.
+
+    Returns:
+        ChatBedrockConverse: Configured Bedrock LLM instance.
+    """
+    logger = logging.getLogger(_create_bedrock_llm.__name__)
+    model = model_id or DEFAULT_MODEL_NAMES["bedrock"]
+    logger.info("Use Amazon Bedrock: %s", model)
+    return ChatBedrockConverse(
+        model=model,
+        temperature=kwargs["temperature"],
+        max_tokens=kwargs["max_tokens"],
+        region_name=aws_region,
+        base_url=endpoint_url,
+        credentials_profile_name=profile_name,
+    )
+
+
+def _create_google_llm(
+    model_name: str | None,
+    **kwargs: Any,  # noqa: ANN401
+) -> ChatGoogleGenerativeAI:
+    """Create a Google Generative AI LLM instance.
+
+    Returns:
+        ChatGoogleGenerativeAI: Configured Google LLM instance.
+    """
+    logger = logging.getLogger(_create_google_llm.__name__)
+    model = model_name or DEFAULT_MODEL_NAMES["google"]
+    logger.info("Use Google Generative AI: %s", model)
+    return ChatGoogleGenerativeAI(
+        model=model,
+        temperature=kwargs["temperature"],
+        top_p=kwargs["top_p"],
+        top_k=kwargs["top_k"],
+        max_tokens=kwargs["max_tokens"],
+        timeout=kwargs["timeout"],
+        max_retries=kwargs["max_retries"],
+    )
+
+
+def _create_anthropic_llm(
+    model_name: str | None,
+    api_base: str | None,
+    **kwargs: Any,  # noqa: ANN401
+) -> ChatAnthropic:
+    """Create an Anthropic LLM instance.
+
+    Returns:
+        ChatAnthropic: Configured Anthropic LLM instance.
+    """
+    logger = logging.getLogger(_create_anthropic_llm.__name__)
+    model = model_name or DEFAULT_MODEL_NAMES["anthropic"]
+    logger.info("Use Anthropic: %s", model)
+    logger.info("Anthropic API base: %s", api_base)
+    return ChatAnthropic(
+        model_name=model,
+        base_url=api_base,
+        temperature=kwargs["temperature"],
+        top_p=kwargs["top_p"],
+        top_k=kwargs["top_k"],
+        max_tokens_to_sample=kwargs["max_tokens"],
+        timeout=kwargs["timeout"],
+        max_retries=kwargs["max_retries"],
+        stop=None,
+    )
+
+
+def _create_openai_llm(
+    model_name: str | None,
+    api_base: str | None,
+    organization: str | None,
+    **kwargs: Any,  # noqa: ANN401
+) -> ChatOpenAI:
+    """Create an OpenAI LLM instance.
+
+    Returns:
+        ChatOpenAI: Configured OpenAI LLM instance.
+    """
+    logger = logging.getLogger(_create_openai_llm.__name__)
+    model = model_name or DEFAULT_MODEL_NAMES["openai"]
+    logger.info("Use OpenAI: %s", model)
+    logger.info("OpenAI API base: %s", api_base)
+    logger.info("OpenAI organization: %s", organization)
+    return ChatOpenAI(
+        model=model,
+        base_url=api_base,
+        organization=organization,
+        temperature=kwargs["temperature"],
+        top_p=kwargs["top_p"],
+        seed=kwargs["seed"],
+        max_completion_tokens=kwargs["max_tokens"],
+        timeout=kwargs["timeout"],
+        max_retries=kwargs["max_retries"],
+    )
+
+
+def _should_use_groq(
+    groq_model_name: str | None,
+    bedrock_model_id: str | None,
+    google_model_name: str | None,
+    anthropic_model_name: str | None,
+    openai_model_name: str | None,
+) -> bool:
+    """Determine if Groq should be used based on model parameters and environment.
+
+    Returns:
+        bool: True if Groq should be used, False otherwise.
+    """
+    if groq_model_name:
+        return True
+
+    other_models_specified = any([
+        bedrock_model_id,
+        google_model_name,
+        anthropic_model_name,
+        openai_model_name,
+    ])
+    has_groq_key = os.environ.get("GROQ_API_KEY") is not None
+
+    return not other_models_specified and has_groq_key
+
+
+def _should_use_bedrock(
+    bedrock_model_id: str | None,
+    google_model_name: str | None,
+    anthropic_model_name: str | None,
+    openai_model_name: str | None,
+) -> bool:
+    """Determine if Bedrock should be used based on model parameters and environment.
+
+    Returns:
+        bool: True if Bedrock should be used, False otherwise.
+    """
+    if bedrock_model_id:
+        return True
+
+    other_models_specified = any([
+        google_model_name,
+        anthropic_model_name,
+        openai_model_name,
+    ])
+
+    return not other_models_specified and has_aws_credentials()
+
+
+def _should_use_google(
+    google_model_name: str | None,
+    anthropic_model_name: str | None,
+    openai_model_name: str | None,
+) -> bool:
+    """Determine if Google should be used based on model parameters and environment.
+
+    Returns:
+        bool: True if Google should be used, False otherwise.
+    """
+    if google_model_name:
+        return True
+
+    other_models_specified = any([anthropic_model_name, openai_model_name])
+    has_google_key = os.environ.get("GOOGLE_API_KEY") is not None
+
+    return not other_models_specified and has_google_key
+
+
+def _should_use_anthropic(
+    anthropic_model_name: str | None,
+    openai_model_name: str | None,
+) -> bool:
+    """Determine if Anthropic should be used based on model parameters.
+
+    Returns:
+        bool: True if Anthropic should be used, False otherwise.
+    """
+    if anthropic_model_name:
+        return True
+
+    has_anthropic_key = os.environ.get("ANTHROPIC_API_KEY") is not None
+    return not openai_model_name and has_anthropic_key
+
+
 def create_llm_instance(  # noqa: PLR0911
     ollama_model_name: str | None = None,
     ollama_base_url: str | None = None,
@@ -118,23 +407,23 @@ def create_llm_instance(  # noqa: PLR0911
     openai_api_key: str | None = None,
     openai_api_base: str | None = None,
     openai_organization: str | None = None,
-    temperature: float = 0.0,
-    top_p: float = 0.95,
-    top_k: int = 64,
-    repeat_penalty: float = 1.1,
-    repeat_last_n: int = 64,
-    n_ctx: int = 8192,
-    max_tokens: int = 8192,
-    seed: int = -1,
-    n_batch: int = 8,
-    n_threads: int | None = None,
-    n_gpu_layers: int | None = -1,
-    f16_kv: bool = True,
-    use_mlock: bool = True,
-    use_mmap: bool = True,
-    token_wise_streaming: bool = False,
-    timeout: int | None = None,
-    max_retries: int = 2,
+    temperature: float = DEFAULT_TEMPERATURE,
+    top_p: float = DEFAULT_TOP_P,
+    top_k: int = DEFAULT_TOP_K,
+    repeat_penalty: float = DEFAULT_REPEAT_PENALTY,
+    repeat_last_n: int = DEFAULT_REPEAT_LAST_N,
+    n_ctx: int = DEFAULT_CONTEXT_WINDOW,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    seed: int = DEFAULT_SEED,
+    n_batch: int = DEFAULT_N_BATCH,
+    n_threads: int | None = DEFAULT_N_THREADS,
+    n_gpu_layers: int | None = DEFAULT_N_GPU_LAYERS,
+    f16_kv: bool = DEFAULT_F16_KV,
+    use_mlock: bool = DEFAULT_USE_MLOCK,
+    use_mmap: bool = DEFAULT_USE_MMAP,
+    token_wise_streaming: bool = DEFAULT_TOKEN_WISE_STREAMING,
+    timeout: int | None = DEFAULT_TIMEOUT,
+    max_retries: int = DEFAULT_MAX_RETRIES,
     aws_credentials_profile_name: str | None = None,
     aws_region: str | None = None,
     bedrock_endpoint_base_url: str | None = None,
@@ -200,129 +489,85 @@ def create_llm_instance(  # noqa: PLR0911
         ValueError: If no valid model configuration is provided or if the model
             cannot be determined.
     """
-    logger = logging.getLogger(create_llm_instance.__name__)
     override_env_vars(
         GROQ_API_KEY=groq_api_key,
         GOOGLE_API_KEY=google_api_key,
         ANTHROPIC_API_KEY=anthropic_api_key,
         OPENAI_API_KEY=openai_api_key,
     )
+
+    # Pack parameters for factory functions
+    llm_kwargs = {
+        "temperature": temperature,
+        "top_p": top_p,
+        "top_k": top_k,
+        "repeat_penalty": repeat_penalty,
+        "repeat_last_n": repeat_last_n,
+        "n_ctx": n_ctx,
+        "max_tokens": max_tokens,
+        "seed": seed,
+        "n_batch": n_batch,
+        "n_threads": n_threads,
+        "n_gpu_layers": n_gpu_layers,
+        "f16_kv": f16_kv,
+        "use_mlock": use_mlock,
+        "use_mmap": use_mmap,
+        "token_wise_streaming": token_wise_streaming,
+        "timeout": timeout,
+        "max_retries": max_retries,
+    }
+
+    # Model selection in priority order
     if ollama_model_name:
-        logger.info("Use Ollama: %s", ollama_model_name)
-        logger.info("Ollama base URL: %s", ollama_base_url)
-        return ChatOllama(
-            model=ollama_model_name,
-            base_url=ollama_base_url,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            repeat_penalty=repeat_penalty,
-            repeat_last_n=repeat_last_n,
-            num_ctx=n_ctx,
-            seed=seed,
+        return _create_ollama_llm(
+            ollama_model_name,
+            ollama_base_url,
+            **llm_kwargs,
         )
     elif llamacpp_model_file_path:
-        logger.info("Use local LLM: %s", llamacpp_model_file_path)
-        return _read_llm_file(
-            path=llamacpp_model_file_path,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            repeat_penalty=repeat_penalty,
-            last_n_tokens_size=repeat_last_n,
-            n_ctx=n_ctx,
-            max_tokens=max_tokens,
-            seed=seed,
-            n_batch=n_batch,
-            n_threads=n_threads,
-            n_gpu_layers=n_gpu_layers,
-            f16_kv=f16_kv,
-            use_mlock=use_mlock,
-            use_mmap=use_mmap,
-            token_wise_streaming=token_wise_streaming,
+        return _create_llamacpp_llm(
+            llamacpp_model_file_path,
+            **llm_kwargs,
         )
-    elif groq_model_name or (
-        (
-            not any([
-                bedrock_model_id,
-                google_model_name,
-                anthropic_model_name,
-                openai_model_name,
-            ])
-        )
-        and os.environ.get("GROQ_API_KEY")
+    elif _should_use_groq(
+        groq_model_name,
+        bedrock_model_id,
+        google_model_name,
+        anthropic_model_name,
+        openai_model_name,
     ):
-        logger.info("Use GROQ: %s", groq_model_name)
-        m = groq_model_name or DEFAULT_MODEL_NAMES["groq"]
-        return ChatGroq(
-            model=m,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            timeout=timeout,
-            max_retries=max_retries,
-            stop_sequences=None,
-        )
-    elif bedrock_model_id or (
-        (not any([google_model_name, anthropic_model_name, openai_model_name]))
-        and has_aws_credentials()
+        return _create_groq_llm(groq_model_name, **llm_kwargs)
+    elif _should_use_bedrock(
+        bedrock_model_id,
+        google_model_name,
+        anthropic_model_name,
+        openai_model_name,
     ):
-        logger.info("Use Amazon Bedrock: %s", bedrock_model_id)
-        m = bedrock_model_id or DEFAULT_MODEL_NAMES["bedrock"]
-        return ChatBedrockConverse(
-            model=m,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            region_name=aws_region,
-            base_url=bedrock_endpoint_base_url,
-            credentials_profile_name=aws_credentials_profile_name,
+        return _create_bedrock_llm(
+            bedrock_model_id,
+            aws_region,
+            bedrock_endpoint_base_url,
+            aws_credentials_profile_name,
+            **llm_kwargs,
         )
-    elif google_model_name or (
-        (not any([anthropic_model_name, openai_model_name]))
-        and os.environ.get("GOOGLE_API_KEY")
+    elif _should_use_google(
+        google_model_name,
+        anthropic_model_name,
+        openai_model_name,
     ):
-        logger.info("Use Google Generative AI: %s", google_model_name)
-        m = google_model_name or DEFAULT_MODEL_NAMES["google"]
-        return ChatGoogleGenerativeAI(
-            model=m,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            max_tokens=max_tokens,
-            timeout=timeout,
-            max_retries=max_retries,
-        )
-    elif anthropic_model_name or (
-        (not openai_model_name) and os.environ.get("ANTHROPIC_API_KEY")
-    ):
-        logger.info("Use Anthropic: %s", anthropic_model_name)
-        logger.info("Anthropic API base: %s", anthropic_api_base)
-        m = anthropic_model_name or DEFAULT_MODEL_NAMES["anthropic"]
-        return ChatAnthropic(
-            model_name=m,
-            base_url=anthropic_api_base,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            max_tokens_to_sample=max_tokens,
-            timeout=timeout,
-            max_retries=max_retries,
-            stop=None,
+        return _create_google_llm(google_model_name, **llm_kwargs)
+    elif _should_use_anthropic(anthropic_model_name, openai_model_name):
+        return _create_anthropic_llm(
+            anthropic_model_name,
+            anthropic_api_base,
+            **llm_kwargs,
         )
     elif openai_model_name or os.environ.get("OPENAI_API_KEY"):
-        logger.info("Use OpenAI: %s", openai_model_name)
-        logger.info("OpenAI API base: %s", openai_api_base)
-        logger.info("OpenAI organization: %s", openai_organization)
-        m = openai_model_name or DEFAULT_MODEL_NAMES["openai"]
-        return ChatOpenAI(
-            model=m,
-            base_url=openai_api_base,
-            organization=openai_organization,
-            temperature=temperature,
-            top_p=top_p,
-            seed=seed,
-            max_completion_tokens=max_tokens,
-            timeout=timeout,
-            max_retries=max_retries,
+        return _create_openai_llm(
+            openai_model_name,
+            openai_api_base,
+            openai_organization,
+            **llm_kwargs,
         )
     else:
         error_message = "The model cannot be determined."
@@ -331,21 +576,21 @@ def create_llm_instance(  # noqa: PLR0911
 
 def _read_llm_file(
     path: str,
-    temperature: float = 0.8,
-    top_p: float = 0.95,
-    top_k: int = 40,
-    repeat_penalty: float = 1.1,
-    last_n_tokens_size: int = 64,
-    n_ctx: int = 512,
-    max_tokens: int = 256,
-    seed: int = -1,
-    n_batch: int = 8,
-    n_threads: int | None = None,
-    n_gpu_layers: int | None = None,
-    f16_kv: bool = True,
-    use_mlock: bool = False,
-    use_mmap: bool = True,
-    token_wise_streaming: bool = False,
+    temperature: float = DEFAULT_TEMPERATURE,
+    top_p: float = DEFAULT_TOP_P,
+    top_k: int = DEFAULT_TOP_K,
+    repeat_penalty: float = DEFAULT_REPEAT_PENALTY,
+    last_n_tokens_size: int = DEFAULT_REPEAT_LAST_N,
+    n_ctx: int = DEFAULT_CONTEXT_WINDOW,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    seed: int = DEFAULT_SEED,
+    n_batch: int = DEFAULT_N_BATCH,
+    n_threads: int | None = DEFAULT_N_THREADS,
+    n_gpu_layers: int | None = DEFAULT_N_GPU_LAYERS,
+    f16_kv: bool = DEFAULT_F16_KV,
+    use_mlock: bool = DEFAULT_USE_MLOCK,
+    use_mmap: bool = DEFAULT_USE_MMAP,
+    token_wise_streaming: bool = DEFAULT_TOKEN_WISE_STREAMING,
 ) -> LlamaCpp:
     """Load a local LLM model file using llama.cpp.
 

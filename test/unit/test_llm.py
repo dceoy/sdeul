@@ -125,10 +125,10 @@ def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
         max_tokens=max_tokens,
         seed=seed,
         n_batch=n_batch,
-        n_threads=None,
+        n_threads=-1,
         n_gpu_layers=n_gpu_layers,
         f16_kv=True,
-        use_mlock=True,
+        use_mlock=False,
         use_mmap=True,
         token_wise_streaming=token_wise_streaming,
     )
@@ -214,7 +214,7 @@ def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     aws_region = "us-east-1"
     bedrock_endpoint_base_url = "https://api.bedrock.com"
     mocker.patch("sdeul.llm.override_env_vars")
-    mocker.patch("sdeul.llm.has_aws_credentials")
+    mocker.patch("sdeul.utility.has_aws_credentials")
     llm = mocker.MagicMock()
     mock_chat_bedrock_converse = mocker.patch(
         "sdeul.llm.ChatBedrockConverse",
@@ -285,12 +285,23 @@ def test_create_llm_instance_with_anthropic_env_var(mocker: MockerFixture) -> No
     max_retries = 2
     stop = None
     mocker.patch("sdeul.llm.override_env_vars")
-    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mock_has_aws = mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mock_has_aws.__name__ = "has_aws_credentials"
+    # Also mock boto3 to prevent any real AWS calls
+    mocker.patch("boto3.client")
 
     # Mock os.environ.get to control which API keys are "available"
     def mock_environ_get(key: str, default: str | None = None) -> str | None:
         if key == "ANTHROPIC_API_KEY":
             return "dummy-key"
+        # Block AWS environment variables to ensure Bedrock isn't chosen
+        if key in {
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "AWS_SESSION_TOKEN",
+            "AWS_PROFILE",
+        }:
+            return None
         return default
 
     mocker.patch("os.environ.get", side_effect=mock_environ_get)
@@ -364,7 +375,8 @@ def test_create_llm_instance_with_openai(mocker: MockerFixture) -> None:
 def test_create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
     mocker.patch("sdeul.llm.override_env_vars")
     mocker.patch.dict(os.environ, {}, clear=True)
-    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mock_has_aws = mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mock_has_aws.__name__ = "has_aws_credentials"
     with pytest.raises(ValueError, match=r"The model cannot be determined."):
         create_llm_instance()
 
@@ -386,7 +398,7 @@ def test__read_llm_file(
     llm_file_path = "llm.gguf"
     temperature = 0.8
     top_p = 0.95
-    top_k = 40
+    top_k = 64
     n_ctx = 512
     repeat_penalty = 1.1
     last_n_tokens_size = 64
@@ -431,7 +443,7 @@ def test__read_llm_file(
             max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
-            n_threads=None,
+            n_threads=-1,
             n_gpu_layers=n_gpu_layers,
             f16_kv=True,
             use_mlock=False,
@@ -451,7 +463,7 @@ def test__read_llm_file(
             max_tokens=max_tokens,
             seed=seed,
             n_batch=n_batch,
-            n_threads=None,
+            n_threads=-1,
             n_gpu_layers=n_gpu_layers,
             f16_kv=True,
             use_mlock=False,

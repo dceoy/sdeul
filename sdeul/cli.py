@@ -23,6 +23,22 @@ from rich import print
 
 from . import __version__
 from .api import run_server
+from .constants import (
+    DEFAULT_API_HOST,
+    DEFAULT_API_PORT,
+    DEFAULT_API_RELOAD,
+    DEFAULT_CONTEXT_WINDOW,
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_N_BATCH,
+    DEFAULT_N_GPU_LAYERS,
+    DEFAULT_N_THREADS,
+    DEFAULT_REPEAT_LAST_N,
+    DEFAULT_REPEAT_PENALTY,
+    DEFAULT_SEED,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TOP_K,
+    DEFAULT_TOP_P,
+)
 from .extraction import extract_json_from_text_file
 from .utility import configure_logging
 from .validation import validate_json_files_using_json_schema
@@ -82,28 +98,49 @@ def extract(
         help="Skip output validation using JSON Schema.",
     ),
     temperature: float = typer.Option(
-        default=0.0,
+        default=DEFAULT_TEMPERATURE,
         help="Set the temperature for sampling.",
     ),
-    top_p: float = typer.Option(default=0.95, help="Set the top-p value for sampling."),
-    top_k: int = typer.Option(default=64, help="Set the top-k value for sampling."),
+    top_p: float = typer.Option(
+        default=DEFAULT_TOP_P,
+        help="Set the top-p value for sampling.",
+    ),
+    top_k: int = typer.Option(
+        default=DEFAULT_TOP_K,
+        help="Set the top-k value for sampling.",
+    ),
     repeat_penalty: float = typer.Option(
-        default=1.1,
+        default=DEFAULT_REPEAT_PENALTY,
         help="Set the penalty to apply to repeated tokens.",
     ),
     repeat_last_n: int = typer.Option(
-        default=64,
+        default=DEFAULT_REPEAT_LAST_N,
         help="Set the number of tokens to look back when applying the repeat penalty.",
     ),
-    n_ctx: int = typer.Option(default=8192, help="Set the token context window."),
+    n_ctx: int = typer.Option(
+        default=DEFAULT_CONTEXT_WINDOW,
+        help="Set the token context window.",
+    ),
     max_tokens: int = typer.Option(
-        default=8192,
+        default=DEFAULT_MAX_TOKENS,
         help="Set the max tokens to generate.",
     ),
-    seed: int = typer.Option(default=-1, help="Set the random seed."),
-    n_batch: int = typer.Option(default=8, help="Set the number of batch tokens."),
-    n_threads: int = typer.Option(default=-1, help="Set the number of threads to use."),
-    n_gpu_layers: int = typer.Option(default=-1, help="Set the number of GPU layers."),
+    seed: int = typer.Option(
+        default=DEFAULT_SEED,
+        help="Set the random seed.",
+    ),
+    n_batch: int = typer.Option(
+        default=DEFAULT_N_BATCH,
+        help="Set the number of batch tokens.",
+    ),
+    n_threads: int = typer.Option(
+        default=DEFAULT_N_THREADS,
+        help="Set the number of threads to use.",
+    ),
+    n_gpu_layers: int = typer.Option(
+        default=DEFAULT_N_GPU_LAYERS,
+        help="Set the number of GPU layers.",
+    ),
     openai_model: str | None = typer.Option(
         default=None,
         envvar="OPENAI_MODEL",
@@ -308,15 +345,15 @@ def validate(
 @app.command()
 def serve(
     host: str = typer.Option(
-        default="0.0.0.0",  # noqa: S104
+        default=DEFAULT_API_HOST,
         help="Host to run the server on.",
     ),
     port: int = typer.Option(
-        default=8000,
+        default=DEFAULT_API_PORT,
         help="Port to run the server on.",
     ),
     reload: bool = typer.Option(
-        default=True,
+        default=DEFAULT_API_RELOAD,
         help="Enable auto-reload on code changes.",
     ),
     debug: bool = typer.Option(default=False, help="Set DEBUG log level."),

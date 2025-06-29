@@ -57,3 +57,31 @@ DEFAULT_MODEL_NAMES = {
     "bedrock": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
     "groq": "meta-llama/llama-4-maverick-17b-128e-instruct",
 }
+
+# LLM Configuration Defaults
+DEFAULT_TEMPERATURE = 0.0
+DEFAULT_TOP_P = 0.95
+DEFAULT_TOP_K = 64
+DEFAULT_REPEAT_PENALTY = 1.1
+DEFAULT_REPEAT_LAST_N = 64
+DEFAULT_CONTEXT_WINDOW = 8192
+DEFAULT_MAX_TOKENS = 8192
+DEFAULT_SEED = -1
+
+# LlamaCpp Specific Defaults
+DEFAULT_N_BATCH = 8
+DEFAULT_N_THREADS = -1
+DEFAULT_N_GPU_LAYERS = -1
+DEFAULT_F16_KV = True
+DEFAULT_USE_MLOCK = False
+DEFAULT_USE_MMAP = True
+DEFAULT_TOKEN_WISE_STREAMING = False
+
+# API Server Defaults
+DEFAULT_API_HOST = "0.0.0.0"  # noqa: S104
+DEFAULT_API_PORT = 8000
+DEFAULT_API_RELOAD = True
+
+# Timeout and Retry Defaults
+DEFAULT_TIMEOUT = None
+DEFAULT_MAX_RETRIES = 2

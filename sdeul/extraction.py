@@ -19,7 +19,28 @@ from jsonschema.exceptions import ValidationError
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
-from .constants import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
+from .config import ExtractConfig
+from .constants import (
+    DEFAULT_CONTEXT_WINDOW,
+    DEFAULT_F16_KV,
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_N_BATCH,
+    DEFAULT_N_GPU_LAYERS,
+    DEFAULT_N_THREADS,
+    DEFAULT_REPEAT_LAST_N,
+    DEFAULT_REPEAT_PENALTY,
+    DEFAULT_SEED,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TIMEOUT,
+    DEFAULT_TOKEN_WISE_STREAMING,
+    DEFAULT_TOP_K,
+    DEFAULT_TOP_P,
+    DEFAULT_USE_MLOCK,
+    DEFAULT_USE_MMAP,
+    SYSTEM_PROMPT,
+    USER_PROMPT_TEMPLATE,
+)
 from .llm import JsonCodeOutputParser, create_llm_instance
 from .utility import (
     log_execution_time,
@@ -54,23 +75,23 @@ def extract_json_from_text_file(
     output_json_file_path: str | None = None,
     compact_json: bool = False,
     skip_validation: bool = False,
-    temperature: float = 0.0,
-    top_p: float = 0.95,
-    top_k: int = 64,
-    repeat_penalty: float = 1.1,
-    repeat_last_n: int = 64,
-    n_ctx: int = 512,
-    max_tokens: int = 8192,
-    seed: int = -1,
-    n_batch: int = 8,
-    n_threads: int = -1,
-    n_gpu_layers: int = -1,
-    f16_kv: bool = True,
-    use_mlock: bool = False,
-    use_mmap: bool = True,
-    token_wise_streaming: bool = False,
-    timeout: int | None = None,
-    max_retries: int = 2,
+    temperature: float = DEFAULT_TEMPERATURE,
+    top_p: float = DEFAULT_TOP_P,
+    top_k: int = DEFAULT_TOP_K,
+    repeat_penalty: float = DEFAULT_REPEAT_PENALTY,
+    repeat_last_n: int = DEFAULT_REPEAT_LAST_N,
+    n_ctx: int = DEFAULT_CONTEXT_WINDOW,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    seed: int = DEFAULT_SEED,
+    n_batch: int = DEFAULT_N_BATCH,
+    n_threads: int = DEFAULT_N_THREADS,
+    n_gpu_layers: int = DEFAULT_N_GPU_LAYERS,
+    f16_kv: bool = DEFAULT_F16_KV,
+    use_mlock: bool = DEFAULT_USE_MLOCK,
+    use_mmap: bool = DEFAULT_USE_MMAP,
+    token_wise_streaming: bool = DEFAULT_TOKEN_WISE_STREAMING,
+    timeout: int | None = DEFAULT_TIMEOUT,
+    max_retries: int = DEFAULT_MAX_RETRIES,
     aws_credentials_profile_name: str | None = None,
     aws_region: str | None = None,
     bedrock_endpoint_base_url: str | None = None,
@@ -239,3 +260,85 @@ def extract_structured_data_from_text(
         else:
             logger.info("Validation succeeded.")
     return parsed_output_data
+
+
+@log_execution_time
+def extract_json_from_text_file_with_config(
+    text_file_path: str,
+    json_schema_file_path: str,
+    config: ExtractConfig,
+) -> None:
+    """Extract structured JSON data from a text file using configuration objects.
+
+    This is a simplified version of extract_json_from_text_file that uses
+    configuration dataclasses instead of a large number of individual parameters.
+    This follows Kent Beck's tidying principle of grouping related parameters.
+
+    Args:
+        text_file_path (str): Path to the input text file containing
+            unstructured data.
+        json_schema_file_path (str): Path to the JSON schema file defining
+            output structure.
+        config (ExtractConfig): Configuration object containing all LLM,
+            model, and processing settings.
+    """
+    schema = read_json_file(path=json_schema_file_path)
+    input_text = read_text_file(path=text_file_path)
+
+    # Create LLM instance using config
+    llm = create_llm_instance(
+        # Model selection
+        ollama_model_name=config.model.ollama_model,
+        ollama_base_url=config.model.ollama_base_url,
+        llamacpp_model_file_path=config.model.llamacpp_model_file,
+        groq_model_name=config.model.groq_model,
+        groq_api_key=config.model.groq_api_key,
+        bedrock_model_id=config.model.bedrock_model,
+        google_model_name=config.model.google_model,
+        google_api_key=config.model.google_api_key,
+        anthropic_model_name=config.model.anthropic_model,
+        anthropic_api_key=config.model.anthropic_api_key,
+        anthropic_api_base=config.model.anthropic_api_base,
+        openai_model_name=config.model.openai_model,
+        openai_api_key=config.model.openai_api_key,
+        openai_api_base=config.model.openai_api_base,
+        openai_organization=config.model.openai_organization,
+        # LLM parameters
+        temperature=config.llm.temperature,
+        top_p=config.llm.top_p,
+        top_k=config.llm.top_k,
+        max_tokens=config.llm.max_tokens,
+        seed=config.llm.seed,
+        timeout=config.llm.timeout,
+        max_retries=config.llm.max_retries,
+        # LlamaCpp parameters
+        repeat_penalty=config.llamacpp.repeat_penalty,
+        repeat_last_n=config.llamacpp.repeat_last_n,
+        n_ctx=config.llamacpp.n_ctx,
+        n_batch=config.llamacpp.n_batch,
+        n_threads=config.llamacpp.n_threads,
+        n_gpu_layers=config.llamacpp.n_gpu_layers,
+        f16_kv=config.llamacpp.f16_kv,
+        use_mlock=config.llamacpp.use_mlock,
+        use_mmap=config.llamacpp.use_mmap,
+        token_wise_streaming=config.llamacpp.token_wise_streaming,
+        # AWS parameters
+        aws_credentials_profile_name=config.model.aws_credentials_profile,
+        aws_region=config.model.aws_region,
+        bedrock_endpoint_base_url=config.model.bedrock_endpoint_url,
+    )
+
+    # Extract structured data
+    parsed_output_data = extract_structured_data_from_text(
+        input_text=input_text,
+        schema=schema,
+        llm=llm,
+        skip_validation=config.processing.skip_validation,
+    )
+
+    # Write or print output
+    write_or_print_json_data(
+        data=parsed_output_data,
+        output_json_file_path=config.processing.output_json_file,
+        compact_json=config.processing.compact_json,
+    )
