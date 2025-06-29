@@ -11,8 +11,10 @@ import pytest
 from jsonschema import ValidationError
 from pytest_mock import MockerFixture
 
+from sdeul.config import ExtractConfig
 from sdeul.extraction import (
     extract_json_from_text_file,
+    extract_json_from_text_file_with_config,
     extract_structured_data_from_text,
 )
 
@@ -201,3 +203,52 @@ def test_extract_structured_data_from_text_with_invalid_json_output(
             skip_validation=False,
         )
     assert mock_logger.exception.call_count > 0
+
+
+def test_extract_json_from_text_file_with_config(mocker: MockerFixture) -> None:
+    """Test extract_json_from_text_file_with_config function."""
+    text_file_path = "input.txt"
+    json_schema_file_path = "schema.json"
+    config = ExtractConfig()
+
+    mock_llm_instance = mocker.MagicMock()
+    mock_create_llm_instance = mocker.patch(
+        "sdeul.extraction.create_llm_instance",
+        return_value=mock_llm_instance,
+    )
+    mock_read_json_file = mocker.patch(
+        "sdeul.extraction.read_json_file",
+        return_value=TEST_SCHEMA,
+    )
+    mock_read_text_file = mocker.patch(
+        "sdeul.extraction.read_text_file",
+        return_value=TEST_TEXT,
+    )
+    mock_extract_structured_data_from_text = mocker.patch(
+        "sdeul.extraction.extract_structured_data_from_text",
+        return_value=TEST_LLM_OUTPUT,
+    )
+    mock_write_or_print_json_data = mocker.patch(
+        "sdeul.extraction.write_or_print_json_data",
+    )
+
+    extract_json_from_text_file_with_config(
+        text_file_path=text_file_path,
+        json_schema_file_path=json_schema_file_path,
+        config=config,
+    )
+
+    mock_read_json_file.assert_called_once_with(path=json_schema_file_path)
+    mock_read_text_file.assert_called_once_with(path=text_file_path)
+    mock_create_llm_instance.assert_called_once()
+    mock_extract_structured_data_from_text.assert_called_once_with(
+        input_text=TEST_TEXT,
+        schema=TEST_SCHEMA,
+        llm=mock_llm_instance,
+        skip_validation=config.processing.skip_validation,
+    )
+    mock_write_or_print_json_data.assert_called_once_with(
+        data=TEST_LLM_OUTPUT,
+        output_json_file_path=config.processing.output_json_file,
+        compact_json=config.processing.compact_json,
+    )
