@@ -18,6 +18,25 @@ from jsonschema import ValidationError as JsonSchemaValidationError
 from jsonschema import validate
 from pydantic import BaseModel, Field
 
+from .constants import (
+    DEFAULT_CONTEXT_WINDOW,
+    DEFAULT_F16_KV,
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_N_BATCH,
+    DEFAULT_N_GPU_LAYERS,
+    DEFAULT_N_THREADS,
+    DEFAULT_REPEAT_LAST_N,
+    DEFAULT_REPEAT_PENALTY,
+    DEFAULT_SEED,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TIMEOUT,
+    DEFAULT_TOKEN_WISE_STREAMING,
+    DEFAULT_TOP_K,
+    DEFAULT_TOP_P,
+    DEFAULT_USE_MLOCK,
+    DEFAULT_USE_MMAP,
+)
 from .extraction import extract_structured_data_from_text
 from .llm import create_llm_instance
 from .utility import configure_logging
@@ -45,46 +64,84 @@ class ExtractRequest(BaseModel):
         description="Skip JSON schema validation",
     )
     temperature: float = Field(
-        default=0.0,
+        default=DEFAULT_TEMPERATURE,
         ge=0.0,
         le=2.0,
         description="Sampling temperature",
     )
     top_p: float = Field(
-        default=0.95,
+        default=DEFAULT_TOP_P,
         ge=0.0,
         le=1.0,
         description="Top-p sampling parameter",
     )
-    top_k: int = Field(default=64, ge=1, description="Top-k sampling parameter")
-    repeat_penalty: float = Field(default=1.1, ge=1.0, description="Repeat penalty")
+    top_k: int = Field(
+        default=DEFAULT_TOP_K,
+        ge=1,
+        description="Top-k sampling parameter",
+    )
+    repeat_penalty: float = Field(
+        default=DEFAULT_REPEAT_PENALTY,
+        ge=1.0,
+        description="Repeat penalty",
+    )
     repeat_last_n: int = Field(
-        default=64,
+        default=DEFAULT_REPEAT_LAST_N,
         ge=0,
         description="Tokens to consider for repeat penalty",
     )
-    n_ctx: int = Field(default=8192, ge=1, description="Context window size")
+    n_ctx: int = Field(
+        default=DEFAULT_CONTEXT_WINDOW,
+        ge=1,
+        description="Context window size",
+    )
     max_tokens: int = Field(
-        default=8192,
+        default=DEFAULT_MAX_TOKENS,
         ge=1,
         description="Maximum tokens to generate",
     )
-    seed: int = Field(default=-1, description="Random seed (-1 for random)")
-    n_batch: int = Field(default=8, ge=1, description="Batch size for processing")
-    n_threads: int = Field(default=-1, description="Number of threads (-1 for auto)")
-    n_gpu_layers: int = Field(default=-1, description="GPU layers to use (-1 for auto)")
+    seed: int = Field(
+        default=DEFAULT_SEED,
+        description="Random seed (-1 for random)",
+    )
+    n_batch: int = Field(
+        default=DEFAULT_N_BATCH,
+        ge=1,
+        description="Batch size for processing",
+    )
+    n_threads: int = Field(
+        default=DEFAULT_N_THREADS,
+        description="Number of threads (-1 for auto)",
+    )
+    n_gpu_layers: int = Field(
+        default=DEFAULT_N_GPU_LAYERS,
+        description="GPU layers to use (-1 for auto)",
+    )
     f16_kv: bool = Field(
-        default=True,
+        default=DEFAULT_F16_KV,
         description="Use half-precision for key/value cache",
     )
-    use_mlock: bool = Field(default=False, description="Force model to stay in RAM")
-    use_mmap: bool = Field(default=True, description="Use memory mapping for model")
+    use_mlock: bool = Field(
+        default=DEFAULT_USE_MLOCK,
+        description="Force model to stay in RAM",
+    )
+    use_mmap: bool = Field(
+        default=DEFAULT_USE_MMAP,
+        description="Use memory mapping for model",
+    )
     token_wise_streaming: bool = Field(
-        default=False,
+        default=DEFAULT_TOKEN_WISE_STREAMING,
         description="Enable token-wise streaming",
     )
-    timeout: int | None = Field(default=None, description="Request timeout in seconds")
-    max_retries: int = Field(default=2, ge=0, description="Maximum number of retries")
+    timeout: int | None = Field(
+        default=DEFAULT_TIMEOUT,
+        description="Request timeout in seconds",
+    )
+    max_retries: int = Field(
+        default=DEFAULT_MAX_RETRIES,
+        ge=0,
+        description="Maximum number of retries",
+    )
 
     # Model selection (exactly one should be provided)
     openai_model: str | None = Field(default=None, description="OpenAI model name")
