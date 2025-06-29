@@ -105,3 +105,64 @@ uv pip install -e .
 - **Factory Pattern**: In `llm.py` to create appropriate LLM instances
 - **Decorator Pattern**: Used for timing function execution with `@log_execution_time`
 - **Adapter Pattern**: Each LLM provider has a consistent interface regardless of underlying implementation
+
+## Web Search Instructions
+
+For tasks requiring web search, always use `gemini` command instead of the built-in web search tool.
+
+### Usage
+
+```sh
+# Basic search query
+gemini --prompt "WebSearch: <query>"
+
+# Example: Search for latest news
+gemini --prompt "WebSearch: What are the latest developments in AI?"
+```
+
+### Policy
+
+When users request information that requires web search:
+
+1. Use `gemini --prompt` command via terminal
+2. Parse and present the Gemini response appropriately
+
+This ensures consistent and reliable web search results through the Gemini API.
+
+## Code Refactoring Guidelines (Kent Beck's Tidying)
+
+Follow Kent Beck's "Tidying" approach when refactoring code. The philosophy is: **"Make the change easy, then make the easy change."**
+
+### Core Principles
+
+1. **Small, Safe Steps** - Make changes that are easily reversible and won't introduce bugs
+2. **Separate Commits** - Never mix structural changes (tidying) with behavioral changes (features/fixes)
+3. **Economic Decision** - Tidy when it makes the immediate task easier
+
+### Key Tidying Operations
+
+1. **Guard Clause** - Replace nested conditionals with early returns
+2. **Dead Code Removal** - Delete unused code, comments, or imports
+3. **Explaining Variables** - Introduce variables for complex expressions
+4. **Explaining Constants** - Replace magic numbers with named constants
+5. **Extract Helper** - Move chunks of code into separate functions
+6. **Normalize Symmetries** - Make similar code look the same
+7. **Rationalize Names** - Improve variable/function names for clarity
+
+### When to Tidy
+
+- Before adding features to messy code
+- When you're already reading and understanding code
+- As part of daily development workflow
+- Keep each tidying small and focused
+- Ensure tests pass after each tidying
+
+### Tidying Workflow
+
+1. Identify needed behavioral change
+2. Examine the code - if messy, tidy first
+3. Commit tidyings as separate structural changes
+4. Implement behavioral change in clean code
+5. Commit behavioral change separately
+
+Remember: All tidyings are refactorings, but keep them small (minutes, not hours) and low-risk.
