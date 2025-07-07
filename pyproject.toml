@@ -65,6 +65,10 @@ dev-dependencies = [
   "types-pexpect >= 4.9.0.20250516",
 ]
 
+[tool.uv.build-backend]
+source-include = ["sdeul/**", "LICENSE"]
+source-exclude = ["test/**"]
+
 [tool.ruff]
 line-length = 88
 exclude = ["build", ".venv"]
