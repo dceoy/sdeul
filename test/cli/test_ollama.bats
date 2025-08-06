@@ -3,7 +3,7 @@
 setup_file() {
   set -euo pipefail
   echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
-  export OLLAMA_MODEL="${OLLAMA_MODEL:-gpt-oss-20b}"
+  export OLLAMA_MODEL="${OLLAMA_MODEL:-gpt-oss:20b}"
   export OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-http://localhost:11434}" # Default Ollama port
 }
 
