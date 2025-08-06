@@ -1,6 +1,6 @@
 [project]
 name = "sdeul"
-version = "0.2.0"
+version = "0.2.1"
 description = "Structural Data Extractor using LLMs"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
