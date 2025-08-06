@@ -3,7 +3,7 @@
 setup_file() {
   set -euo pipefail
   echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
-  export ANTHROPIC_MODEL="${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}"
+  export ANTHROPIC_MODEL="${ANTHROPIC_MODEL:-claude-4-sonnet-20250514-v1:0}"
 }
 
 teardown_file() {

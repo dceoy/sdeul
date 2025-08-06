@@ -3,7 +3,7 @@
 setup_file() {
   set -euo pipefail
   echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
-  MODEL_FILE_URL="${MODEL_FILE_URL:-https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf}"
+  MODEL_FILE_URL="${MODEL_FILE_URL:-https://huggingface.co/unsloth/gemma-3-27b-it-GGUF/resolve/main/gemma-3-27b-it-Q8_0.gguf}"
   if [[ -z "${MODEL_FILE_PATH:-}" ]]; then
     export MODEL_FILE_PATH="${MODEL_FILE_PATH:-./test/model/${MODEL_FILE_URL##*/}}"
   fi

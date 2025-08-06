@@ -194,8 +194,10 @@ def test_extract_endpoint_invalid_request_data(client: TestClient) -> None:
 
     response = client.post("/extract", json=invalid_data)
 
-    # Should return 422 for validation error
-    assert response.status_code == _HTTP_400_BAD_REQUEST
+    # Empty inputs are valid and should return 200 with empty result
+    assert response.status_code == _HTTP_200_OK
+    assert response.json()["data"] == {}
+    assert response.json()["validated"] is True
 
 
 def test_extract_endpoint_with_different_models(

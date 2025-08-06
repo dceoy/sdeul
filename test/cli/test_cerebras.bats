@@ -3,16 +3,16 @@
 setup_file() {
   set -euo pipefail
   echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
-  export GOOGLE_MODEL="${GOOGLE_MODEL:-gemini-2.5-pro}"
+  export CEREBRAS_MODEL="${CEREBRAS_MODEL:-gpt-oss-120b}"
 }
 
 teardown_file() {
   :
 }
 
-@test "pass with \"sdeul extract --google-model\"" {
+@test "pass with \"sdeul extract --cerebras-model\"" {
   run uv run sdeul extract \
-    --google-model="${GOOGLE_MODEL}" \
+    --cerebras-model="${CEREBRAS_MODEL}" \
     ./test/data/medication_history.schema.json \
     ./test/data/patient_medication_record.txt
   [[ "${status}" -eq 0 ]]

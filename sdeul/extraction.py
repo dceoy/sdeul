@@ -60,6 +60,8 @@ def extract_json_from_text_file(
     ollama_model_name: str | None = None,
     ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
+    cerebras_model_name: str | None = None,
+    cerebras_api_key: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
     bedrock_model_id: str | None = None,
@@ -111,6 +113,9 @@ def extract_json_from_text_file(
         ollama_base_url (str | None): Custom Ollama API base URL.
         llamacpp_model_file_path (str | None): Path to local GGUF model file
             for llama.cpp.
+        cerebras_model_name (str | None): Cerebras model name.
+        cerebras_api_key (str | None): Cerebras API key (overrides environment
+            variable).
         groq_model_name (str | None): Groq model name.
         groq_api_key (str | None): Groq API key (overrides environment
             variable).
@@ -160,6 +165,8 @@ def extract_json_from_text_file(
         ollama_model_name=ollama_model_name,
         ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
+        cerebras_model_name=cerebras_model_name,
+        cerebras_api_key=cerebras_api_key,
         groq_model_name=groq_model_name,
         groq_api_key=groq_api_key,
         bedrock_model_id=bedrock_model_id,
@@ -291,6 +298,8 @@ def extract_json_from_text_file_with_config(
         ollama_model_name=config.model.ollama_model,
         ollama_base_url=config.model.ollama_base_url,
         llamacpp_model_file_path=config.model.llamacpp_model_file,
+        cerebras_model_name=config.model.cerebras_model,
+        cerebras_api_key=config.model.cerebras_api_key,
         groq_model_name=config.model.groq_model,
         groq_api_key=config.model.groq_api_key,
         bedrock_model_id=config.model.bedrock_model,

@@ -55,6 +55,7 @@ DEFAULT_MODEL_NAMES = {
     "google": "gemini-2.5-pro",
     "anthropic": "claude-3-5-sonnet-20241022",
     "bedrock": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "cerebras": "llama3.3-70b",
     "groq": "meta-llama/llama-4-maverick-17b-128e-instruct",
 }
 

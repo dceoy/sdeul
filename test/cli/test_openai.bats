@@ -3,7 +3,7 @@
 setup_file() {
   set -euo pipefail
   echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
-  export OPENAI_MODEL="${OPENAI_MODEL:-gpt-4o-mini}"
+  export OPENAI_MODEL="${OPENAI_MODEL:-gpt-4.1}"
 }
 
 teardown_file() {

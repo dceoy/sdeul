@@ -134,6 +134,35 @@ def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
     )
 
 
+def test_create_llm_instance_with_cerebras(mocker: MockerFixture) -> None:
+    cerebras_model_name = "dummy-cerebras-model"
+    temperature = 0.8
+    max_tokens = 8192
+    timeout = None
+    max_retries = 2
+    stop_sequences = None
+    mocker.patch("sdeul.llm.override_env_vars")
+    llm = mocker.MagicMock()
+    mock_chat_cerebras = mocker.patch("sdeul.llm.ChatCerebras", return_value=llm)
+
+    result = create_llm_instance(
+        cerebras_model_name=cerebras_model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        timeout=timeout,
+        max_retries=max_retries,
+    )
+    assert result == llm
+    mock_chat_cerebras.assert_called_once_with(
+        model=cerebras_model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        timeout=timeout,
+        max_retries=max_retries,
+        stop_sequences=stop_sequences,
+    )
+
+
 def test_create_llm_instance_with_groq(mocker: MockerFixture) -> None:
     groq_model_name = "dummy-groq-model"
     temperature = 0.8

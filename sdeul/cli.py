@@ -156,6 +156,11 @@ def extract(
         envvar="ANTHROPIC_MODEL",
         help="Use the Anthropic model.",
     ),
+    cerebras_model: str | None = typer.Option(
+        default=None,
+        envvar="CEREBRAS_MODEL",
+        help="Use the Cerebras model.",
+    ),
     groq_model: str | None = typer.Option(
         default=None,
         envvar="GROQ_MODEL",
@@ -211,6 +216,11 @@ def extract(
         envvar="ANTHROPIC_API_BASE",
         help="Override the Anthropic API base URL.",
     ),
+    cerebras_api_key: str | None = typer.Option(
+        default=None,
+        envvar="CEREBRAS_API_KEY",
+        help="Override the Cerebras API key.",
+    ),
     groq_api_key: str | None = typer.Option(
         default=None,
         envvar="GROQ_API_KEY",
@@ -255,6 +265,7 @@ def extract(
         openai_model (str | None): OpenAI model to use.
         google_model (str | None): Google model to use.
         anthropic_model (str | None): Anthropic model to use.
+        cerebras_model (str | None): Cerebras model to use.
         groq_model (str | None): Groq model to use.
         bedrock_model (str | None): Amazon Bedrock model ID to use.
         ollama_model (str | None): Ollama model to use.
@@ -270,6 +281,8 @@ def extract(
         anthropic_api_key (str | None): Anthropic API key (overrides environment
             variable).
         anthropic_api_base (str | None): Custom Anthropic API base URL.
+        cerebras_api_key (str | None): Cerebras API key (overrides environment
+            variable).
         groq_api_key (str | None): Groq API key (overrides environment variable).
         aws_credentials_profile (str | None): AWS profile name for Bedrock access.
         debug (bool): Enable debug logging level.
@@ -296,6 +309,7 @@ def extract(
         openai_model_name=openai_model,
         google_model_name=google_model,
         anthropic_model_name=anthropic_model,
+        cerebras_model_name=cerebras_model,
         groq_model_name=groq_model,
         bedrock_model_id=bedrock_model,
         ollama_model_name=ollama_model,
@@ -306,6 +320,7 @@ def extract(
         google_api_key=google_api_key,
         anthropic_api_key=anthropic_api_key,
         anthropic_api_base=anthropic_api_base,
+        cerebras_api_key=cerebras_api_key,
         groq_api_key=groq_api_key,
         ollama_base_url=ollama_base_url,
         aws_credentials_profile_name=aws_credentials_profile,
