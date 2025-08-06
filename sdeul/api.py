@@ -165,6 +165,9 @@ class ExtractRequest(BaseModel):
         description="Anthropic API base URL",
     )
 
+    cerebras_model: str | None = Field(default=None, description="Cerebras model name")
+    cerebras_api_key: str | None = Field(default=None, description="Cerebras API key")
+
     groq_model: str | None = Field(default=None, description="Groq model name")
     groq_api_key: str | None = Field(default=None, description="Groq API key")
 
@@ -235,11 +238,17 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
     Raises:
         HTTPException: If extraction fails or no model is specified.
     """
+    # Handle empty inputs gracefully
+    if not request.text and not request.json_schema:
+        return ExtractResponse(data={}, validated=True)
+
     try:
         llm = create_llm_instance(
             ollama_model_name=request.ollama_model,
             ollama_base_url=request.ollama_base_url,
             llamacpp_model_file_path=request.llamacpp_model_file,
+            cerebras_model_name=request.cerebras_model,
+            cerebras_api_key=request.cerebras_api_key,
             groq_model_name=request.groq_model,
             groq_api_key=request.groq_api_key,
             bedrock_model_id=request.bedrock_model,

@@ -3,11 +3,11 @@ name: Unit and CLI tests
 on:
   workflow_call:
     inputs:
-      python-version:
+      uv-version:
         required: false
         type: string
-        description: Python version to use
-        default: 3.x
+        description: Version of uv to use (applicable only if uv.lock is present)
+        default: latest
       bats-version:
         required: false
         type: string
@@ -22,13 +22,16 @@ on:
       GROQ_API_KEY:
         required: true
         description: Groq API key
+      CEREBRAS_API_KEY:
+        required: true
+        description: Cerebras API key
   workflow_dispatch:
     inputs:
-      python-version:
+      uv-version:
         required: false
         type: string
-        description: Python version to use
-        default: 3.x
+        description: Version of uv to use (applicable only if uv.lock is present)
+        default: latest
       bats-version:
         required: false
         type: string
@@ -39,20 +42,22 @@ on:
         type: choice
         options:
           - null
-          - llama-3.1-70b-versatile
+          - openai/gpt-oss-120b
+          - openai/gpt-oss-20b
+          - meta-llama/llama-4-maverick-17b-128e-instruct
+          - meta-llama/llama-4-scout-17b-16e-instruct
         description: Groq model to use
-        default: null
-      model-file-url:
+        default: openai/gpt-oss-120b
+      cerebras-model:
         required: false
         type: choice
         options:
           - null
-          - https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf
-          - https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-IQ4_XS.gguf
-          - https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q6_K_L.gguf
-          - https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-IQ4_XS.gguf
-        description: Model file URL to run tests with
-        default: null
+          - gpt-oss-120b
+          - llama-4-maverick-17b-128e-instruct
+          - llama-4-scout-17b-16e-instruct
+        description: Cerebras model to use
+        default: gpt-oss-120b
       runs-on:
         required: false
         type: string
@@ -64,17 +69,16 @@ defaults:
     working-directory: .
 jobs:
   unit-tests:
-    if: inputs.model-file-url == null
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc  # v6.4.3
         with:
-          python-version: ${{ inputs.python-version || '3.x' }}
-      - name: Install packages
+          version: ${{ inputs.uv-version || 'latest' }}
+      - name: Install dependencies
         run: |
-          pip install -U --no-cache-dir pip uv
           uv sync
       - name: Run unit tests using pytest
         run: |
@@ -90,26 +94,28 @@ jobs:
         uses: bats-core/bats-action@42fcc8700f773c075a16a90eb11674c0318ad507  # 3.0.1
         with:
           bats-version: ${{ inputs.bats-version || 'latest' }}
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc  # v6.4.3
         with:
-          python-version: ${{ inputs.python-version || '3.x' }}
-      - name: Install packages
+          version: ${{ inputs.uv-version || 'latest' }}
+      - name: Install dependencies
         run: |
-          pip install -U --no-cache-dir pip uv
           uv sync
       - name: Test CLI
         run: |
           bats --verbose-run ./test/cli/test_cli.bats
+      - name: Test API
+        run: |
+          bats --verbose-run ./test/cli/test_api.bats
       - name: Test a command using Groq
         if: inputs.groq-model != null
         env:
           GROQ_MODEL: ${{ inputs.groq-model }}
         run: |
           bats --verbose-run ./test/cli/test_groq.bats
-      - name: Run a specified Bats test file
-        if: inputs.model-file-url != null
+      - name: Test a command using Cerebras
+        if: inputs.cerebras-model != null
         env:
-          MODEL_FILE_URL: ${{ inputs.model-file-url }}
+          CEREBRAS_MODEL: ${{ inputs.cerebras-model }}
         run: |
-          bats --verbose-run ./test/cli/test_llamacpp.bats
+          bats --verbose-run ./test/cli/test_cerebras.bats

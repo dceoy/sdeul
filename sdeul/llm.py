@@ -25,6 +25,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.schema import StrOutputParser
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrockConverse
+from langchain_cerebras import ChatCerebras
 from langchain_community.llms import LlamaCpp
 from langchain_core.exceptions import OutputParserException
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -181,6 +182,28 @@ def _create_llamacpp_llm(
     )
 
 
+def _create_cerebras_llm(
+    model_name: str | None,
+    **kwargs: Any,  # noqa: ANN401
+) -> ChatCerebras:
+    """Create a Cerebras LLM instance.
+
+    Returns:
+        ChatCerebras: Configured Cerebras LLM instance.
+    """
+    logger = logging.getLogger(_create_cerebras_llm.__name__)
+    model = model_name or DEFAULT_MODEL_NAMES["cerebras"]
+    logger.info("Use Cerebras: %s", model)
+    return ChatCerebras(
+        model=model,
+        temperature=kwargs["temperature"],
+        max_tokens=kwargs["max_tokens"],
+        timeout=kwargs["timeout"],
+        max_retries=kwargs["max_retries"],
+        stop_sequences=None,
+    )
+
+
 def _create_groq_llm(
     model_name: str | None,
     **kwargs: Any,  # noqa: ANN401
@@ -307,6 +330,34 @@ def _create_openai_llm(
     )
 
 
+def _should_use_cerebras(
+    cerebras_model_name: str | None,
+    groq_model_name: str | None,
+    bedrock_model_id: str | None,
+    google_model_name: str | None,
+    anthropic_model_name: str | None,
+    openai_model_name: str | None,
+) -> bool:
+    """Determine if Cerebras should be used based on model parameters and environment.
+
+    Returns:
+        bool: True if Cerebras should be used, False otherwise.
+    """
+    if cerebras_model_name:
+        return True
+
+    other_models_specified = any([
+        groq_model_name,
+        bedrock_model_id,
+        google_model_name,
+        anthropic_model_name,
+        openai_model_name,
+    ])
+    has_cerebras_key = os.environ.get("CEREBRAS_API_KEY") is not None
+
+    return not other_models_specified and has_cerebras_key
+
+
 def _should_use_groq(
     groq_model_name: str | None,
     bedrock_model_id: str | None,
@@ -395,6 +446,8 @@ def create_llm_instance(  # noqa: PLR0911
     ollama_model_name: str | None = None,
     ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
+    cerebras_model_name: str | None = None,
+    cerebras_api_key: str | None = None,
     groq_model_name: str | None = None,
     groq_api_key: str | None = None,
     bedrock_model_id: str | None = None,
@@ -430,6 +483,7 @@ def create_llm_instance(  # noqa: PLR0911
 ) -> (
     ChatOllama
     | LlamaCpp
+    | ChatCerebras
     | ChatGroq
     | ChatBedrockConverse
     | ChatGoogleGenerativeAI
@@ -442,6 +496,8 @@ def create_llm_instance(  # noqa: PLR0911
         ollama_model_name (str | None): Name of the Ollama model to use.
         ollama_base_url (str | None): Base URL for the Ollama API.
         llamacpp_model_file_path (str | None): Path to the llama.cpp model file.
+        cerebras_model_name (str | None): Name of the Cerebras model to use.
+        cerebras_api_key (str | None): API key for Cerebras.
         groq_model_name (str | None): Name of the Groq model to use.
         groq_api_key (str | None): API key for Groq.
         bedrock_model_id (str | None): ID of the Amazon Bedrock model to use.
@@ -481,7 +537,7 @@ def create_llm_instance(  # noqa: PLR0911
             endpoint.
 
     Returns:
-        ChatOllama | LlamaCpp | ChatGroq | ChatBedrockConverse |
+        ChatOllama | LlamaCpp | ChatCerebras | ChatGroq | ChatBedrockConverse |
         ChatGoogleGenerativeAI | ChatAnthropic | ChatOpenAI: An instance of the
         selected LLM.
 
@@ -490,6 +546,7 @@ def create_llm_instance(  # noqa: PLR0911
             cannot be determined.
     """
     override_env_vars(
+        CEREBRAS_API_KEY=cerebras_api_key,
         GROQ_API_KEY=groq_api_key,
         GOOGLE_API_KEY=google_api_key,
         ANTHROPIC_API_KEY=anthropic_api_key,
@@ -529,6 +586,15 @@ def create_llm_instance(  # noqa: PLR0911
             llamacpp_model_file_path,
             **llm_kwargs,
         )
+    elif _should_use_cerebras(
+        cerebras_model_name,
+        groq_model_name,
+        bedrock_model_id,
+        google_model_name,
+        anthropic_model_name,
+        openai_model_name,
+    ):
+        return _create_cerebras_llm(cerebras_model_name, **llm_kwargs)
     elif _should_use_groq(
         groq_model_name,
         bedrock_model_id,

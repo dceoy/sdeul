@@ -80,6 +80,7 @@ class ModelConfig:
     # Model names
     ollama_model: str | None = None
     llamacpp_model_file: str | None = None
+    cerebras_model: str | None = None
     groq_model: str | None = None
     bedrock_model: str | None = None
     google_model: str | None = None
@@ -97,6 +98,7 @@ class ModelConfig:
     openai_organization: str | None = None
     google_api_key: str | None = None
     anthropic_api_key: str | None = None
+    cerebras_api_key: str | None = None
     groq_api_key: str | None = None
     aws_credentials_profile: str | None = None
     aws_region: str | None = None

@@ -4,7 +4,7 @@ setup_file() {
   set -euo pipefail
   echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
   aws sts get-caller-identity
-  export BEDROCK_MODEL="${BEDROCK_MODEL:-anthropic.claude-3-5-sonnet-20240620-v1:0}"
+  export BEDROCK_MODEL="${BEDROCK_MODEL:-anthropic.claude-4-20250514-v1:0}"
 }
 
 teardown_file() {

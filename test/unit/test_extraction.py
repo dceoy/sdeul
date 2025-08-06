@@ -97,6 +97,8 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         ollama_model_name=None,
         ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
+        cerebras_model_name=None,
+        cerebras_api_key=None,
         groq_model_name=None,
         groq_api_key=None,
         bedrock_model_id=None,

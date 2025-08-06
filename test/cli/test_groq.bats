@@ -3,7 +3,7 @@
 setup_file() {
   set -euo pipefail
   echo "BATS test file: ${BATS_TEST_FILENAME}" >&3
-  export GROQ_MODEL="${GROQ_MODEL:-llama-3.1-70b-versatile}"
+  export GROQ_MODEL="${GROQ_MODEL:-openai/gpt-oss-120b}"
 }
 
 teardown_file() {
