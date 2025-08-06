@@ -238,6 +238,10 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
     Raises:
         HTTPException: If extraction fails or no model is specified.
     """
+    # Handle empty inputs gracefully
+    if not request.text and not request.json_schema:
+        return ExtractResponse(data={}, validated=True)
+
     try:
         llm = create_llm_instance(
             ollama_model_name=request.ollama_model,
