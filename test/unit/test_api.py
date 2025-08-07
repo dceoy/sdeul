@@ -100,6 +100,7 @@ def test_extract_endpoint_success(
         schema=TEST_SCHEMA,
         llm=mock_llm,
         skip_validation=False,
+        terminology=None,
     )
 
 
@@ -129,6 +130,7 @@ def test_extract_endpoint_with_skip_validation(
         schema=TEST_SCHEMA,
         llm=mock_llm,
         skip_validation=True,
+        terminology=None,
     )
 
 

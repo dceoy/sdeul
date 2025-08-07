@@ -305,6 +305,11 @@ def extract_json_from_text_file_with_config(
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
 
+    # Read terminology file if provided
+    terminology = None
+    if config.processing.terminology_file:
+        terminology = read_text_file(path=config.processing.terminology_file)
+
     # Create LLM instance using config
     # Determine model name and provider from config
     model_name = (
@@ -381,6 +386,7 @@ def extract_json_from_text_file_with_config(
         schema=schema,
         llm=llm,
         skip_validation=config.processing.skip_validation,
+        terminology=terminology,
     )
 
     # Write or print output

@@ -338,6 +338,7 @@ def test_extract_json_from_text_file_with_config(mocker: MockerFixture) -> None:
         schema=TEST_SCHEMA,
         llm=mock_llm_instance,
         skip_validation=config.processing.skip_validation,
+        terminology=None,
     )
     mock_write_or_print_json_data.assert_called_once_with(
         data=TEST_LLM_OUTPUT,

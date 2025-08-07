@@ -119,6 +119,7 @@ class ProcessingConfig:
     output_json_file: str | None = None
     compact_json: bool = False
     skip_validation: bool = False
+    terminology_file: str | None = None
     debug: bool = False
     info: bool = False
 
