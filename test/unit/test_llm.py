@@ -305,14 +305,15 @@ def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
     )
 
 
-def test_create_llm_instance_with_anthropic_env_var(mocker: MockerFixture) -> None:
+def test_create_llm_instance_with_anthropic_env_var_requires_model(
+    mocker: MockerFixture,
+) -> None:
     temperature = 0.0
     top_p = 0.95
     top_k = 64
     max_tokens = 8192
     timeout = None
     max_retries = 2
-    stop = None
     mocker.patch("sdeul.llm.override_env_vars")
     mock_has_aws = mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
     mock_has_aws.__name__ = "has_aws_credentials"
@@ -334,32 +335,20 @@ def test_create_llm_instance_with_anthropic_env_var(mocker: MockerFixture) -> No
         return default
 
     mocker.patch("os.environ.get", side_effect=mock_environ_get)
-    llm = mocker.MagicMock()
-    mock_chat_anthropic = mocker.patch(
-        "sdeul.llm.ChatAnthropic",
-        return_value=llm,
-    )
 
-    result = create_llm_instance(
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        max_tokens=max_tokens,
-        timeout=timeout,
-        max_retries=max_retries,
-    )
-    assert result == llm
-    mock_chat_anthropic.assert_called_once_with(
-        model_name="claude-3-5-sonnet-20241022",  # Default model
-        base_url=None,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        max_tokens_to_sample=max_tokens,
-        timeout=timeout,
-        max_retries=max_retries,
-        stop=stop,
-    )
+    # Should raise an error when no model name is provided
+    with pytest.raises(
+        ValueError,
+        match=r"Anthropic model name is required when using Anthropic API.",
+    ):
+        create_llm_instance(
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+        )
 
 
 def test_create_llm_instance_with_openai(mocker: MockerFixture) -> None:

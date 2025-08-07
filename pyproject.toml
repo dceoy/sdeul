@@ -142,6 +142,7 @@ select = [
   "DOC",    # pydoclint (DOC)
 ]
 ignore = [
+  "COM812",   # missing-trailing-comma
   "B008",     # function-call-in-default-argument
   "A004",     # builtin-import-shadowing
   "FBT001",   # boolean-type-hint-positional-argument

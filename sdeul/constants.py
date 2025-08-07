@@ -7,7 +7,6 @@ using various Language Learning Models.
 Constants:
     SYSTEM_PROMPT: Core instruction prompt for LLMs to extract structured JSON
     USER_PROMPT_TEMPLATE: Template for formatting user input and schema
-    DEFAULT_MODEL_NAMES: Default model names for each LLM provider
 """
 
 SYSTEM_PROMPT = """\
@@ -71,15 +70,6 @@ Provided JSON schema:
 ```
 
 {terminology}"""
-
-DEFAULT_MODEL_NAMES = {
-    "openai": "gpt-4.1",
-    "google": "gemini-2.5-pro",
-    "anthropic": "claude-3-5-sonnet-20241022",
-    "bedrock": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-    "cerebras": "llama3.3-70b",
-    "groq": "meta-llama/llama-4-maverick-17b-128e-instruct",
-}
 
 # LLM Configuration Defaults
 DEFAULT_TEMPERATURE = 0.0
