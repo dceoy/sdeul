@@ -296,6 +296,37 @@ def extract(
         info (bool): Enable info logging level.
     """
     configure_logging(debug=debug, info=info)
+
+    # Determine model_name and provider from the individual model arguments
+    model_name = (
+        openai_model
+        or google_model
+        or anthropic_model
+        or cerebras_model
+        or groq_model
+        or bedrock_model
+        or ollama_model
+    )
+
+    # Determine provider based on which model is specified
+    provider = None
+    if openai_model:
+        provider = "openai"
+    elif google_model:
+        provider = "google"
+    elif anthropic_model:
+        provider = "anthropic"
+    elif cerebras_model:
+        provider = "cerebras"
+    elif groq_model:
+        provider = "groq"
+    elif bedrock_model:
+        provider = "bedrock"
+    elif ollama_model:
+        provider = "ollama"
+    elif llamacpp_model_file:
+        provider = "llamacpp"
+
     extract_json_from_text_file(
         json_schema_file_path=json_schema_file,
         text_file_path=text_file,
@@ -314,13 +345,8 @@ def extract(
         n_batch=n_batch,
         n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
-        openai_model_name=openai_model,
-        google_model_name=google_model,
-        anthropic_model_name=anthropic_model,
-        cerebras_model_name=cerebras_model,
-        groq_model_name=groq_model,
-        bedrock_model_id=bedrock_model,
-        ollama_model_name=ollama_model,
+        model_name=model_name,
+        provider=provider,
         llamacpp_model_file_path=llamacpp_model_file,
         openai_api_key=openai_api_key,
         openai_api_base=openai_api_base,

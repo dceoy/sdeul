@@ -57,20 +57,15 @@ if TYPE_CHECKING:
 def extract_json_from_text_file(
     text_file_path: str,
     json_schema_file_path: str,
-    ollama_model_name: str | None = None,
+    model_name: str | None = None,
+    provider: str | None = None,
     ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
-    cerebras_model_name: str | None = None,
     cerebras_api_key: str | None = None,
-    groq_model_name: str | None = None,
     groq_api_key: str | None = None,
-    bedrock_model_id: str | None = None,
-    google_model_name: str | None = None,
     google_api_key: str | None = None,
-    anthropic_model_name: str | None = None,
     anthropic_api_key: str | None = None,
     anthropic_api_base: str | None = None,
-    openai_model_name: str | None = None,
     openai_api_key: str | None = None,
     openai_api_base: str | None = None,
     openai_organization: str | None = None,
@@ -110,25 +105,22 @@ def extract_json_from_text_file(
             unstructured data.
         json_schema_file_path (str): Path to the JSON schema file defining
             output structure.
-        ollama_model_name (str | None): Ollama model name.
+        model_name (str | None): Name or ID of the model to use.
+        provider (str | None): LLM provider to use (openai, google, anthropic,
+            cerebras, groq, bedrock, ollama, llamacpp). If not specified, will be
+            inferred from API keys and environment.
         ollama_base_url (str | None): Custom Ollama API base URL.
         llamacpp_model_file_path (str | None): Path to local GGUF model file
             for llama.cpp.
-        cerebras_model_name (str | None): Cerebras model name.
         cerebras_api_key (str | None): Cerebras API key (overrides environment
             variable).
-        groq_model_name (str | None): Groq model name.
         groq_api_key (str | None): Groq API key (overrides environment
             variable).
-        bedrock_model_id (str | None): Amazon Bedrock model ID.
-        google_model_name (str | None): Google Generative AI model name.
         google_api_key (str | None): Google API key (overrides environment
             variable).
-        anthropic_model_name (str | None): Anthropic model name.
         anthropic_api_key (str | None): Anthropic API key (overrides environment
             variable).
         anthropic_api_base (str | None): Custom Anthropic API base URL.
-        openai_model_name (str | None): OpenAI model name.
         openai_api_key (str | None): OpenAI API key (overrides environment
             variable).
         openai_api_base (str | None): Custom OpenAI API base URL.
@@ -166,20 +158,15 @@ def extract_json_from_text_file(
         bedrock_endpoint_base_url (str | None): Custom Bedrock endpoint URL.
     """
     llm = create_llm_instance(
-        ollama_model_name=ollama_model_name,
+        model_name=model_name,
+        provider=provider,
         ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
-        cerebras_model_name=cerebras_model_name,
         cerebras_api_key=cerebras_api_key,
-        groq_model_name=groq_model_name,
         groq_api_key=groq_api_key,
-        bedrock_model_id=bedrock_model_id,
-        google_model_name=google_model_name,
         google_api_key=google_api_key,
-        anthropic_model_name=anthropic_model_name,
         anthropic_api_key=anthropic_api_key,
         anthropic_api_base=anthropic_api_base,
-        openai_model_name=openai_model_name,
         openai_api_key=openai_api_key,
         openai_api_base=openai_api_base,
         openai_organization=openai_organization,
@@ -319,22 +306,47 @@ def extract_json_from_text_file_with_config(
     input_text = read_text_file(path=text_file_path)
 
     # Create LLM instance using config
+    # Determine model name and provider from config
+    model_name = (
+        config.model.openai_model
+        or config.model.google_model
+        or config.model.anthropic_model
+        or config.model.cerebras_model
+        or config.model.groq_model
+        or config.model.bedrock_model
+        or config.model.ollama_model
+    )
+
+    # Determine provider based on which model is specified
+    provider = None
+    if config.model.openai_model:
+        provider = "openai"
+    elif config.model.google_model:
+        provider = "google"
+    elif config.model.anthropic_model:
+        provider = "anthropic"
+    elif config.model.cerebras_model:
+        provider = "cerebras"
+    elif config.model.groq_model:
+        provider = "groq"
+    elif config.model.bedrock_model:
+        provider = "bedrock"
+    elif config.model.ollama_model:
+        provider = "ollama"
+    elif config.model.llamacpp_model_file:
+        provider = "llamacpp"
+
     llm = create_llm_instance(
         # Model selection
-        ollama_model_name=config.model.ollama_model,
+        model_name=model_name,
+        provider=provider,
         ollama_base_url=config.model.ollama_base_url,
         llamacpp_model_file_path=config.model.llamacpp_model_file,
-        cerebras_model_name=config.model.cerebras_model,
         cerebras_api_key=config.model.cerebras_api_key,
-        groq_model_name=config.model.groq_model,
         groq_api_key=config.model.groq_api_key,
-        bedrock_model_id=config.model.bedrock_model,
-        google_model_name=config.model.google_model,
         google_api_key=config.model.google_api_key,
-        anthropic_model_name=config.model.anthropic_model,
         anthropic_api_key=config.model.anthropic_api_key,
         anthropic_api_base=config.model.anthropic_api_base,
-        openai_model_name=config.model.openai_model,
         openai_api_key=config.model.openai_api_key,
         openai_api_base=config.model.openai_api_base,
         openai_organization=config.model.openai_organization,

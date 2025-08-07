@@ -135,7 +135,8 @@ def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
 
 
 def test_create_llm_instance_with_cerebras(mocker: MockerFixture) -> None:
-    cerebras_model_name = "dummy-cerebras-model"
+    model_name = "dummy-cerebras-model"
+    provider = "cerebras"
     temperature = 0.8
     max_tokens = 8192
     timeout = None
@@ -146,7 +147,8 @@ def test_create_llm_instance_with_cerebras(mocker: MockerFixture) -> None:
     mock_chat_cerebras = mocker.patch("sdeul.llm.ChatCerebras", return_value=llm)
 
     result = create_llm_instance(
-        cerebras_model_name=cerebras_model_name,
+        model_name=model_name,
+        provider=provider,
         temperature=temperature,
         max_tokens=max_tokens,
         timeout=timeout,
@@ -154,7 +156,7 @@ def test_create_llm_instance_with_cerebras(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_chat_cerebras.assert_called_once_with(
-        model=cerebras_model_name,
+        model=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
         timeout=timeout,
@@ -164,7 +166,8 @@ def test_create_llm_instance_with_cerebras(mocker: MockerFixture) -> None:
 
 
 def test_create_llm_instance_with_groq(mocker: MockerFixture) -> None:
-    groq_model_name = "dummy-groq-model"
+    model_name = "dummy-groq-model"
+    provider = "groq"
     temperature = 0.8
     max_tokens = 8192
     timeout = None
@@ -175,7 +178,8 @@ def test_create_llm_instance_with_groq(mocker: MockerFixture) -> None:
     mock_chat_groq = mocker.patch("sdeul.llm.ChatGroq", return_value=llm)
 
     result = create_llm_instance(
-        groq_model_name=groq_model_name,
+        model_name=model_name,
+        provider=provider,
         temperature=temperature,
         max_tokens=max_tokens,
         timeout=timeout,
@@ -183,7 +187,7 @@ def test_create_llm_instance_with_groq(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_chat_groq.assert_called_once_with(
-        model=groq_model_name,
+        model=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
         timeout=timeout,
@@ -193,7 +197,8 @@ def test_create_llm_instance_with_groq(mocker: MockerFixture) -> None:
 
 
 def test_create_llm_instance_with_anthropic(mocker: MockerFixture) -> None:
-    anthropic_model_name = "claude-3-5-sonnet-20241022"
+    model_name = "claude-3-5-sonnet-20241022"
+    provider = "anthropic"
     anthropic_api_key = "dummy-api-key"
     anthropic_api_base = "https://api.anthropic.com"
     temperature = 0.8
@@ -211,7 +216,8 @@ def test_create_llm_instance_with_anthropic(mocker: MockerFixture) -> None:
     )
 
     result = create_llm_instance(
-        anthropic_model_name=anthropic_model_name,
+        model_name=model_name,
+        provider=provider,
         anthropic_api_key=anthropic_api_key,
         anthropic_api_base=anthropic_api_base,
         temperature=temperature,
@@ -223,7 +229,7 @@ def test_create_llm_instance_with_anthropic(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_chat_anthropic.assert_called_once_with(
-        model_name=anthropic_model_name,
+        model_name=model_name,
         base_url=anthropic_api_base,
         temperature=temperature,
         top_p=top_p,
@@ -236,7 +242,8 @@ def test_create_llm_instance_with_anthropic(mocker: MockerFixture) -> None:
 
 
 def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
-    bedrock_model_id = "dummy-bedrock-model"
+    model_name = "dummy-bedrock-model"
+    provider = "bedrock"
     temperature = 0.8
     max_tokens = 8192
     aws_credentials_profile_name = None
@@ -251,7 +258,8 @@ def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     )
 
     result = create_llm_instance(
-        bedrock_model_id=bedrock_model_id,
+        model_name=model_name,
+        provider=provider,
         temperature=temperature,
         max_tokens=max_tokens,
         aws_credentials_profile_name=aws_credentials_profile_name,
@@ -260,7 +268,7 @@ def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_chat_bedrock_converse.assert_called_once_with(
-        model=bedrock_model_id,
+        model=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
         region_name=aws_region,
@@ -270,7 +278,8 @@ def test_create_llm_instance_with_bedrock(mocker: MockerFixture) -> None:
 
 
 def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
-    google_model_name = "dummy-google-model"
+    model_name = "dummy-google-model"
+    provider = "google"
     temperature = 0.0
     top_p = 0.95
     top_k = 64
@@ -285,7 +294,8 @@ def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
     )
 
     result = create_llm_instance(
-        google_model_name=google_model_name,
+        model_name=model_name,
+        provider=provider,
         temperature=temperature,
         top_p=top_p,
         top_k=top_k,
@@ -295,7 +305,7 @@ def test_create_llm_instance_with_google(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_chat_google_generative_ai.assert_called_once_with(
-        model=google_model_name,
+        model=model_name,
         temperature=temperature,
         top_p=top_p,
         top_k=top_k,
@@ -339,7 +349,7 @@ def test_create_llm_instance_with_anthropic_env_var_requires_model(
     # Should raise an error when no model name is provided
     with pytest.raises(
         ValueError,
-        match=r"Anthropic model name is required when using Anthropic API.",
+        match=r"Model name is required when using Anthropic API.",
     ):
         create_llm_instance(
             temperature=temperature,
@@ -352,7 +362,8 @@ def test_create_llm_instance_with_anthropic_env_var_requires_model(
 
 
 def test_create_llm_instance_with_openai(mocker: MockerFixture) -> None:
-    openai_model_name = "dummy-openai-model"
+    model_name = "dummy-openai-model"
+    provider = "openai"
     openai_api_base = "https://api.openai.com"
     openai_organization = "dummy-organization"
     temperature = 0.8
@@ -366,7 +377,8 @@ def test_create_llm_instance_with_openai(mocker: MockerFixture) -> None:
     mock_chat_openai = mocker.patch("sdeul.llm.ChatOpenAI", return_value=llm)
 
     result = create_llm_instance(
-        openai_model_name=openai_model_name,
+        model_name=model_name,
+        provider=provider,
         openai_api_base=openai_api_base,
         openai_organization=openai_organization,
         temperature=temperature,
@@ -378,7 +390,7 @@ def test_create_llm_instance_with_openai(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_chat_openai.assert_called_once_with(
-        model=openai_model_name,
+        model=model_name,
         base_url=openai_api_base,
         organization=openai_organization,
         temperature=temperature,
@@ -512,7 +524,8 @@ def test__llama_log_callback(
 
 
 def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
-    ollama_model_name = "dummy-ollama-model"
+    model_name = "dummy-ollama-model"
+    provider = "ollama"
     ollama_base_url = "http://localhost:11434"
     temperature = 0.0
     top_p = 0.95
@@ -526,7 +539,8 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
     mock_chat_ollama = mocker.patch("sdeul.llm.ChatOllama", return_value=llm)
 
     result = create_llm_instance(
-        ollama_model_name=ollama_model_name,
+        model_name=model_name,
+        provider=provider,
         ollama_base_url=ollama_base_url,
         temperature=temperature,
         top_p=top_p,
@@ -538,7 +552,7 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
     )
     assert result == llm
     mock_chat_ollama.assert_called_once_with(
-        model=ollama_model_name,
+        model=model_name,
         base_url=ollama_base_url,
         temperature=temperature,
         top_p=top_p,

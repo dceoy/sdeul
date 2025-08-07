@@ -155,6 +155,11 @@ convention = "google"
 [tool.ruff.lint.pylint]
 max-args = 50
 max-locals = 30
+max-statements = 60
+max-branches = 20
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [

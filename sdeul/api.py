@@ -243,21 +243,46 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
         return ExtractResponse(data={}, validated=True)
 
     try:
+        # Determine model_name and provider from the individual model arguments
+        model_name = (
+            request.openai_model
+            or request.google_model
+            or request.anthropic_model
+            or request.cerebras_model
+            or request.groq_model
+            or request.bedrock_model
+            or request.ollama_model
+        )
+
+        # Determine provider based on which model is specified
+        provider = None
+        if request.openai_model:
+            provider = "openai"
+        elif request.google_model:
+            provider = "google"
+        elif request.anthropic_model:
+            provider = "anthropic"
+        elif request.cerebras_model:
+            provider = "cerebras"
+        elif request.groq_model:
+            provider = "groq"
+        elif request.bedrock_model:
+            provider = "bedrock"
+        elif request.ollama_model:
+            provider = "ollama"
+        elif request.llamacpp_model_file:
+            provider = "llamacpp"
+
         llm = create_llm_instance(
-            ollama_model_name=request.ollama_model,
+            model_name=model_name,
+            provider=provider,
             ollama_base_url=request.ollama_base_url,
             llamacpp_model_file_path=request.llamacpp_model_file,
-            cerebras_model_name=request.cerebras_model,
             cerebras_api_key=request.cerebras_api_key,
-            groq_model_name=request.groq_model,
             groq_api_key=request.groq_api_key,
-            bedrock_model_id=request.bedrock_model,
-            google_model_name=request.google_model,
             google_api_key=request.google_api_key,
-            anthropic_model_name=request.anthropic_model,
             anthropic_api_key=request.anthropic_api_key,
             anthropic_api_base=request.anthropic_api_base,
-            openai_model_name=request.openai_model,
             openai_api_key=request.openai_api_key,
             openai_api_base=request.openai_api_base,
             openai_organization=request.openai_organization,

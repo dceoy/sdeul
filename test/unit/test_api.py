@@ -483,7 +483,8 @@ def test_extract_endpoint_with_all_parameters(
     call_kwargs = mock_create_llm_instance.call_args[1]
 
     # Check key parameters
-    assert call_kwargs["openai_model_name"] == "gpt-4"
+    assert call_kwargs["model_name"] == "gpt-4"
+    assert call_kwargs["provider"] == "openai"
     assert call_kwargs["openai_api_key"] == "test-key"
     assert call_kwargs["temperature"] == TEST_TEMPERATURE
     assert call_kwargs["top_p"] == TEST_TOP_P
