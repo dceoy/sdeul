@@ -152,7 +152,7 @@ ignore = [
 convention = "google"
 
 [tool.ruff.lint.pylint]
-max-args = 42
+max-args = 50
 max-locals = 30
 
 [tool.ruff.lint.per-file-ignores]

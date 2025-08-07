@@ -139,6 +139,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         schema=TEST_SCHEMA,
         llm=mock_llm_instance,
         skip_validation=skip_validation,
+        terminology=None,
     )
     mock_write_or_print_json_data.assert_called_once_with(
         data=TEST_LLM_OUTPUT,
@@ -171,6 +172,7 @@ def test_extract_structured_data_from_text(
     mock_llm_chain.invoke.assert_called_once_with({
         "schema": json.dumps(obj=TEST_SCHEMA),
         "input_text": TEST_TEXT,
+        "terminology": "",
     })
     if skip_validation:
         mock_validate.assert_not_called()
@@ -180,6 +182,46 @@ def test_extract_structured_data_from_text(
             schema=TEST_SCHEMA,
         )
     assert mock_logger.error.call_count == 0
+
+
+def test_extract_structured_data_from_text_with_terminology(
+    mocker: MockerFixture,
+) -> None:
+    mock_logger = mocker.MagicMock()
+    mocker.patch("logging.getLogger", return_value=mock_logger)
+    mock_llm_chain = mocker.MagicMock()
+    mocker.patch("sdeul.extraction.ChatPromptTemplate", return_value=mock_llm_chain)
+    mocker.patch("sdeul.extraction.JsonCodeOutputParser", return_value=mock_llm_chain)
+    mock_llm_chain.__or__.return_value = mock_llm_chain
+    mock_llm_chain.invoke.return_value = TEST_LLM_OUTPUT
+    mock_validate = mocker.patch("sdeul.extraction.validate")
+    terminology_text = (
+        "API: Application Programming Interface\nHTTP: HyperText Transfer Protocol"
+    )
+
+    result = extract_structured_data_from_text(
+        input_text=TEST_TEXT,
+        schema=TEST_SCHEMA,
+        llm=mock_llm_chain,
+        skip_validation=False,
+        terminology=terminology_text,
+    )
+
+    assert result == TEST_LLM_OUTPUT
+    expected_terminology_section = """Domain-specific terminology and context:
+```
+API: Application Programming Interface
+HTTP: HyperText Transfer Protocol
+```"""
+    mock_llm_chain.invoke.assert_called_once_with({
+        "schema": json.dumps(obj=TEST_SCHEMA),
+        "input_text": TEST_TEXT,
+        "terminology": expected_terminology_section,
+    })
+    mock_validate.assert_called_once_with(
+        instance=TEST_LLM_OUTPUT,
+        schema=TEST_SCHEMA,
+    )
 
 
 def test_extract_structured_data_from_text_with_invalid_json_output(
@@ -205,6 +247,59 @@ def test_extract_structured_data_from_text_with_invalid_json_output(
             skip_validation=False,
         )
     assert mock_logger.exception.call_count > 0
+
+
+def test_extract_json_from_text_file_with_terminology(mocker: MockerFixture) -> None:
+    text_file_path = "input.txt"
+    json_schema_file_path = "schema.json"
+    terminology_file_path = "terminology.txt"
+    terminology_content = (
+        "API: Application Programming Interface\nHTTP: HyperText Transfer Protocol"
+    )
+
+    mock_llm_instance = mocker.MagicMock()
+    mocker.patch(
+        "sdeul.extraction.create_llm_instance",
+        return_value=mock_llm_instance,
+    )
+    mock_read_json_file = mocker.patch(
+        "sdeul.extraction.read_json_file",
+        return_value=TEST_SCHEMA,
+    )
+    mock_read_text_file = mocker.patch(
+        "sdeul.extraction.read_text_file",
+        side_effect=[TEST_TEXT, terminology_content],
+    )
+    mock_extract_structured_data_from_text = mocker.patch(
+        "sdeul.extraction.extract_structured_data_from_text",
+        return_value=TEST_LLM_OUTPUT,
+    )
+    mock_write_or_print_json_data = mocker.patch(
+        "sdeul.extraction.write_or_print_json_data",
+    )
+
+    extract_json_from_text_file(
+        text_file_path=text_file_path,
+        json_schema_file_path=json_schema_file_path,
+        terminology_file_path=terminology_file_path,
+    )
+
+    mock_read_json_file.assert_called_once_with(path=json_schema_file_path)
+    assert mock_read_text_file.call_count == 2  # noqa: PLR2004
+    mock_read_text_file.assert_any_call(path=text_file_path)
+    mock_read_text_file.assert_any_call(path=terminology_file_path)
+    mock_extract_structured_data_from_text.assert_called_once_with(
+        input_text=TEST_TEXT,
+        schema=TEST_SCHEMA,
+        llm=mock_llm_instance,
+        skip_validation=False,
+        terminology=terminology_content,
+    )
+    mock_write_or_print_json_data.assert_called_once_with(
+        data=TEST_LLM_OUTPUT,
+        output_json_file_path=None,
+        compact_json=False,
+    )
 
 
 def test_extract_json_from_text_file_with_config(mocker: MockerFixture) -> None:

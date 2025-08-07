@@ -97,6 +97,10 @@ def extract(
         default=False,
         help="Skip output validation using JSON Schema.",
     ),
+    terminology_file: str | None = typer.Option(
+        default=None,
+        help="Path to file with domain-specific terminology or glossary.",
+    ),
     temperature: float = typer.Option(
         default=DEFAULT_TEMPERATURE,
         help="Set the temperature for sampling.",
@@ -251,6 +255,9 @@ def extract(
             pretty-printed.
         skip_validation (bool): Skip validation of the extracted data against
             the schema.
+        terminology_file (str | None): Optional path to file containing
+            domain-specific terminology definitions or glossary to help the LLM
+            interpret specialized terms.
         temperature (float): Controls randomness in the model's output (0.0-2.0).
         top_p (float): Controls diversity via nucleus sampling (0.0-1.0).
         top_k (int): Controls diversity by limiting token choices.
@@ -295,6 +302,7 @@ def extract(
         output_json_file_path=output_json_file,
         compact_json=compact_json,
         skip_validation=skip_validation,
+        terminology_file_path=terminology_file,
         temperature=temperature,
         top_p=top_p,
         top_k=top_k,

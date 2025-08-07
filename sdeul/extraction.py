@@ -77,6 +77,7 @@ def extract_json_from_text_file(
     output_json_file_path: str | None = None,
     compact_json: bool = False,
     skip_validation: bool = False,
+    terminology_file_path: str | None = None,
     temperature: float = DEFAULT_TEMPERATURE,
     top_p: float = DEFAULT_TOP_P,
     top_k: int = DEFAULT_TOP_K,
@@ -138,6 +139,9 @@ def extract_json_from_text_file(
             indentation.
         skip_validation (bool): If True, skips JSON schema validation of
             extracted data.
+        terminology_file_path (str | None): Optional path to a file containing
+            domain-specific terminology definitions or glossary to help the LLM
+            interpret specialized terms.
         temperature (float): Sampling temperature for randomness (0.0-2.0).
         top_p (float): Top-p value for nucleus sampling (0.0-1.0).
         top_k (int): Top-k value for limiting token choices.
@@ -202,11 +206,18 @@ def extract_json_from_text_file(
     )
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
+
+    # Read terminology file if provided
+    terminology = None
+    if terminology_file_path:
+        terminology = read_text_file(path=terminology_file_path)
+
     parsed_output_data = extract_structured_data_from_text(
         input_text=input_text,
         schema=schema,
         llm=llm,
         skip_validation=skip_validation,
+        terminology=terminology,
     )
     write_or_print_json_data(
         data=parsed_output_data,
@@ -220,6 +231,7 @@ def extract_structured_data_from_text(
     schema: dict[str, Any],
     llm: BaseChatModel,
     skip_validation: bool = False,
+    terminology: str | None = None,
 ) -> Any:  # noqa: ANN401
     """Extract structured data from text using an LLM and JSON schema.
 
@@ -234,6 +246,8 @@ def extract_structured_data_from_text(
         llm (BaseChatModel): The Language Learning Model instance to use for extraction.
         skip_validation (bool): Whether to skip JSON schema validation of
             the output.
+        terminology (str | None): Optional domain-specific terminology definitions
+            or glossary to help the LLM interpret specialized terms.
 
     Returns:
         Any: The extracted structured data as a Python object.
@@ -244,6 +258,17 @@ def extract_structured_data_from_text(
     """
     logger = logging.getLogger(extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
+
+    # Format terminology section for the prompt
+    terminology_section = ""
+    if terminology:
+        terminology_section = f"""
+Domain-specific terminology and context:
+```
+{terminology}
+```
+"""
+
     prompt = ChatPromptTemplate([
         ("system", SYSTEM_PROMPT),
         ("user", USER_PROMPT_TEMPLATE),
@@ -253,6 +278,7 @@ def extract_structured_data_from_text(
     parsed_output_data = llm_chain.invoke({
         "schema": json.dumps(obj=schema),
         "input_text": input_text,
+        "terminology": terminology_section.strip(),
     })
     logger.info("LLM output: %s", parsed_output_data)
     if skip_validation:
