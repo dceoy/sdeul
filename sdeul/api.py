@@ -18,6 +18,11 @@ from jsonschema import ValidationError as JsonSchemaValidationError
 from jsonschema import validate
 from pydantic import BaseModel, Field
 
+from .config import (
+    LlamaCppConfig,
+    LLMConfig,
+    ModelConfig,
+)
 from .constants import (
     DEFAULT_CONTEXT_WINDOW,
     DEFAULT_F16_KV,
@@ -62,6 +67,13 @@ class ExtractRequest(BaseModel):
     skip_validation: bool = Field(
         default=False,
         description="Skip JSON schema validation",
+    )
+    terminology: str | None = Field(
+        default=None,
+        description=(
+            "Domain-specific terminology or glossary to help interpret "
+            "specialized terms"
+        ),
     )
     temperature: float = Field(
         default=DEFAULT_TEMPERATURE,
@@ -243,32 +255,21 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
         return ExtractResponse(data={}, validated=True)
 
     try:
-        llm = create_llm_instance(
-            ollama_model_name=request.ollama_model,
-            ollama_base_url=request.ollama_base_url,
-            llamacpp_model_file_path=request.llamacpp_model_file,
-            cerebras_model_name=request.cerebras_model,
-            cerebras_api_key=request.cerebras_api_key,
-            groq_model_name=request.groq_model,
-            groq_api_key=request.groq_api_key,
-            bedrock_model_id=request.bedrock_model,
-            google_model_name=request.google_model,
-            google_api_key=request.google_api_key,
-            anthropic_model_name=request.anthropic_model,
-            anthropic_api_key=request.anthropic_api_key,
-            anthropic_api_base=request.anthropic_api_base,
-            openai_model_name=request.openai_model,
-            openai_api_key=request.openai_api_key,
-            openai_api_base=request.openai_api_base,
-            openai_organization=request.openai_organization,
+        # Create configuration objects from request
+        llm_config = LLMConfig(
             temperature=request.temperature,
             top_p=request.top_p,
             top_k=request.top_k,
+            max_tokens=request.max_tokens,
+            seed=request.seed,
+            timeout=request.timeout,
+            max_retries=request.max_retries,
+        )
+
+        llamacpp_config = LlamaCppConfig(
             repeat_penalty=request.repeat_penalty,
             repeat_last_n=request.repeat_last_n,
             n_ctx=request.n_ctx,
-            max_tokens=request.max_tokens,
-            seed=request.seed,
             n_batch=request.n_batch,
             n_threads=request.n_threads,
             n_gpu_layers=request.n_gpu_layers,
@@ -276,17 +277,101 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             use_mlock=request.use_mlock,
             use_mmap=request.use_mmap,
             token_wise_streaming=request.token_wise_streaming,
-            timeout=request.timeout,
-            max_retries=request.max_retries,
-            aws_credentials_profile_name=request.aws_credentials_profile,
+        )
+
+        model_config = ModelConfig(
+            openai_model=request.openai_model,
+            google_model=request.google_model,
+            anthropic_model=request.anthropic_model,
+            cerebras_model=request.cerebras_model,
+            groq_model=request.groq_model,
+            bedrock_model=request.bedrock_model,
+            ollama_model=request.ollama_model,
+            llamacpp_model_file=request.llamacpp_model_file,
+            ollama_base_url=request.ollama_base_url,
+            openai_api_base=request.openai_api_base,
+            anthropic_api_base=request.anthropic_api_base,
+            bedrock_endpoint_url=request.bedrock_endpoint_url,
+            openai_api_key=request.openai_api_key,
+            openai_organization=request.openai_organization,
+            google_api_key=request.google_api_key,
+            anthropic_api_key=request.anthropic_api_key,
+            cerebras_api_key=request.cerebras_api_key,
+            groq_api_key=request.groq_api_key,
+            aws_credentials_profile=request.aws_credentials_profile,
             aws_region=request.aws_region,
-            bedrock_endpoint_base_url=request.bedrock_endpoint_url,
+        )
+
+        # Determine model_name and provider from the individual model arguments
+        model_name = (
+            request.openai_model
+            or request.google_model
+            or request.anthropic_model
+            or request.cerebras_model
+            or request.groq_model
+            or request.bedrock_model
+            or request.ollama_model
+        )
+
+        # Determine provider based on which model is specified
+        provider = None
+        if request.openai_model:
+            provider = "openai"
+        elif request.google_model:
+            provider = "google"
+        elif request.anthropic_model:
+            provider = "anthropic"
+        elif request.cerebras_model:
+            provider = "cerebras"
+        elif request.groq_model:
+            provider = "groq"
+        elif request.bedrock_model:
+            provider = "bedrock"
+        elif request.ollama_model:
+            provider = "ollama"
+        elif request.llamacpp_model_file:
+            provider = "llamacpp"
+
+        llm = create_llm_instance(
+            model_name=model_name,
+            provider=provider,
+            ollama_base_url=model_config.ollama_base_url,
+            llamacpp_model_file_path=model_config.llamacpp_model_file,
+            cerebras_api_key=model_config.cerebras_api_key,
+            groq_api_key=model_config.groq_api_key,
+            google_api_key=model_config.google_api_key,
+            anthropic_api_key=model_config.anthropic_api_key,
+            anthropic_api_base=model_config.anthropic_api_base,
+            openai_api_key=model_config.openai_api_key,
+            openai_api_base=model_config.openai_api_base,
+            openai_organization=model_config.openai_organization,
+            temperature=llm_config.temperature,
+            top_p=llm_config.top_p,
+            top_k=llm_config.top_k,
+            repeat_penalty=llamacpp_config.repeat_penalty,
+            repeat_last_n=llamacpp_config.repeat_last_n,
+            n_ctx=llamacpp_config.n_ctx,
+            max_tokens=llm_config.max_tokens,
+            seed=llm_config.seed,
+            n_batch=llamacpp_config.n_batch,
+            n_threads=llamacpp_config.n_threads,
+            n_gpu_layers=llamacpp_config.n_gpu_layers,
+            f16_kv=llamacpp_config.f16_kv,
+            use_mlock=llamacpp_config.use_mlock,
+            use_mmap=llamacpp_config.use_mmap,
+            token_wise_streaming=llamacpp_config.token_wise_streaming,
+            timeout=llm_config.timeout,
+            max_retries=llm_config.max_retries,
+            aws_credentials_profile_name=model_config.aws_credentials_profile,
+            aws_region=model_config.aws_region,
+            bedrock_endpoint_base_url=model_config.bedrock_endpoint_url,
         )
         extracted_data = extract_structured_data_from_text(
             input_text=request.text,
             schema=request.json_schema,
             llm=llm,
             skip_validation=request.skip_validation,
+            terminology=request.terminology,
         )
         response = ExtractResponse(
             data=extracted_data,

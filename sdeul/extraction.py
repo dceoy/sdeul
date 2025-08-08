@@ -38,8 +38,10 @@ from .constants import (
     DEFAULT_TOP_P,
     DEFAULT_USE_MLOCK,
     DEFAULT_USE_MMAP,
-    SYSTEM_PROMPT,
-    USER_PROMPT_TEMPLATE,
+    SYSTEM_PROMPT_BASE,
+    SYSTEM_PROMPT_WITH_TERMINOLOGY,
+    USER_PROMPT_TEMPLATE_BASE,
+    USER_PROMPT_TEMPLATE_WITH_TERMINOLOGY,
 )
 from .llm import JsonCodeOutputParser, create_llm_instance
 from .utility import (
@@ -57,26 +59,22 @@ if TYPE_CHECKING:
 def extract_json_from_text_file(
     text_file_path: str,
     json_schema_file_path: str,
-    ollama_model_name: str | None = None,
+    model_name: str | None = None,
+    provider: str | None = None,
     ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
-    cerebras_model_name: str | None = None,
     cerebras_api_key: str | None = None,
-    groq_model_name: str | None = None,
     groq_api_key: str | None = None,
-    bedrock_model_id: str | None = None,
-    google_model_name: str | None = None,
     google_api_key: str | None = None,
-    anthropic_model_name: str | None = None,
     anthropic_api_key: str | None = None,
     anthropic_api_base: str | None = None,
-    openai_model_name: str | None = None,
     openai_api_key: str | None = None,
     openai_api_base: str | None = None,
     openai_organization: str | None = None,
     output_json_file_path: str | None = None,
     compact_json: bool = False,
     skip_validation: bool = False,
+    terminology_file_path: str | None = None,
     temperature: float = DEFAULT_TEMPERATURE,
     top_p: float = DEFAULT_TOP_P,
     top_k: int = DEFAULT_TOP_K,
@@ -109,25 +107,22 @@ def extract_json_from_text_file(
             unstructured data.
         json_schema_file_path (str): Path to the JSON schema file defining
             output structure.
-        ollama_model_name (str | None): Ollama model name.
+        model_name (str | None): Name or ID of the model to use.
+        provider (str | None): LLM provider to use (openai, google, anthropic,
+            cerebras, groq, bedrock, ollama, llamacpp). If not specified, will be
+            inferred from API keys and environment.
         ollama_base_url (str | None): Custom Ollama API base URL.
         llamacpp_model_file_path (str | None): Path to local GGUF model file
             for llama.cpp.
-        cerebras_model_name (str | None): Cerebras model name.
         cerebras_api_key (str | None): Cerebras API key (overrides environment
             variable).
-        groq_model_name (str | None): Groq model name.
         groq_api_key (str | None): Groq API key (overrides environment
             variable).
-        bedrock_model_id (str | None): Amazon Bedrock model ID.
-        google_model_name (str | None): Google Generative AI model name.
         google_api_key (str | None): Google API key (overrides environment
             variable).
-        anthropic_model_name (str | None): Anthropic model name.
         anthropic_api_key (str | None): Anthropic API key (overrides environment
             variable).
         anthropic_api_base (str | None): Custom Anthropic API base URL.
-        openai_model_name (str | None): OpenAI model name.
         openai_api_key (str | None): OpenAI API key (overrides environment
             variable).
         openai_api_base (str | None): Custom OpenAI API base URL.
@@ -138,6 +133,9 @@ def extract_json_from_text_file(
             indentation.
         skip_validation (bool): If True, skips JSON schema validation of
             extracted data.
+        terminology_file_path (str | None): Optional path to a file containing
+            domain-specific terminology definitions or glossary to help the LLM
+            interpret specialized terms.
         temperature (float): Sampling temperature for randomness (0.0-2.0).
         top_p (float): Top-p value for nucleus sampling (0.0-1.0).
         top_k (int): Top-k value for limiting token choices.
@@ -162,20 +160,15 @@ def extract_json_from_text_file(
         bedrock_endpoint_base_url (str | None): Custom Bedrock endpoint URL.
     """
     llm = create_llm_instance(
-        ollama_model_name=ollama_model_name,
+        model_name=model_name,
+        provider=provider,
         ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
-        cerebras_model_name=cerebras_model_name,
         cerebras_api_key=cerebras_api_key,
-        groq_model_name=groq_model_name,
         groq_api_key=groq_api_key,
-        bedrock_model_id=bedrock_model_id,
-        google_model_name=google_model_name,
         google_api_key=google_api_key,
-        anthropic_model_name=anthropic_model_name,
         anthropic_api_key=anthropic_api_key,
         anthropic_api_base=anthropic_api_base,
-        openai_model_name=openai_model_name,
         openai_api_key=openai_api_key,
         openai_api_base=openai_api_base,
         openai_organization=openai_organization,
@@ -202,11 +195,18 @@ def extract_json_from_text_file(
     )
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
+
+    # Read terminology file if provided
+    terminology = None
+    if terminology_file_path:
+        terminology = read_text_file(path=terminology_file_path)
+
     parsed_output_data = extract_structured_data_from_text(
         input_text=input_text,
         schema=schema,
         llm=llm,
         skip_validation=skip_validation,
+        terminology=terminology,
     )
     write_or_print_json_data(
         data=parsed_output_data,
@@ -220,6 +220,7 @@ def extract_structured_data_from_text(
     schema: dict[str, Any],
     llm: BaseChatModel,
     skip_validation: bool = False,
+    terminology: str | None = None,
 ) -> Any:  # noqa: ANN401
     """Extract structured data from text using an LLM and JSON schema.
 
@@ -234,6 +235,8 @@ def extract_structured_data_from_text(
         llm (BaseChatModel): The Language Learning Model instance to use for extraction.
         skip_validation (bool): Whether to skip JSON schema validation of
             the output.
+        terminology (str | None): Optional domain-specific terminology definitions
+            or glossary to help the LLM interpret specialized terms.
 
     Returns:
         Any: The extracted structured data as a Python object.
@@ -244,16 +247,32 @@ def extract_structured_data_from_text(
     """
     logger = logging.getLogger(extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
+
+    # Format terminology section for the prompt
+    # Select appropriate prompts based on terminology presence
+    if terminology:
+        system_prompt = SYSTEM_PROMPT_WITH_TERMINOLOGY
+        user_prompt_template = USER_PROMPT_TEMPLATE_WITH_TERMINOLOGY
+        invoke_params = {
+            "schema": json.dumps(obj=schema),
+            "input_text": input_text,
+            "terminology": terminology,
+        }
+    else:
+        system_prompt = SYSTEM_PROMPT_BASE
+        user_prompt_template = USER_PROMPT_TEMPLATE_BASE
+        invoke_params = {
+            "schema": json.dumps(obj=schema),
+            "input_text": input_text,
+        }
+
     prompt = ChatPromptTemplate([
-        ("system", SYSTEM_PROMPT),
-        ("user", USER_PROMPT_TEMPLATE),
+        ("system", system_prompt),
+        ("user", user_prompt_template),
     ])
     llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()  # pyright: ignore[reportUnknownVariableType]
     logger.info("LLM chain: %s", llm_chain)
-    parsed_output_data = llm_chain.invoke({
-        "schema": json.dumps(obj=schema),
-        "input_text": input_text,
-    })
+    parsed_output_data = llm_chain.invoke(invoke_params)
     logger.info("LLM output: %s", parsed_output_data)
     if skip_validation:
         logger.info("Skip validation using JSON Schema.")
@@ -292,23 +311,53 @@ def extract_json_from_text_file_with_config(
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
 
+    # Read terminology file if provided
+    terminology = None
+    if config.processing.terminology_file:
+        terminology = read_text_file(path=config.processing.terminology_file)
+
     # Create LLM instance using config
+    # Determine model name and provider from config
+    model_name = (
+        config.model.openai_model
+        or config.model.google_model
+        or config.model.anthropic_model
+        or config.model.cerebras_model
+        or config.model.groq_model
+        or config.model.bedrock_model
+        or config.model.ollama_model
+    )
+
+    # Determine provider based on which model is specified
+    provider = None
+    if config.model.openai_model:
+        provider = "openai"
+    elif config.model.google_model:
+        provider = "google"
+    elif config.model.anthropic_model:
+        provider = "anthropic"
+    elif config.model.cerebras_model:
+        provider = "cerebras"
+    elif config.model.groq_model:
+        provider = "groq"
+    elif config.model.bedrock_model:
+        provider = "bedrock"
+    elif config.model.ollama_model:
+        provider = "ollama"
+    elif config.model.llamacpp_model_file:
+        provider = "llamacpp"
+
     llm = create_llm_instance(
         # Model selection
-        ollama_model_name=config.model.ollama_model,
+        model_name=model_name,
+        provider=provider,
         ollama_base_url=config.model.ollama_base_url,
         llamacpp_model_file_path=config.model.llamacpp_model_file,
-        cerebras_model_name=config.model.cerebras_model,
         cerebras_api_key=config.model.cerebras_api_key,
-        groq_model_name=config.model.groq_model,
         groq_api_key=config.model.groq_api_key,
-        bedrock_model_id=config.model.bedrock_model,
-        google_model_name=config.model.google_model,
         google_api_key=config.model.google_api_key,
-        anthropic_model_name=config.model.anthropic_model,
         anthropic_api_key=config.model.anthropic_api_key,
         anthropic_api_base=config.model.anthropic_api_base,
-        openai_model_name=config.model.openai_model,
         openai_api_key=config.model.openai_api_key,
         openai_api_base=config.model.openai_api_base,
         openai_organization=config.model.openai_organization,
@@ -343,6 +392,7 @@ def extract_json_from_text_file_with_config(
         schema=schema,
         llm=llm,
         skip_validation=config.processing.skip_validation,
+        terminology=terminology,
     )
 
     # Write or print output

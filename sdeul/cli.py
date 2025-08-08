@@ -23,6 +23,13 @@ from rich import print
 
 from . import __version__
 from .api import run_server
+from .config import (
+    ExtractConfig,
+    LlamaCppConfig,
+    LLMConfig,
+    ModelConfig,
+    ProcessingConfig,
+)
 from .constants import (
     DEFAULT_API_HOST,
     DEFAULT_API_PORT,
@@ -39,7 +46,7 @@ from .constants import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from .extraction import extract_json_from_text_file
+from .extraction import extract_json_from_text_file_with_config
 from .utility import configure_logging
 from .validation import validate_json_files_using_json_schema
 
@@ -96,6 +103,10 @@ def extract(
     skip_validation: bool = typer.Option(
         default=False,
         help="Skip output validation using JSON Schema.",
+    ),
+    terminology_file: str | None = typer.Option(
+        default=None,
+        help="Path to file with domain-specific terminology or glossary.",
     ),
     temperature: float = typer.Option(
         default=DEFAULT_TEMPERATURE,
@@ -231,6 +242,40 @@ def extract(
         envvar="AWS_PROFILE",
         help="Set the AWS credentials profile name for Amazon Bedrock.",
     ),
+    aws_region: str | None = typer.Option(
+        default=None,
+        envvar="AWS_REGION",
+        help="AWS region for Bedrock service.",
+    ),
+    bedrock_endpoint_url: str | None = typer.Option(
+        default=None,
+        envvar="BEDROCK_ENDPOINT_URL",
+        help="Custom Bedrock endpoint URL.",
+    ),
+    f16_kv: bool = typer.Option(
+        default=True,
+        help="Use half-precision for key/value cache (llama.cpp only).",
+    ),
+    use_mlock: bool = typer.Option(
+        default=False,
+        help="Force system to keep model in RAM (llama.cpp only).",
+    ),
+    use_mmap: bool = typer.Option(
+        default=True,
+        help="Use memory mapping for model (llama.cpp only).",
+    ),
+    token_wise_streaming: bool = typer.Option(
+        default=False,
+        help="Enable token-wise streaming output (llama.cpp only).",
+    ),
+    timeout: int | None = typer.Option(
+        default=None,
+        help="API request timeout in seconds.",
+    ),
+    max_retries: int = typer.Option(
+        default=2,
+        help="Maximum number of API request retries.",
+    ),
     debug: bool = typer.Option(default=False, help="Execute with debug messages."),
     info: bool = typer.Option(default=False, help="Execute with info messages."),
 ) -> None:
@@ -251,6 +296,9 @@ def extract(
             pretty-printed.
         skip_validation (bool): Skip validation of the extracted data against
             the schema.
+        terminology_file (str | None): Optional path to file containing
+            domain-specific terminology definitions or glossary to help the LLM
+            interpret specialized terms.
         temperature (float): Controls randomness in the model's output (0.0-2.0).
         top_p (float): Controls diversity via nucleus sampling (0.0-1.0).
         top_k (int): Controls diversity by limiting token choices.
@@ -285,45 +333,87 @@ def extract(
             variable).
         groq_api_key (str | None): Groq API key (overrides environment variable).
         aws_credentials_profile (str | None): AWS profile name for Bedrock access.
+        aws_region (str | None): AWS region for Bedrock service.
+        bedrock_endpoint_url (str | None): Custom Bedrock endpoint URL.
+        f16_kv (bool): Use half-precision for key/value cache (llama.cpp only).
+        use_mlock (bool): Force system to keep model in RAM (llama.cpp only).
+        use_mmap (bool): Use memory mapping for model (llama.cpp only).
+        token_wise_streaming (bool): Enable token-wise streaming output
+            (llama.cpp only).
+        timeout (int | None): API request timeout in seconds.
+        max_retries (int): Maximum number of API request retries.
         debug (bool): Enable debug logging level.
         info (bool): Enable info logging level.
     """
     configure_logging(debug=debug, info=info)
-    extract_json_from_text_file(
-        json_schema_file_path=json_schema_file,
-        text_file_path=text_file,
-        output_json_file_path=output_json_file,
-        compact_json=compact_json,
-        skip_validation=skip_validation,
+
+    # Create configuration objects
+    llm_config = LLMConfig(
         temperature=temperature,
         top_p=top_p,
         top_k=top_k,
+        max_tokens=max_tokens,
+        seed=seed,
+        timeout=timeout,
+        max_retries=max_retries,
+    )
+
+    llamacpp_config = LlamaCppConfig(
         repeat_penalty=repeat_penalty,
         repeat_last_n=repeat_last_n,
         n_ctx=n_ctx,
-        max_tokens=max_tokens,
-        seed=seed,
         n_batch=n_batch,
         n_threads=n_threads,
         n_gpu_layers=n_gpu_layers,
-        openai_model_name=openai_model,
-        google_model_name=google_model,
-        anthropic_model_name=anthropic_model,
-        cerebras_model_name=cerebras_model,
-        groq_model_name=groq_model,
-        bedrock_model_id=bedrock_model,
-        ollama_model_name=ollama_model,
-        llamacpp_model_file_path=llamacpp_model_file,
-        openai_api_key=openai_api_key,
+        f16_kv=f16_kv,
+        use_mlock=use_mlock,
+        use_mmap=use_mmap,
+        token_wise_streaming=token_wise_streaming,
+    )
+
+    model_config = ModelConfig(
+        openai_model=openai_model,
+        google_model=google_model,
+        anthropic_model=anthropic_model,
+        cerebras_model=cerebras_model,
+        groq_model=groq_model,
+        bedrock_model=bedrock_model,
+        ollama_model=ollama_model,
+        llamacpp_model_file=llamacpp_model_file,
+        ollama_base_url=ollama_base_url,
         openai_api_base=openai_api_base,
+        anthropic_api_base=anthropic_api_base,
+        bedrock_endpoint_url=bedrock_endpoint_url,
+        openai_api_key=openai_api_key,
         openai_organization=openai_organization,
         google_api_key=google_api_key,
         anthropic_api_key=anthropic_api_key,
-        anthropic_api_base=anthropic_api_base,
         cerebras_api_key=cerebras_api_key,
         groq_api_key=groq_api_key,
-        ollama_base_url=ollama_base_url,
-        aws_credentials_profile_name=aws_credentials_profile,
+        aws_credentials_profile=aws_credentials_profile,
+        aws_region=aws_region,
+    )
+
+    processing_config = ProcessingConfig(
+        output_json_file=output_json_file,
+        compact_json=compact_json,
+        skip_validation=skip_validation,
+        terminology_file=terminology_file,
+        debug=debug,
+        info=info,
+    )
+
+    config = ExtractConfig(
+        llm=llm_config,
+        llamacpp=llamacpp_config,
+        model=model_config,
+        processing=processing_config,
+    )
+
+    extract_json_from_text_file_with_config(
+        text_file_path=text_file,
+        json_schema_file_path=json_schema_file,
+        config=config,
     )
 
 

@@ -39,7 +39,6 @@ from .constants import (
     DEFAULT_F16_KV,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_MODEL_NAMES,
     DEFAULT_N_BATCH,
     DEFAULT_N_GPU_LAYERS,
     DEFAULT_N_THREADS,
@@ -183,7 +182,7 @@ def _create_llamacpp_llm(
 
 
 def _create_cerebras_llm(
-    model_name: str | None,
+    model_name: str,
     **kwargs: Any,  # noqa: ANN401
 ) -> ChatCerebras:
     """Create a Cerebras LLM instance.
@@ -192,10 +191,9 @@ def _create_cerebras_llm(
         ChatCerebras: Configured Cerebras LLM instance.
     """
     logger = logging.getLogger(_create_cerebras_llm.__name__)
-    model = model_name or DEFAULT_MODEL_NAMES["cerebras"]
-    logger.info("Use Cerebras: %s", model)
+    logger.info("Use Cerebras: %s", model_name)
     return ChatCerebras(
-        model=model,
+        model=model_name,
         temperature=kwargs["temperature"],
         max_tokens=kwargs["max_tokens"],
         timeout=kwargs["timeout"],
@@ -205,7 +203,7 @@ def _create_cerebras_llm(
 
 
 def _create_groq_llm(
-    model_name: str | None,
+    model_name: str,
     **kwargs: Any,  # noqa: ANN401
 ) -> ChatGroq:
     """Create a Groq LLM instance.
@@ -214,10 +212,9 @@ def _create_groq_llm(
         ChatGroq: Configured Groq LLM instance.
     """
     logger = logging.getLogger(_create_groq_llm.__name__)
-    model = model_name or DEFAULT_MODEL_NAMES["groq"]
-    logger.info("Use GROQ: %s", model)
+    logger.info("Use GROQ: %s", model_name)
     return ChatGroq(
-        model=model,
+        model=model_name,
         temperature=kwargs["temperature"],
         max_tokens=kwargs["max_tokens"],
         timeout=kwargs["timeout"],
@@ -227,7 +224,7 @@ def _create_groq_llm(
 
 
 def _create_bedrock_llm(
-    model_id: str | None,
+    model_id: str,
     aws_region: str | None,
     endpoint_url: str | None,
     profile_name: str | None,
@@ -239,10 +236,9 @@ def _create_bedrock_llm(
         ChatBedrockConverse: Configured Bedrock LLM instance.
     """
     logger = logging.getLogger(_create_bedrock_llm.__name__)
-    model = model_id or DEFAULT_MODEL_NAMES["bedrock"]
-    logger.info("Use Amazon Bedrock: %s", model)
+    logger.info("Use Amazon Bedrock: %s", model_id)
     return ChatBedrockConverse(
-        model=model,
+        model=model_id,
         temperature=kwargs["temperature"],
         max_tokens=kwargs["max_tokens"],
         region_name=aws_region,
@@ -252,7 +248,7 @@ def _create_bedrock_llm(
 
 
 def _create_google_llm(
-    model_name: str | None,
+    model_name: str,
     **kwargs: Any,  # noqa: ANN401
 ) -> ChatGoogleGenerativeAI:
     """Create a Google Generative AI LLM instance.
@@ -261,10 +257,9 @@ def _create_google_llm(
         ChatGoogleGenerativeAI: Configured Google LLM instance.
     """
     logger = logging.getLogger(_create_google_llm.__name__)
-    model = model_name or DEFAULT_MODEL_NAMES["google"]
-    logger.info("Use Google Generative AI: %s", model)
+    logger.info("Use Google Generative AI: %s", model_name)
     return ChatGoogleGenerativeAI(
-        model=model,
+        model=model_name,
         temperature=kwargs["temperature"],
         top_p=kwargs["top_p"],
         top_k=kwargs["top_k"],
@@ -275,7 +270,7 @@ def _create_google_llm(
 
 
 def _create_anthropic_llm(
-    model_name: str | None,
+    model_name: str,
     api_base: str | None,
     **kwargs: Any,  # noqa: ANN401
 ) -> ChatAnthropic:
@@ -285,11 +280,10 @@ def _create_anthropic_llm(
         ChatAnthropic: Configured Anthropic LLM instance.
     """
     logger = logging.getLogger(_create_anthropic_llm.__name__)
-    model = model_name or DEFAULT_MODEL_NAMES["anthropic"]
-    logger.info("Use Anthropic: %s", model)
+    logger.info("Use Anthropic: %s", model_name)
     logger.info("Anthropic API base: %s", api_base)
     return ChatAnthropic(
-        model_name=model,
+        model_name=model_name,
         base_url=api_base,
         temperature=kwargs["temperature"],
         top_p=kwargs["top_p"],
@@ -302,7 +296,7 @@ def _create_anthropic_llm(
 
 
 def _create_openai_llm(
-    model_name: str | None,
+    model_name: str,
     api_base: str | None,
     organization: str | None,
     **kwargs: Any,  # noqa: ANN401
@@ -313,12 +307,11 @@ def _create_openai_llm(
         ChatOpenAI: Configured OpenAI LLM instance.
     """
     logger = logging.getLogger(_create_openai_llm.__name__)
-    model = model_name or DEFAULT_MODEL_NAMES["openai"]
-    logger.info("Use OpenAI: %s", model)
+    logger.info("Use OpenAI: %s", model_name)
     logger.info("OpenAI API base: %s", api_base)
     logger.info("OpenAI organization: %s", organization)
     return ChatOpenAI(
-        model=model,
+        model=model_name,
         base_url=api_base,
         organization=organization,
         temperature=kwargs["temperature"],
@@ -330,133 +323,16 @@ def _create_openai_llm(
     )
 
 
-def _should_use_cerebras(
-    cerebras_model_name: str | None,
-    groq_model_name: str | None,
-    bedrock_model_id: str | None,
-    google_model_name: str | None,
-    anthropic_model_name: str | None,
-    openai_model_name: str | None,
-) -> bool:
-    """Determine if Cerebras should be used based on model parameters and environment.
-
-    Returns:
-        bool: True if Cerebras should be used, False otherwise.
-    """
-    if cerebras_model_name:
-        return True
-
-    other_models_specified = any([
-        groq_model_name,
-        bedrock_model_id,
-        google_model_name,
-        anthropic_model_name,
-        openai_model_name,
-    ])
-    has_cerebras_key = os.environ.get("CEREBRAS_API_KEY") is not None
-
-    return not other_models_specified and has_cerebras_key
-
-
-def _should_use_groq(
-    groq_model_name: str | None,
-    bedrock_model_id: str | None,
-    google_model_name: str | None,
-    anthropic_model_name: str | None,
-    openai_model_name: str | None,
-) -> bool:
-    """Determine if Groq should be used based on model parameters and environment.
-
-    Returns:
-        bool: True if Groq should be used, False otherwise.
-    """
-    if groq_model_name:
-        return True
-
-    other_models_specified = any([
-        bedrock_model_id,
-        google_model_name,
-        anthropic_model_name,
-        openai_model_name,
-    ])
-    has_groq_key = os.environ.get("GROQ_API_KEY") is not None
-
-    return not other_models_specified and has_groq_key
-
-
-def _should_use_bedrock(
-    bedrock_model_id: str | None,
-    google_model_name: str | None,
-    anthropic_model_name: str | None,
-    openai_model_name: str | None,
-) -> bool:
-    """Determine if Bedrock should be used based on model parameters and environment.
-
-    Returns:
-        bool: True if Bedrock should be used, False otherwise.
-    """
-    if bedrock_model_id:
-        return True
-
-    other_models_specified = any([
-        google_model_name,
-        anthropic_model_name,
-        openai_model_name,
-    ])
-
-    return not other_models_specified and has_aws_credentials()
-
-
-def _should_use_google(
-    google_model_name: str | None,
-    anthropic_model_name: str | None,
-    openai_model_name: str | None,
-) -> bool:
-    """Determine if Google should be used based on model parameters and environment.
-
-    Returns:
-        bool: True if Google should be used, False otherwise.
-    """
-    if google_model_name:
-        return True
-
-    other_models_specified = any([anthropic_model_name, openai_model_name])
-    has_google_key = os.environ.get("GOOGLE_API_KEY") is not None
-
-    return not other_models_specified and has_google_key
-
-
-def _should_use_anthropic(
-    anthropic_model_name: str | None,
-    openai_model_name: str | None,
-) -> bool:
-    """Determine if Anthropic should be used based on model parameters.
-
-    Returns:
-        bool: True if Anthropic should be used, False otherwise.
-    """
-    if anthropic_model_name:
-        return True
-
-    has_anthropic_key = os.environ.get("ANTHROPIC_API_KEY") is not None
-    return not openai_model_name and has_anthropic_key
-
-
-def create_llm_instance(  # noqa: PLR0911
-    ollama_model_name: str | None = None,
+def create_llm_instance(  # noqa: PLR0911, PLR0912, C901
+    model_name: str | None = None,
+    provider: str | None = None,
     ollama_base_url: str | None = None,
     llamacpp_model_file_path: str | None = None,
-    cerebras_model_name: str | None = None,
     cerebras_api_key: str | None = None,
-    groq_model_name: str | None = None,
     groq_api_key: str | None = None,
-    bedrock_model_id: str | None = None,
-    google_model_name: str | None = None,
     google_api_key: str | None = None,
-    anthropic_model_name: str | None = None,
     anthropic_api_key: str | None = None,
     anthropic_api_base: str | None = None,
-    openai_model_name: str | None = None,
     openai_api_key: str | None = None,
     openai_api_base: str | None = None,
     openai_organization: str | None = None,
@@ -493,21 +369,17 @@ def create_llm_instance(  # noqa: PLR0911
     """Create an instance of a Language Learning Model (LLM).
 
     Args:
-        ollama_model_name (str | None): Name of the Ollama model to use.
+        model_name (str | None): Name or ID of the model to use.
+        provider (str | None): LLM provider to use (openai, google, anthropic,
+            cerebras, groq, bedrock, ollama, llamacpp). If not specified, will be
+            inferred from API keys and environment.
         ollama_base_url (str | None): Base URL for the Ollama API.
         llamacpp_model_file_path (str | None): Path to the llama.cpp model file.
-        cerebras_model_name (str | None): Name of the Cerebras model to use.
         cerebras_api_key (str | None): API key for Cerebras.
-        groq_model_name (str | None): Name of the Groq model to use.
         groq_api_key (str | None): API key for Groq.
-        bedrock_model_id (str | None): ID of the Amazon Bedrock model to use.
-        google_model_name (str | None): Name of the Google Generative AI model
-            to use.
         google_api_key (str | None): API key for Google Generative AI.
-        anthropic_model_name (str | None): Name of the Anthropic model to use.
         anthropic_api_key (str | None): API key for Anthropic.
         anthropic_api_base (str | None): Base URL for Anthropic API.
-        openai_model_name (str | None): Name of the OpenAI model to use.
         openai_api_key (str | None): API key for OpenAI.
         openai_api_base (str | None): Base URL for OpenAI API.
         openai_organization (str | None): OpenAI organization ID.
@@ -574,63 +446,85 @@ def create_llm_instance(  # noqa: PLR0911
         "max_retries": max_retries,
     }
 
-    # Model selection in priority order
-    if ollama_model_name:
+    # Determine provider if not explicitly specified
+    if not provider:
+        # Auto-detect provider based on API keys and environment
+        if llamacpp_model_file_path:
+            provider = "llamacpp"
+        elif os.environ.get("OLLAMA_BASE_URL") or ollama_base_url:
+            provider = "ollama"
+        elif os.environ.get("CEREBRAS_API_KEY") or cerebras_api_key:
+            provider = "cerebras"
+        elif os.environ.get("GROQ_API_KEY") or groq_api_key:
+            provider = "groq"
+        elif has_aws_credentials():
+            provider = "bedrock"
+        elif os.environ.get("GOOGLE_API_KEY") or google_api_key:
+            provider = "google"
+        elif os.environ.get("ANTHROPIC_API_KEY") or anthropic_api_key:
+            provider = "anthropic"
+        elif os.environ.get("OPENAI_API_KEY") or openai_api_key:
+            provider = "openai"
+
+    # Model selection based on provider
+    if provider == "ollama":
+        if not model_name:
+            error_message = "Model name is required when using Ollama."
+            raise ValueError(error_message)
         return _create_ollama_llm(
-            ollama_model_name,
+            model_name,
             ollama_base_url,
             **llm_kwargs,
         )
-    elif llamacpp_model_file_path:
+    elif provider == "llamacpp":
+        if not llamacpp_model_file_path:
+            error_message = "Model file path is required when using llama.cpp."
+            raise ValueError(error_message)
         return _create_llamacpp_llm(
             llamacpp_model_file_path,
             **llm_kwargs,
         )
-    elif _should_use_cerebras(
-        cerebras_model_name,
-        groq_model_name,
-        bedrock_model_id,
-        google_model_name,
-        anthropic_model_name,
-        openai_model_name,
-    ):
-        return _create_cerebras_llm(cerebras_model_name, **llm_kwargs)
-    elif _should_use_groq(
-        groq_model_name,
-        bedrock_model_id,
-        google_model_name,
-        anthropic_model_name,
-        openai_model_name,
-    ):
-        return _create_groq_llm(groq_model_name, **llm_kwargs)
-    elif _should_use_bedrock(
-        bedrock_model_id,
-        google_model_name,
-        anthropic_model_name,
-        openai_model_name,
-    ):
+    elif provider == "cerebras":
+        if not model_name:
+            error_message = "Model name is required when using Cerebras API."
+            raise ValueError(error_message)
+        return _create_cerebras_llm(model_name, **llm_kwargs)
+    elif provider == "groq":
+        if not model_name:
+            error_message = "Model name is required when using Groq API."
+            raise ValueError(error_message)
+        return _create_groq_llm(model_name, **llm_kwargs)
+    elif provider == "bedrock":
+        if not model_name:
+            error_message = "Model ID is required when using Amazon Bedrock."
+            raise ValueError(error_message)
         return _create_bedrock_llm(
-            bedrock_model_id,
+            model_name,
             aws_region,
             bedrock_endpoint_base_url,
             aws_credentials_profile_name,
             **llm_kwargs,
         )
-    elif _should_use_google(
-        google_model_name,
-        anthropic_model_name,
-        openai_model_name,
-    ):
-        return _create_google_llm(google_model_name, **llm_kwargs)
-    elif _should_use_anthropic(anthropic_model_name, openai_model_name):
+    elif provider == "google":
+        if not model_name:
+            error_message = "Model name is required when using Google API."
+            raise ValueError(error_message)
+        return _create_google_llm(model_name, **llm_kwargs)
+    elif provider == "anthropic":
+        if not model_name:
+            error_message = "Model name is required when using Anthropic API."
+            raise ValueError(error_message)
         return _create_anthropic_llm(
-            anthropic_model_name,
+            model_name,
             anthropic_api_base,
             **llm_kwargs,
         )
-    elif openai_model_name or os.environ.get("OPENAI_API_KEY"):
+    elif provider == "openai":
+        if not model_name:
+            error_message = "Model name is required when using OpenAI API."
+            raise ValueError(error_message)
         return _create_openai_llm(
-            openai_model_name,
+            model_name,
             openai_api_base,
             openai_organization,
             **llm_kwargs,

@@ -6,12 +6,13 @@
 # pyright: reportUnknownArgumentType=false
 
 import json
+from typing import Any
 
 import pytest
 from jsonschema import ValidationError
 from pytest_mock import MockerFixture
 
-from sdeul.config import ExtractConfig
+from sdeul.config import ExtractConfig, ModelConfig, ProcessingConfig
 from sdeul.extraction import (
     extract_json_from_text_file,
     extract_json_from_text_file_with_config,
@@ -94,20 +95,15 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         max_retries=max_retries,
     )
     mock_create_llm_instance.assert_called_once_with(
-        ollama_model_name=None,
+        model_name=None,
+        provider=None,
         ollama_base_url=ollama_base_url,
         llamacpp_model_file_path=llamacpp_model_file_path,
-        cerebras_model_name=None,
         cerebras_api_key=None,
-        groq_model_name=None,
         groq_api_key=None,
-        bedrock_model_id=None,
-        google_model_name=None,
         google_api_key=None,
-        anthropic_model_name=None,
         anthropic_api_key=None,
         anthropic_api_base=None,
-        openai_model_name=None,
         openai_api_key=None,
         openai_api_base=None,
         openai_organization=None,
@@ -139,6 +135,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         schema=TEST_SCHEMA,
         llm=mock_llm_instance,
         skip_validation=skip_validation,
+        terminology=None,
     )
     mock_write_or_print_json_data.assert_called_once_with(
         data=TEST_LLM_OUTPUT,
@@ -182,6 +179,41 @@ def test_extract_structured_data_from_text(
     assert mock_logger.error.call_count == 0
 
 
+def test_extract_structured_data_from_text_with_terminology(
+    mocker: MockerFixture,
+) -> None:
+    mock_logger = mocker.MagicMock()
+    mocker.patch("logging.getLogger", return_value=mock_logger)
+    mock_llm_chain = mocker.MagicMock()
+    mocker.patch("sdeul.extraction.ChatPromptTemplate", return_value=mock_llm_chain)
+    mocker.patch("sdeul.extraction.JsonCodeOutputParser", return_value=mock_llm_chain)
+    mock_llm_chain.__or__.return_value = mock_llm_chain
+    mock_llm_chain.invoke.return_value = TEST_LLM_OUTPUT
+    mock_validate = mocker.patch("sdeul.extraction.validate")
+    terminology_text = (
+        "API: Application Programming Interface\nHTTP: HyperText Transfer Protocol"
+    )
+
+    result = extract_structured_data_from_text(
+        input_text=TEST_TEXT,
+        schema=TEST_SCHEMA,
+        llm=mock_llm_chain,
+        skip_validation=False,
+        terminology=terminology_text,
+    )
+
+    assert result == TEST_LLM_OUTPUT
+    mock_llm_chain.invoke.assert_called_once_with({
+        "schema": json.dumps(obj=TEST_SCHEMA),
+        "input_text": TEST_TEXT,
+        "terminology": terminology_text,
+    })
+    mock_validate.assert_called_once_with(
+        instance=TEST_LLM_OUTPUT,
+        schema=TEST_SCHEMA,
+    )
+
+
 def test_extract_structured_data_from_text_with_invalid_json_output(
     mocker: MockerFixture,
 ) -> None:
@@ -205,6 +237,59 @@ def test_extract_structured_data_from_text_with_invalid_json_output(
             skip_validation=False,
         )
     assert mock_logger.exception.call_count > 0
+
+
+def test_extract_json_from_text_file_with_terminology(mocker: MockerFixture) -> None:
+    text_file_path = "input.txt"
+    json_schema_file_path = "schema.json"
+    terminology_file_path = "terminology.txt"
+    terminology_content = (
+        "API: Application Programming Interface\nHTTP: HyperText Transfer Protocol"
+    )
+
+    mock_llm_instance = mocker.MagicMock()
+    mocker.patch(
+        "sdeul.extraction.create_llm_instance",
+        return_value=mock_llm_instance,
+    )
+    mock_read_json_file = mocker.patch(
+        "sdeul.extraction.read_json_file",
+        return_value=TEST_SCHEMA,
+    )
+    mock_read_text_file = mocker.patch(
+        "sdeul.extraction.read_text_file",
+        side_effect=[TEST_TEXT, terminology_content],
+    )
+    mock_extract_structured_data_from_text = mocker.patch(
+        "sdeul.extraction.extract_structured_data_from_text",
+        return_value=TEST_LLM_OUTPUT,
+    )
+    mock_write_or_print_json_data = mocker.patch(
+        "sdeul.extraction.write_or_print_json_data",
+    )
+
+    extract_json_from_text_file(
+        text_file_path=text_file_path,
+        json_schema_file_path=json_schema_file_path,
+        terminology_file_path=terminology_file_path,
+    )
+
+    mock_read_json_file.assert_called_once_with(path=json_schema_file_path)
+    assert mock_read_text_file.call_count == 2
+    mock_read_text_file.assert_any_call(path=text_file_path)
+    mock_read_text_file.assert_any_call(path=terminology_file_path)
+    mock_extract_structured_data_from_text.assert_called_once_with(
+        input_text=TEST_TEXT,
+        schema=TEST_SCHEMA,
+        llm=mock_llm_instance,
+        skip_validation=False,
+        terminology=terminology_content,
+    )
+    mock_write_or_print_json_data.assert_called_once_with(
+        data=TEST_LLM_OUTPUT,
+        output_json_file_path=None,
+        compact_json=False,
+    )
 
 
 def test_extract_json_from_text_file_with_config(mocker: MockerFixture) -> None:
@@ -248,9 +333,114 @@ def test_extract_json_from_text_file_with_config(mocker: MockerFixture) -> None:
         schema=TEST_SCHEMA,
         llm=mock_llm_instance,
         skip_validation=config.processing.skip_validation,
+        terminology=None,
     )
     mock_write_or_print_json_data.assert_called_once_with(
         data=TEST_LLM_OUTPUT,
         output_json_file_path=config.processing.output_json_file,
         compact_json=config.processing.compact_json,
     )
+
+
+def test_extract_json_from_text_file_with_config_and_terminology(
+    mocker: MockerFixture,
+) -> None:
+    """Test extract_json_from_text_file_with_config with terminology file."""
+    text_file_path = "input.txt"
+    json_schema_file_path = "schema.json"
+    terminology_file_path = "terminology.txt"
+    terminology_content = "API: Application Programming Interface"
+
+    config = ExtractConfig(
+        processing=ProcessingConfig(terminology_file=terminology_file_path)
+    )
+
+    mock_llm_instance = mocker.MagicMock()
+    mocker.patch(
+        "sdeul.extraction.create_llm_instance",
+        return_value=mock_llm_instance,
+    )
+    mocker.patch(
+        "sdeul.extraction.read_json_file",
+        return_value=TEST_SCHEMA,
+    )
+    mock_read_text_file = mocker.patch(
+        "sdeul.extraction.read_text_file",
+        side_effect=[TEST_TEXT, terminology_content],
+    )
+    mock_extract_structured_data_from_text = mocker.patch(
+        "sdeul.extraction.extract_structured_data_from_text",
+        return_value=TEST_LLM_OUTPUT,
+    )
+    mocker.patch(
+        "sdeul.extraction.write_or_print_json_data",
+    )
+
+    extract_json_from_text_file_with_config(
+        text_file_path=text_file_path,
+        json_schema_file_path=json_schema_file_path,
+        config=config,
+    )
+
+    assert mock_read_text_file.call_count == 2
+    mock_extract_structured_data_from_text.assert_called_once_with(
+        input_text=TEST_TEXT,
+        schema=TEST_SCHEMA,
+        llm=mock_llm_instance,
+        skip_validation=config.processing.skip_validation,
+        terminology=terminology_content,
+    )
+
+
+@pytest.mark.parametrize(
+    ("model_config", "expected_provider"),
+    [
+        ({"openai_model": "gpt-4"}, "openai"),
+        ({"google_model": "gemini-pro"}, "google"),
+        ({"anthropic_model": "claude-3"}, "anthropic"),
+        ({"cerebras_model": "llama-70b"}, "cerebras"),
+        ({"groq_model": "mixtral-8x7b"}, "groq"),
+        ({"bedrock_model": "anthropic.claude-v2"}, "bedrock"),
+        ({"ollama_model": "llama3"}, "ollama"),
+        ({"llamacpp_model_file": "/path/to/model.gguf"}, "llamacpp"),
+    ],
+)
+def test_extract_json_from_text_file_with_config_providers(
+    mocker: MockerFixture,
+    model_config: dict[str, Any],
+    expected_provider: str,
+) -> None:
+    """Test provider selection in extract_json_from_text_file_with_config."""
+    text_file_path = "input.txt"
+    json_schema_file_path = "schema.json"
+
+    config = ExtractConfig(model=ModelConfig(**model_config))
+
+    mock_llm_instance = mocker.MagicMock()
+    mock_create_llm_instance = mocker.patch(
+        "sdeul.extraction.create_llm_instance",
+        return_value=mock_llm_instance,
+    )
+    mocker.patch(
+        "sdeul.extraction.read_json_file",
+        return_value=TEST_SCHEMA,
+    )
+    mocker.patch(
+        "sdeul.extraction.read_text_file",
+        return_value=TEST_TEXT,
+    )
+    mocker.patch(
+        "sdeul.extraction.extract_structured_data_from_text",
+        return_value=TEST_LLM_OUTPUT,
+    )
+    mocker.patch("sdeul.extraction.write_or_print_json_data")
+
+    extract_json_from_text_file_with_config(
+        text_file_path=text_file_path,
+        json_schema_file_path=json_schema_file_path,
+        config=config,
+    )
+
+    # Verify create_llm_instance was called with the correct provider
+    call_args = mock_create_llm_instance.call_args
+    assert call_args.kwargs["provider"] == expected_provider

@@ -17,7 +17,7 @@ on:
         required: false
         type: string
         description: Runner to use
-        default: ubuntu-latest
+        default: macos-latest
     secrets:
       GROQ_API_KEY:
         required: true
@@ -62,7 +62,7 @@ on:
         required: false
         type: string
         description: Runner to use
-        default: ubuntu-latest
+        default: macos-latest
 defaults:
   run:
     shell: bash -euo pipefail {0}

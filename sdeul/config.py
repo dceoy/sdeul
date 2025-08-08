@@ -77,7 +77,11 @@ class ModelConfig:
     Organizes the selection of which LLM provider to use.
     """
 
-    # Model names
+    # Unified model selection
+    model_name: str | None = None
+    provider: str | None = None
+
+    # Legacy model names (kept for backwards compatibility)
     ollama_model: str | None = None
     llamacpp_model_file: str | None = None
     cerebras_model: str | None = None
@@ -115,6 +119,7 @@ class ProcessingConfig:
     output_json_file: str | None = None
     compact_json: bool = False
     skip_validation: bool = False
+    terminology_file: str | None = None
     debug: bool = False
     info: bool = False
 
