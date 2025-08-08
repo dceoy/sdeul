@@ -95,11 +95,11 @@ teardown_file() {
   [[ "${output}" =~ "data" ]] || [[ "${output}" =~ "detail" ]]
 }
 
-@test "pass with \"POST /extract\" without model (uses default)" {
+@test "fail with \"POST /extract\" without model (no default model)" {
   local schema='{"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}'
   local text="Extract the name John Doe"
 
-  # The API uses a default model when none is specified
+  # The API should fail when no model is specified
   run curl -s -X POST "${API_BASE_URL}/extract" \
     -H "Content-Type: application/json" \
     -d "{
@@ -110,9 +110,8 @@ teardown_file() {
     }"
 
   [[ "${status}" -eq 0 ]]
-  # Should return extracted data with validated=false since skip_validation=true
-  [[ "${output}" =~ "data" ]]
-  [[ "${output}" =~ "validated" ]]
+  # Should return an error since no model is specified
+  [[ "${output}" =~ "detail" ]]
 }
 
 @test "fail with \"POST /extract\" with missing required fields" {
