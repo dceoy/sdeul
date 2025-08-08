@@ -38,8 +38,10 @@ from .constants import (
     DEFAULT_TOP_P,
     DEFAULT_USE_MLOCK,
     DEFAULT_USE_MMAP,
-    SYSTEM_PROMPT,
-    USER_PROMPT_TEMPLATE,
+    SYSTEM_PROMPT_BASE,
+    SYSTEM_PROMPT_WITH_TERMINOLOGY,
+    USER_PROMPT_TEMPLATE_BASE,
+    USER_PROMPT_TEMPLATE_WITH_TERMINOLOGY,
 )
 from .llm import JsonCodeOutputParser, create_llm_instance
 from .utility import (
@@ -247,26 +249,30 @@ def extract_structured_data_from_text(
     logger.info("Start extracting structured data from the input text.")
 
     # Format terminology section for the prompt
-    terminology_section = ""
+    # Select appropriate prompts based on terminology presence
     if terminology:
-        terminology_section = f"""
-Domain-specific terminology and context:
-```
-{terminology}
-```
-"""
+        system_prompt = SYSTEM_PROMPT_WITH_TERMINOLOGY
+        user_prompt_template = USER_PROMPT_TEMPLATE_WITH_TERMINOLOGY
+        invoke_params = {
+            "schema": json.dumps(obj=schema),
+            "input_text": input_text,
+            "terminology": terminology,
+        }
+    else:
+        system_prompt = SYSTEM_PROMPT_BASE
+        user_prompt_template = USER_PROMPT_TEMPLATE_BASE
+        invoke_params = {
+            "schema": json.dumps(obj=schema),
+            "input_text": input_text,
+        }
 
     prompt = ChatPromptTemplate([
-        ("system", SYSTEM_PROMPT),
-        ("user", USER_PROMPT_TEMPLATE),
+        ("system", system_prompt),
+        ("user", user_prompt_template),
     ])
     llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()  # pyright: ignore[reportUnknownVariableType]
     logger.info("LLM chain: %s", llm_chain)
-    parsed_output_data = llm_chain.invoke({
-        "schema": json.dumps(obj=schema),
-        "input_text": input_text,
-        "terminology": terminology_section.strip(),
-    })
+    parsed_output_data = llm_chain.invoke(invoke_params)
     logger.info("LLM output: %s", parsed_output_data)
     if skip_validation:
         logger.info("Skip validation using JSON Schema.")

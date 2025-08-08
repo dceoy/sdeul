@@ -167,7 +167,6 @@ def test_extract_structured_data_from_text(
     mock_llm_chain.invoke.assert_called_once_with({
         "schema": json.dumps(obj=TEST_SCHEMA),
         "input_text": TEST_TEXT,
-        "terminology": "",
     })
     if skip_validation:
         mock_validate.assert_not_called()
@@ -203,15 +202,10 @@ def test_extract_structured_data_from_text_with_terminology(
     )
 
     assert result == TEST_LLM_OUTPUT
-    expected_terminology_section = """Domain-specific terminology and context:
-```
-API: Application Programming Interface
-HTTP: HyperText Transfer Protocol
-```"""
     mock_llm_chain.invoke.assert_called_once_with({
         "schema": json.dumps(obj=TEST_SCHEMA),
         "input_text": TEST_TEXT,
-        "terminology": expected_terminology_section,
+        "terminology": terminology_text,
     })
     mock_validate.assert_called_once_with(
         instance=TEST_LLM_OUTPUT,
