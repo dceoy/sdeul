@@ -562,3 +562,178 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
         num_ctx=n_ctx,
         seed=seed,
     )
+
+
+def test_create_llm_instance_ollama_no_model(mocker: MockerFixture) -> None:
+    """Test that Ollama requires a model name."""
+    provider = "ollama"
+    mocker.patch("sdeul.llm.override_env_vars")
+
+    with pytest.raises(ValueError, match=r"Model name is required when using Ollama."):
+        create_llm_instance(provider=provider)
+
+
+def test_create_llm_instance_llamacpp_no_model_file(mocker: MockerFixture) -> None:
+    """Test that LlamaCpp requires a model file path."""
+    provider = "llamacpp"
+    mocker.patch("sdeul.llm.override_env_vars")
+
+    with pytest.raises(
+        ValueError,
+        match=r"Model file path is required when using llama.cpp.",
+    ):
+        create_llm_instance(provider=provider)
+
+
+def test_create_llm_instance_cerebras_no_model(mocker: MockerFixture) -> None:
+    """Test that Cerebras requires a model name."""
+    provider = "cerebras"
+    mocker.patch("sdeul.llm.override_env_vars")
+
+    with pytest.raises(
+        ValueError,
+        match=r"Model name is required when using Cerebras API.",
+    ):
+        create_llm_instance(provider=provider)
+
+
+def test_create_llm_instance_groq_no_model(mocker: MockerFixture) -> None:
+    """Test that Groq requires a model name."""
+    provider = "groq"
+    mocker.patch("sdeul.llm.override_env_vars")
+
+    with pytest.raises(
+        ValueError,
+        match=r"Model name is required when using Groq API.",
+    ):
+        create_llm_instance(provider=provider)
+
+
+def test_create_llm_instance_bedrock_no_model(mocker: MockerFixture) -> None:
+    """Test that Bedrock requires a model ID."""
+    provider = "bedrock"
+    mocker.patch("sdeul.llm.override_env_vars")
+
+    with pytest.raises(
+        ValueError,
+        match=r"Model ID is required when using Amazon Bedrock.",
+    ):
+        create_llm_instance(provider=provider)
+
+
+def test_create_llm_instance_google_no_model(mocker: MockerFixture) -> None:
+    """Test that Google requires a model name."""
+    provider = "google"
+    mocker.patch("sdeul.llm.override_env_vars")
+
+    with pytest.raises(
+        ValueError,
+        match=r"Model name is required when using Google API.",
+    ):
+        create_llm_instance(provider=provider)
+
+
+def test_create_llm_instance_openai_no_model(mocker: MockerFixture) -> None:
+    """Test that OpenAI requires a model name."""
+    provider = "openai"
+    mocker.patch("sdeul.llm.override_env_vars")
+
+    with pytest.raises(
+        ValueError,
+        match=r"Model name is required when using OpenAI API.",
+    ):
+        create_llm_instance(provider=provider)
+
+
+def test_create_llm_instance_auto_detect_ollama(mocker: MockerFixture) -> None:
+    """Test auto-detection of Ollama provider."""
+    model_name = "dummy-ollama-model"
+    ollama_base_url = "http://localhost:11434"
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mocker.patch.dict(os.environ, {"OLLAMA_BASE_URL": ollama_base_url}, clear=True)
+
+    llm = mocker.MagicMock()
+    mock_chat_ollama = mocker.patch("sdeul.llm.ChatOllama", return_value=llm)
+
+    result = create_llm_instance(model_name=model_name)
+    assert result == llm
+    mock_chat_ollama.assert_called_once()
+
+
+def test_create_llm_instance_auto_detect_cerebras(mocker: MockerFixture) -> None:
+    """Test auto-detection of Cerebras provider."""
+    model_name = "dummy-cerebras-model"
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mocker.patch.dict(os.environ, {"CEREBRAS_API_KEY": "test-key"}, clear=True)
+
+    llm = mocker.MagicMock()
+    mock_chat_cerebras = mocker.patch("sdeul.llm.ChatCerebras", return_value=llm)
+
+    result = create_llm_instance(model_name=model_name)
+    assert result == llm
+    mock_chat_cerebras.assert_called_once()
+
+
+def test_create_llm_instance_auto_detect_groq(mocker: MockerFixture) -> None:
+    """Test auto-detection of Groq provider."""
+    model_name = "dummy-groq-model"
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mocker.patch.dict(os.environ, {"GROQ_API_KEY": "test-key"}, clear=True)
+
+    llm = mocker.MagicMock()
+    mock_chat_groq = mocker.patch("sdeul.llm.ChatGroq", return_value=llm)
+
+    result = create_llm_instance(model_name=model_name)
+    assert result == llm
+    mock_chat_groq.assert_called_once()
+
+
+def test_create_llm_instance_auto_detect_bedrock(mocker: MockerFixture) -> None:
+    """Test auto-detection of Bedrock provider."""
+    model_name = "dummy-bedrock-model"
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=True)
+    mocker.patch.dict(os.environ, {}, clear=True)
+
+    llm = mocker.MagicMock()
+    mock_chat_bedrock = mocker.patch("sdeul.llm.ChatBedrockConverse", return_value=llm)
+
+    result = create_llm_instance(model_name=model_name)
+    assert result == llm
+    mock_chat_bedrock.assert_called_once()
+
+
+def test_create_llm_instance_auto_detect_google(mocker: MockerFixture) -> None:
+    """Test auto-detection of Google provider."""
+    model_name = "dummy-google-model"
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mocker.patch.dict(os.environ, {"GOOGLE_API_KEY": "test-key"}, clear=True)
+
+    llm = mocker.MagicMock()
+    mock_chat_google = mocker.patch(
+        "sdeul.llm.ChatGoogleGenerativeAI",
+        return_value=llm,
+    )
+
+    result = create_llm_instance(model_name=model_name)
+    assert result == llm
+    mock_chat_google.assert_called_once()
+
+
+def test_create_llm_instance_auto_detect_openai(mocker: MockerFixture) -> None:
+    """Test auto-detection of OpenAI provider."""
+    model_name = "dummy-openai-model"
+    mocker.patch("sdeul.llm.override_env_vars")
+    mocker.patch("sdeul.llm.has_aws_credentials", return_value=False)
+    mocker.patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}, clear=True)
+
+    llm = mocker.MagicMock()
+    mock_chat_openai = mocker.patch("sdeul.llm.ChatOpenAI", return_value=llm)
+
+    result = create_llm_instance(model_name=model_name)
+    assert result == llm
+    mock_chat_openai.assert_called_once()

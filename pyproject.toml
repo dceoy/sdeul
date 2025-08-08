@@ -171,6 +171,7 @@ max-complexity = 20
   "D103",     # undocumented-public-function
   "S101",     # assert
   "S104",     # hardcoded-bind-all-interfaces
+  "PLR2004",  # Magic value used in comparison
   "PLC2701",  # import-private-name
   "SLF001",   # private-member-access
 ]
