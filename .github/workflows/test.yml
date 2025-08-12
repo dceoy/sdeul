@@ -69,20 +69,11 @@ defaults:
     working-directory: .
 jobs:
   unit-tests:
-    runs-on: ${{ inputs.runs-on }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
-      - name: Set up uv
-        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc  # v6.4.3
-        with:
-          version: ${{ inputs.uv-version || 'latest' }}
-      - name: Install dependencies
-        run: |
-          uv sync
-      - name: Run unit tests using pytest
-        run: |
-          uv run pytest
+    uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-test.yml@main
+    with:
+      package-path: .
+      uv-version: ${{ inputs.uv-version }}
+      runs-on: ${{ inputs.runs-on }}
   cli-tests:
     runs-on: ${{ inputs.runs-on }}
     env:
