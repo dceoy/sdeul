@@ -1,19 +1,16 @@
-sdeul
-=====
+# sdeul
 
 Structural Data Extractor using LLMs
 
 [![CI/CD](https://github.com/dceoy/sdeul/actions/workflows/ci.yml/badge.svg)](https://github.com/dceoy/sdeul/actions/workflows/ci.yml)
 
-Installation
-------------
+## Installation
 
 ```sh
 $ pip install -U sdeul
 ```
 
-Usage
------
+## Usage
 
 ### Command Line Interface
 
@@ -85,7 +82,6 @@ SDEUL also provides a REST API for extracting structured data and validating JSO
     ```
 
 2.  The API will be available at `http://localhost:8000` with the following endpoints:
-
     - `POST /extract` - Extract structured data from text
     - `POST /validate` - Validate JSON data against a schema
     - `GET /health` - Health check endpoint
