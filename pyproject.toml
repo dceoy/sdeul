@@ -43,8 +43,8 @@ documentation = "https://github.com/dceoy/sdeul/blob/main/README.md"
 [project.scripts]
 sdeul = "sdeul.cli:app"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "ruff >=0.12.0,<0.13.0",
   "pyright >= 1.1.379",
   "pytest >= 8.3.2",
