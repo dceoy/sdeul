@@ -13,22 +13,15 @@ from .constants import (
     DEFAULT_API_PORT,
     DEFAULT_API_RELOAD,
     DEFAULT_CONTEXT_WINDOW,
-    DEFAULT_F16_KV,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_N_BATCH,
-    DEFAULT_N_GPU_LAYERS,
-    DEFAULT_N_THREADS,
     DEFAULT_REPEAT_LAST_N,
     DEFAULT_REPEAT_PENALTY,
     DEFAULT_SEED,
     DEFAULT_TEMPERATURE,
     DEFAULT_TIMEOUT,
-    DEFAULT_TOKEN_WISE_STREAMING,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    DEFAULT_USE_MLOCK,
-    DEFAULT_USE_MMAP,
 )
 
 
@@ -43,30 +36,13 @@ class LLMConfig:
     temperature: float = DEFAULT_TEMPERATURE
     top_p: float = DEFAULT_TOP_P
     top_k: int = DEFAULT_TOP_K
+    repeat_penalty: float = DEFAULT_REPEAT_PENALTY
+    repeat_last_n: int = DEFAULT_REPEAT_LAST_N
+    n_ctx: int = DEFAULT_CONTEXT_WINDOW
     max_tokens: int = DEFAULT_MAX_TOKENS
     seed: int = DEFAULT_SEED
     timeout: int | None = DEFAULT_TIMEOUT
     max_retries: int = DEFAULT_MAX_RETRIES
-
-
-@dataclass
-class LlamaCppConfig:
-    """Configuration for LlamaCpp-specific parameters.
-
-    Groups parameters that are specific to local LlamaCpp model execution,
-    including hardware optimization settings.
-    """
-
-    repeat_penalty: float = DEFAULT_REPEAT_PENALTY
-    repeat_last_n: int = DEFAULT_REPEAT_LAST_N
-    n_ctx: int = DEFAULT_CONTEXT_WINDOW
-    n_batch: int = DEFAULT_N_BATCH
-    n_threads: int | None = DEFAULT_N_THREADS
-    n_gpu_layers: int | None = DEFAULT_N_GPU_LAYERS
-    f16_kv: bool = DEFAULT_F16_KV
-    use_mlock: bool = DEFAULT_USE_MLOCK
-    use_mmap: bool = DEFAULT_USE_MMAP
-    token_wise_streaming: bool = DEFAULT_TOKEN_WISE_STREAMING
 
 
 @dataclass
@@ -83,7 +59,6 @@ class ModelConfig:
 
     # Legacy model names (kept for backwards compatibility)
     ollama_model: str | None = None
-    llamacpp_model_file: str | None = None
     cerebras_model: str | None = None
     groq_model: str | None = None
     bedrock_model: str | None = None
@@ -145,19 +120,16 @@ class ExtractConfig:
     """
 
     llm: LLMConfig
-    llamacpp: LlamaCppConfig
     model: ModelConfig
     processing: ProcessingConfig
 
     def __init__(
         self,
         llm: LLMConfig | None = None,
-        llamacpp: LlamaCppConfig | None = None,
         model: ModelConfig | None = None,
         processing: ProcessingConfig | None = None,
     ) -> None:
         """Initialize ExtractConfig with default values if not provided."""
         self.llm = llm or LLMConfig()
-        self.llamacpp = llamacpp or LlamaCppConfig()
         self.model = model or ModelConfig()
         self.processing = processing or ProcessingConfig()

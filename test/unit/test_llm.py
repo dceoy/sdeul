@@ -5,8 +5,6 @@
 # pyright: reportPrivateUsage=false
 # pyright: reportUnknownArgumentType=false
 
-import ctypes
-import io
 import logging
 import os
 
@@ -16,8 +14,6 @@ from pytest_mock import MockerFixture
 
 from sdeul.llm import (
     JsonCodeOutputParser,
-    _llama_log_callback,
-    _read_llm_file,
     create_llm_instance,
 )
 
@@ -80,58 +76,6 @@ def test_jsoncodeoutputparser__detect_json_code_block_with_invalid_input() -> No
     with pytest.raises(OutputParserException) as exc_info:
         JsonCodeOutputParser()._detect_json_code_block(text)
     assert str(exc_info.value).startswith(msg)
-
-
-def test_create_llm_instance_with_model_file(mocker: MockerFixture) -> None:
-    llamacpp_model_file_path = "/path/to/model"
-    temperature = 0.0
-    top_p = 0.95
-    top_k = 64
-    repeat_penalty = 1.1
-    repeat_last_n = 64
-    n_ctx = 8192
-    max_tokens = 8192
-    seed = -1
-    n_batch = 8
-    n_gpu_layers = -1
-    token_wise_streaming = False
-    mocker.patch("sdeul.llm.override_env_vars")
-    llm = mocker.MagicMock()
-    mock_read_llm_file = mocker.patch("sdeul.llm._read_llm_file", return_value=llm)
-
-    result = create_llm_instance(
-        llamacpp_model_file_path=llamacpp_model_file_path,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        repeat_penalty=repeat_penalty,
-        repeat_last_n=repeat_last_n,
-        n_ctx=n_ctx,
-        max_tokens=max_tokens,
-        seed=seed,
-        n_batch=n_batch,
-        n_gpu_layers=n_gpu_layers,
-        token_wise_streaming=token_wise_streaming,
-    )
-    assert result == llm
-    mock_read_llm_file.assert_called_once_with(
-        path=llamacpp_model_file_path,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        repeat_penalty=repeat_penalty,
-        last_n_tokens_size=repeat_last_n,
-        n_ctx=n_ctx,
-        max_tokens=max_tokens,
-        seed=seed,
-        n_batch=n_batch,
-        n_threads=-1,
-        n_gpu_layers=n_gpu_layers,
-        f16_kv=True,
-        use_mlock=False,
-        use_mmap=True,
-        token_wise_streaming=token_wise_streaming,
-    )
 
 
 def test_create_llm_instance_with_cerebras(mocker: MockerFixture) -> None:
@@ -411,118 +355,6 @@ def test_create_llm_instance_no_model_specified(mocker: MockerFixture) -> None:
         create_llm_instance()
 
 
-@pytest.mark.parametrize(
-    ("token_wise_streaming", "logging_level", "expected_verbose"),
-    [
-        (False, logging.INFO, False),
-        (False, logging.DEBUG, True),
-        (True, logging.INFO, True),
-    ],
-)
-def test__read_llm_file(
-    token_wise_streaming: bool,
-    logging_level: int,
-    expected_verbose: bool,
-    mocker: MockerFixture,
-) -> None:
-    llm_file_path = "llm.gguf"
-    temperature = 0.8
-    top_p = 0.95
-    top_k = 64
-    n_ctx = 512
-    repeat_penalty = 1.1
-    last_n_tokens_size = 64
-    max_tokens = 256
-    seed = -1
-    n_batch = 8
-    n_gpu_layers = -1
-    mock_logger = mocker.MagicMock()
-    mocker.patch("logging.getLogger", return_value=mock_logger)
-    mock_logger.level = logging_level
-    mocker.patch("sdeul.llm.llama_log_set")
-    expected_result = mocker.Mock()
-    mock_llamacpp = mocker.patch("sdeul.llm.LlamaCpp", return_value=expected_result)
-    mocker.patch("sdeul.llm.StreamingStdOutCallbackHandler")
-    mock_callback_manager = mocker.MagicMock()
-    mocker.patch(
-        "sdeul.llm.CallbackManager",
-        return_value=mock_callback_manager,
-    )
-
-    result = _read_llm_file(
-        path=llm_file_path,
-        temperature=temperature,
-        top_p=top_p,
-        max_tokens=max_tokens,
-        n_ctx=n_ctx,
-        seed=seed,
-        n_batch=n_batch,
-        n_gpu_layers=n_gpu_layers,
-        token_wise_streaming=token_wise_streaming,
-    )
-    assert result == expected_result
-    if token_wise_streaming:
-        mock_llamacpp.assert_called_once_with(
-            model_path=llm_file_path,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            repeat_penalty=repeat_penalty,
-            last_n_tokens_size=last_n_tokens_size,
-            n_ctx=n_ctx,
-            max_tokens=max_tokens,
-            seed=seed,
-            n_batch=n_batch,
-            n_threads=-1,
-            n_gpu_layers=n_gpu_layers,
-            f16_kv=True,
-            use_mlock=False,
-            use_mmap=True,
-            verbose=expected_verbose,
-            callback_manager=mock_callback_manager,
-        )
-    else:
-        mock_llamacpp.assert_called_once_with(
-            model_path=llm_file_path,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            repeat_penalty=repeat_penalty,
-            last_n_tokens_size=last_n_tokens_size,
-            n_ctx=n_ctx,
-            max_tokens=max_tokens,
-            seed=seed,
-            n_batch=n_batch,
-            n_threads=-1,
-            n_gpu_layers=n_gpu_layers,
-            f16_kv=True,
-            use_mlock=False,
-            use_mmap=True,
-            verbose=expected_verbose,
-            callback_manager=None,
-        )
-
-
-@pytest.mark.parametrize(
-    ("text", "root_level", "expected_output"),
-    [
-        (b"info message", logging.DEBUG, "info message"),
-        (b"debug message", logging.INFO, "debug message"),
-        (b"warning message", logging.WARNING, ""),
-    ],
-)
-def test__llama_log_callback(
-    text: bytes,
-    root_level: int,
-    expected_output: str,
-    mocker: MockerFixture,
-) -> None:
-    mocker.patch.object(logging.root, "level", root_level)
-    mock_stderr = mocker.patch("sdeul.llm.sys.stderr", new_callable=io.StringIO)
-    _llama_log_callback(0, text, ctypes.c_void_p(0))
-    assert mock_stderr.getvalue() == expected_output
-
-
 def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
     model_name = "dummy-ollama-model"
     provider = "ollama"
@@ -570,18 +402,6 @@ def test_create_llm_instance_ollama_no_model(mocker: MockerFixture) -> None:
     mocker.patch("sdeul.llm.override_env_vars")
 
     with pytest.raises(ValueError, match=r"Model name is required when using Ollama."):
-        create_llm_instance(provider=provider)
-
-
-def test_create_llm_instance_llamacpp_no_model_file(mocker: MockerFixture) -> None:
-    """Test that LlamaCpp requires a model file path."""
-    provider = "llamacpp"
-    mocker.patch("sdeul.llm.override_env_vars")
-
-    with pytest.raises(
-        ValueError,
-        match=r"Model file path is required when using llama.cpp.",
-    ):
         create_llm_instance(provider=provider)
 
 
