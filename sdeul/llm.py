@@ -1,3 +1,4 @@
+# pyright: reportMissingImports=false, reportUnknownVariableType=false, reportUnknownMemberType=false, reportUntypedBaseClass=false
 """Functions for Language Learning Model (LLM) integration and management.
 
 This module provides functionality for creating and managing various LLM instances
@@ -20,14 +21,13 @@ import os
 import sys
 from typing import Any
 
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.schema import StrOutputParser
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrockConverse
 from langchain_cerebras import ChatCerebras
 from langchain_community.llms import LlamaCpp
+from langchain_core.callbacks import CallbackManager, StreamingStdOutCallbackHandler
 from langchain_core.exceptions import OutputParserException
+from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
@@ -122,6 +122,42 @@ class JsonCodeOutputParser(StrOutputParser):
 
 
 # Factory functions for creating LLM instances
+
+
+def _infer_provider(
+    *,
+    provider: str | None,
+    ollama_base_url: str | None,
+    llamacpp_model_file_path: str | None,
+    cerebras_api_key: str | None,
+    groq_api_key: str | None,
+    google_api_key: str | None,
+    anthropic_api_key: str | None,
+    openai_api_key: str | None,
+) -> str | None:
+    if provider:
+        return provider
+
+    checks = (
+        ("llamacpp", lambda: bool(llamacpp_model_file_path)),
+        ("ollama", lambda: bool(os.environ.get("OLLAMA_BASE_URL") or ollama_base_url)),
+        (
+            "cerebras",
+            lambda: bool(os.environ.get("CEREBRAS_API_KEY") or cerebras_api_key),
+        ),
+        ("groq", lambda: bool(os.environ.get("GROQ_API_KEY") or groq_api_key)),
+        ("bedrock", has_aws_credentials),
+        ("google", lambda: bool(os.environ.get("GOOGLE_API_KEY") or google_api_key)),
+        (
+            "anthropic",
+            lambda: bool(os.environ.get("ANTHROPIC_API_KEY") or anthropic_api_key),
+        ),
+        ("openai", lambda: bool(os.environ.get("OPENAI_API_KEY") or openai_api_key)),
+    )
+    for name, predicate in checks:
+        if predicate():
+            return name
+    return None
 
 
 def _create_ollama_llm(
@@ -323,7 +359,7 @@ def _create_openai_llm(
     )
 
 
-def create_llm_instance(  # noqa: PLR0911, PLR0912, C901
+def create_llm_instance(
     model_name: str | None = None,
     provider: str | None = None,
     ollama_base_url: str | None = None,
@@ -446,92 +482,98 @@ def create_llm_instance(  # noqa: PLR0911, PLR0912, C901
         "max_retries": max_retries,
     }
 
-    # Determine provider if not explicitly specified
-    if not provider:
-        # Auto-detect provider based on API keys and environment
-        if llamacpp_model_file_path:
-            provider = "llamacpp"
-        elif os.environ.get("OLLAMA_BASE_URL") or ollama_base_url:
-            provider = "ollama"
-        elif os.environ.get("CEREBRAS_API_KEY") or cerebras_api_key:
-            provider = "cerebras"
-        elif os.environ.get("GROQ_API_KEY") or groq_api_key:
-            provider = "groq"
-        elif has_aws_credentials():
-            provider = "bedrock"
-        elif os.environ.get("GOOGLE_API_KEY") or google_api_key:
-            provider = "google"
-        elif os.environ.get("ANTHROPIC_API_KEY") or anthropic_api_key:
-            provider = "anthropic"
-        elif os.environ.get("OPENAI_API_KEY") or openai_api_key:
-            provider = "openai"
+    provider = _infer_provider(
+        provider=provider,
+        ollama_base_url=ollama_base_url,
+        llamacpp_model_file_path=llamacpp_model_file_path,
+        cerebras_api_key=cerebras_api_key,
+        groq_api_key=groq_api_key,
+        google_api_key=google_api_key,
+        anthropic_api_key=anthropic_api_key,
+        openai_api_key=openai_api_key,
+    )
 
-    # Model selection based on provider
-    if provider == "ollama":
-        if not model_name:
-            error_message = "Model name is required when using Ollama."
-            raise ValueError(error_message)
-        return _create_ollama_llm(
+    provider_specs: dict[str, tuple[Any, str, str | None, str, dict[str, Any]]] = {
+        "ollama": (
+            _create_ollama_llm,
+            "model_name",
             model_name,
-            ollama_base_url,
-            **llm_kwargs,
-        )
-    elif provider == "llamacpp":
-        if not llamacpp_model_file_path:
-            error_message = "Model file path is required when using llama.cpp."
-            raise ValueError(error_message)
-        return _create_llamacpp_llm(
+            "Model name is required when using Ollama.",
+            {"base_url": ollama_base_url},
+        ),
+        "llamacpp": (
+            _create_llamacpp_llm,
+            "model_file_path",
             llamacpp_model_file_path,
-            **llm_kwargs,
-        )
-    elif provider == "cerebras":
-        if not model_name:
-            error_message = "Model name is required when using Cerebras API."
-            raise ValueError(error_message)
-        return _create_cerebras_llm(model_name, **llm_kwargs)
-    elif provider == "groq":
-        if not model_name:
-            error_message = "Model name is required when using Groq API."
-            raise ValueError(error_message)
-        return _create_groq_llm(model_name, **llm_kwargs)
-    elif provider == "bedrock":
-        if not model_name:
-            error_message = "Model ID is required when using Amazon Bedrock."
-            raise ValueError(error_message)
-        return _create_bedrock_llm(
+            "Model file path is required when using llama.cpp.",
+            {},
+        ),
+        "cerebras": (
+            _create_cerebras_llm,
+            "model_name",
             model_name,
-            aws_region,
-            bedrock_endpoint_base_url,
-            aws_credentials_profile_name,
-            **llm_kwargs,
-        )
-    elif provider == "google":
-        if not model_name:
-            error_message = "Model name is required when using Google API."
-            raise ValueError(error_message)
-        return _create_google_llm(model_name, **llm_kwargs)
-    elif provider == "anthropic":
-        if not model_name:
-            error_message = "Model name is required when using Anthropic API."
-            raise ValueError(error_message)
-        return _create_anthropic_llm(
+            "Model name is required when using Cerebras API.",
+            {},
+        ),
+        "groq": (
+            _create_groq_llm,
+            "model_name",
             model_name,
-            anthropic_api_base,
-            **llm_kwargs,
-        )
-    elif provider == "openai":
-        if not model_name:
-            error_message = "Model name is required when using OpenAI API."
-            raise ValueError(error_message)
-        return _create_openai_llm(
+            "Model name is required when using Groq API.",
+            {},
+        ),
+        "bedrock": (
+            _create_bedrock_llm,
+            "model_id",
             model_name,
-            openai_api_base,
-            openai_organization,
-            **llm_kwargs,
-        )
-    else:
+            "Model ID is required when using Amazon Bedrock.",
+            {
+                "aws_region": aws_region,
+                "endpoint_url": bedrock_endpoint_base_url,
+                "profile_name": aws_credentials_profile_name,
+            },
+        ),
+        "google": (
+            _create_google_llm,
+            "model_name",
+            model_name,
+            "Model name is required when using Google API.",
+            {},
+        ),
+        "anthropic": (
+            _create_anthropic_llm,
+            "model_name",
+            model_name,
+            "Model name is required when using Anthropic API.",
+            {"api_base": anthropic_api_base},
+        ),
+        "openai": (
+            _create_openai_llm,
+            "model_name",
+            model_name,
+            "Model name is required when using OpenAI API.",
+            {
+                "api_base": openai_api_base,
+                "organization": openai_organization,
+            },
+        ),
+    }
+
+    if not provider or provider not in provider_specs:
         error_message = "The model cannot be determined."
         raise ValueError(error_message)
+
+    factory, model_key, model_value, error_message, provider_kwargs = provider_specs[
+        provider
+    ]
+    if not model_value:
+        raise ValueError(error_message)
+
+    return factory(
+        **{model_key: model_value},
+        **provider_kwargs,
+        **llm_kwargs,
+    )
 
 
 def _read_llm_file(

@@ -9,17 +9,24 @@ Functions:
     extract_structured_data_from_text: Function for LLM-based extraction
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
-from .config import ExtractConfig
+from .config import (
+    ExtractConfig,
+    LlamaCppConfig,
+    LLMConfig,
+    ModelConfig,
+    ProcessingConfig,
+)
 from .constants import (
     DEFAULT_CONTEXT_WINDOW,
     DEFAULT_F16_KV,
@@ -52,7 +59,7 @@ from .utility import (
 )
 
 if TYPE_CHECKING:
-    from langchain.chains import LLMChain
+    from langchain_core.language_models.chat_models import BaseChatModel
 
 
 @log_execution_time
@@ -159,60 +166,106 @@ def extract_json_from_text_file(
         aws_region (str | None): AWS region for Bedrock service.
         bedrock_endpoint_base_url (str | None): Custom Bedrock endpoint URL.
     """
-    llm = create_llm_instance(
-        model_name=model_name,
-        provider=provider,
-        ollama_base_url=ollama_base_url,
-        llamacpp_model_file_path=llamacpp_model_file_path,
-        cerebras_api_key=cerebras_api_key,
-        groq_api_key=groq_api_key,
-        google_api_key=google_api_key,
-        anthropic_api_key=anthropic_api_key,
-        anthropic_api_base=anthropic_api_base,
-        openai_api_key=openai_api_key,
-        openai_api_base=openai_api_base,
-        openai_organization=openai_organization,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        repeat_penalty=repeat_penalty,
-        repeat_last_n=repeat_last_n,
-        n_ctx=n_ctx,
-        max_tokens=max_tokens,
-        seed=seed,
-        n_batch=n_batch,
-        n_threads=(n_threads if n_threads > 0 else cpu_count()),
-        n_gpu_layers=n_gpu_layers,
-        f16_kv=f16_kv,
-        use_mlock=use_mlock,
-        use_mmap=use_mmap,
-        token_wise_streaming=token_wise_streaming,
-        timeout=timeout,
-        max_retries=max_retries,
-        aws_credentials_profile_name=aws_credentials_profile_name,
-        aws_region=aws_region,
-        bedrock_endpoint_base_url=bedrock_endpoint_base_url,
+    config = ExtractConfig(
+        llm=LLMConfig(
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_tokens=max_tokens,
+            seed=seed,
+            timeout=timeout,
+            max_retries=max_retries,
+        ),
+        llamacpp=LlamaCppConfig(
+            repeat_penalty=repeat_penalty,
+            repeat_last_n=repeat_last_n,
+            n_ctx=n_ctx,
+            n_batch=n_batch,
+            n_threads=(n_threads if n_threads > 0 else cpu_count()),
+            n_gpu_layers=n_gpu_layers,
+            f16_kv=f16_kv,
+            use_mlock=use_mlock,
+            use_mmap=use_mmap,
+            token_wise_streaming=token_wise_streaming,
+        ),
+        model=ModelConfig(
+            model_name=model_name,
+            provider=provider,
+            ollama_base_url=ollama_base_url,
+            llamacpp_model_file=llamacpp_model_file_path,
+            openai_api_key=openai_api_key,
+            openai_api_base=openai_api_base,
+            openai_organization=openai_organization,
+            google_api_key=google_api_key,
+            anthropic_api_key=anthropic_api_key,
+            anthropic_api_base=anthropic_api_base,
+            cerebras_api_key=cerebras_api_key,
+            groq_api_key=groq_api_key,
+            aws_credentials_profile=aws_credentials_profile_name,
+            aws_region=aws_region,
+            bedrock_endpoint_url=bedrock_endpoint_base_url,
+        ),
+        processing=ProcessingConfig(
+            output_json_file=output_json_file_path,
+            compact_json=compact_json,
+            skip_validation=skip_validation,
+            terminology_file=terminology_file_path,
+        ),
     )
-    schema = read_json_file(path=json_schema_file_path)
-    input_text = read_text_file(path=text_file_path)
+    extract_json_from_text_file_with_config(
+        text_file_path=text_file_path,
+        json_schema_file_path=json_schema_file_path,
+        config=config,
+        infer_provider=False,
+    )
 
-    # Read terminology file if provided
-    terminology = None
-    if terminology_file_path:
-        terminology = read_text_file(path=terminology_file_path)
 
-    parsed_output_data = extract_structured_data_from_text(
-        input_text=input_text,
-        schema=schema,
-        llm=llm,
-        skip_validation=skip_validation,
-        terminology=terminology,
+def _build_prompt_and_params(
+    input_text: str,
+    schema: dict[str, Any],
+    terminology: str | None,
+) -> tuple[ChatPromptTemplate, dict[str, str]]:
+    if terminology:
+        system_prompt = SYSTEM_PROMPT_WITH_TERMINOLOGY
+        user_prompt_template = USER_PROMPT_TEMPLATE_WITH_TERMINOLOGY
+        invoke_params = {
+            "schema": json.dumps(obj=schema),
+            "input_text": input_text,
+            "terminology": terminology,
+        }
+    else:
+        system_prompt = SYSTEM_PROMPT_BASE
+        user_prompt_template = USER_PROMPT_TEMPLATE_BASE
+        invoke_params = {
+            "schema": json.dumps(obj=schema),
+            "input_text": input_text,
+        }
+
+    prompt = ChatPromptTemplate(
+        [
+            ("system", system_prompt),
+            ("user", user_prompt_template),
+        ],
     )
-    write_or_print_json_data(
-        data=parsed_output_data,
-        output_json_file_path=output_json_file_path,
-        compact_json=compact_json,
+    return prompt, invoke_params
+
+
+def _resolve_model_selection(model: ModelConfig) -> tuple[str | None, str | None]:
+    legacy_order = (
+        ("openai", model.openai_model),
+        ("google", model.google_model),
+        ("anthropic", model.anthropic_model),
+        ("cerebras", model.cerebras_model),
+        ("groq", model.groq_model),
+        ("bedrock", model.bedrock_model),
+        ("ollama", model.ollama_model),
     )
+    for provider, model_name in legacy_order:
+        if model_name:
+            return model_name, provider
+    if model.llamacpp_model_file:
+        return None, "llamacpp"
+    return None, None
 
 
 def extract_structured_data_from_text(
@@ -248,31 +301,14 @@ def extract_structured_data_from_text(
     logger = logging.getLogger(extract_structured_data_from_text.__name__)
     logger.info("Start extracting structured data from the input text.")
 
-    # Format terminology section for the prompt
-    # Select appropriate prompts based on terminology presence
-    if terminology:
-        system_prompt = SYSTEM_PROMPT_WITH_TERMINOLOGY
-        user_prompt_template = USER_PROMPT_TEMPLATE_WITH_TERMINOLOGY
-        invoke_params = {
-            "schema": json.dumps(obj=schema),
-            "input_text": input_text,
-            "terminology": terminology,
-        }
-    else:
-        system_prompt = SYSTEM_PROMPT_BASE
-        user_prompt_template = USER_PROMPT_TEMPLATE_BASE
-        invoke_params = {
-            "schema": json.dumps(obj=schema),
-            "input_text": input_text,
-        }
-
-    prompt = ChatPromptTemplate([
-        ("system", system_prompt),
-        ("user", user_prompt_template),
-    ])
-    llm_chain: LLMChain = prompt | llm | JsonCodeOutputParser()  # pyright: ignore[reportUnknownVariableType]
+    prompt, invoke_params = _build_prompt_and_params(
+        input_text=input_text,
+        schema=schema,
+        terminology=terminology,
+    )
+    llm_chain = cast("Any", prompt | llm | JsonCodeOutputParser())
     logger.info("LLM chain: %s", llm_chain)
-    parsed_output_data = llm_chain.invoke(invoke_params)
+    parsed_output_data: Any = llm_chain.invoke(invoke_params)
     logger.info("LLM output: %s", parsed_output_data)
     if skip_validation:
         logger.info("Skip validation using JSON Schema.")
@@ -293,6 +329,7 @@ def extract_json_from_text_file_with_config(
     text_file_path: str,
     json_schema_file_path: str,
     config: ExtractConfig,
+    infer_provider: bool = True,
 ) -> None:
     """Extract structured JSON data from a text file using configuration objects.
 
@@ -307,6 +344,8 @@ def extract_json_from_text_file_with_config(
             output structure.
         config (ExtractConfig): Configuration object containing all LLM,
             model, and processing settings.
+        infer_provider (bool): Whether to infer provider and model name from
+            legacy model settings in the configuration.
     """
     schema = read_json_file(path=json_schema_file_path)
     input_text = read_text_file(path=text_file_path)
@@ -317,35 +356,11 @@ def extract_json_from_text_file_with_config(
         terminology = read_text_file(path=config.processing.terminology_file)
 
     # Create LLM instance using config
-    # Determine model name and provider from config
-    model_name = (
-        config.model.openai_model
-        or config.model.google_model
-        or config.model.anthropic_model
-        or config.model.cerebras_model
-        or config.model.groq_model
-        or config.model.bedrock_model
-        or config.model.ollama_model
-    )
-
-    # Determine provider based on which model is specified
-    provider = None
-    if config.model.openai_model:
-        provider = "openai"
-    elif config.model.google_model:
-        provider = "google"
-    elif config.model.anthropic_model:
-        provider = "anthropic"
-    elif config.model.cerebras_model:
-        provider = "cerebras"
-    elif config.model.groq_model:
-        provider = "groq"
-    elif config.model.bedrock_model:
-        provider = "bedrock"
-    elif config.model.ollama_model:
-        provider = "ollama"
-    elif config.model.llamacpp_model_file:
-        provider = "llamacpp"
+    if infer_provider:
+        model_name, provider = _resolve_model_selection(config.model)
+    else:
+        model_name = config.model.model_name
+        provider = config.model.provider
 
     llm = create_llm_instance(
         # Model selection

@@ -179,7 +179,6 @@ max-complexity = 20
 [tool.pyright]
 typeCheckingMode = "strict"
 exclude = ["build", ".venv"]
-threads = 0
 
 [tool.pytest.ini_options]
 addopts = [

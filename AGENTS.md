@@ -106,29 +106,14 @@ uv pip install -e .
 - **Decorator Pattern**: Used for timing function execution with `@log_execution_time`
 - **Adapter Pattern**: Each LLM provider has a consistent interface regardless of underlying implementation
 
-## Web Search Instructions
+## Serena MCP Usage (Prioritize When Available)
 
-For tasks requiring web search, always use Gemini CLI (`gemini` command) instead of the built-in web search tools (WebFetch and WebSearch).
-Gemini CLI is an AI workflow tool that provides reliable web search capabilities.
-
-### Usage
-
-```sh
-# Basic search query
-gemini --sandbox --prompt "WebSearch: <query>"
-
-# Example: Search for latest news
-gemini --sandbox --prompt "WebSearch: What are the latest developments in AI?"
-```
-
-### Policy
-
-When users request information that requires web search:
-
-1. Use `gemini --sandbox --prompt` command via terminal
-2. Parse and present the Gemini response appropriately
-
-This ensures consistent and reliable web search results through the Gemini API.
+- **If Serena MCP is available, use it first.** Treat Serena MCP tools as the primary interface over local commands or ad-hoc scripts.
+- **Glance at the Serena MCP docs/help before calling a tool** to confirm tool names, required args, and limits.
+- **Use the MCP-exposed tools for supported actions** (e.g., reading/writing files, running tasks, fetching data) instead of re-implementing workflows.
+- **Never hardcode secrets.** Reference environment variables or the MCP’s configured credential store; avoid printing tokens or sensitive paths.
+- **If Serena MCP isn’t enabled or lacks a needed capability, say so and propose a safe fallback.** Mention enabling it via `.mcp.json` when relevant.
+- **Be explicit and reproducible.** Name the exact MCP tool and arguments you intend to use in your steps.
 
 ## Code Design Principles
 
