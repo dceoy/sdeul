@@ -37,7 +37,6 @@ bats test/cli/test_bedrock.bats  # Requires AWS credentials
 bats test/cli/test_google.bats  # Requires Google API key
 bats test/cli/test_groq.bats  # Requires Groq API key
 bats test/cli/test_ollama.bats  # Requires Ollama running
-bats test/cli/test_llamacpp.bats  # Requires LLM file
 ```
 
 ### Code Quality
@@ -78,7 +77,7 @@ uv pip install -e .
    - Validating the output against the schema
 
 3. **LLM Module (`llm.py`)**: Handles:
-   - Creating LLM instances based on provider (OpenAI, Google, AWS Bedrock, Groq, Ollama, LLamaCpp)
+   - Creating LLM instances based on provider (OpenAI, Google, AWS Bedrock, Groq, Ollama)
    - Parsing LLM outputs (extracting JSON from responses)
 
 4. **Utility Functions (`utility.py`)**: Provides helper functions for:

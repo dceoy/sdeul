@@ -253,11 +253,6 @@ def test_extract_endpoint_with_different_models(
             "ollama_model": "llama3.1",
             "ollama_base_url": "http://localhost:11434",
         },
-        {
-            "text": TEST_TEXT,
-            "json_schema": TEST_SCHEMA,
-            "llamacpp_model_file": "/path/to/model.gguf",
-        },
     ]
 
     for request_data in test_cases:
@@ -470,13 +465,6 @@ def test_extract_endpoint_with_all_parameters(
         "n_ctx": 4096,
         "max_tokens": 2048,
         "seed": 42,
-        "n_batch": 16,
-        "n_threads": 4,
-        "n_gpu_layers": 10,
-        "f16_kv": False,
-        "use_mlock": True,
-        "use_mmap": False,
-        "token_wise_streaming": True,
         "timeout": 30,
         "max_retries": 3,
         "openai_model": "gpt-4",
@@ -505,47 +493,6 @@ def test_extract_endpoint_with_all_parameters(
     assert call_kwargs["max_tokens"] == TEST_MAX_TOKENS
     assert call_kwargs["timeout"] == TEST_TIMEOUT
     assert call_kwargs["max_retries"] == TEST_MAX_RETRIES
-
-
-def test_extract_endpoint_with_llamacpp_model(
-    client: TestClient,
-    mocker: MockerFixture,
-) -> None:
-    """Test extract endpoint with LlamaCpp model file."""
-    mock_llm = mocker.MagicMock()
-    mock_create_llm_instance = mocker.patch(
-        "sdeul.api.create_llm_instance",
-        return_value=mock_llm,
-    )
-    mocker.patch(
-        "sdeul.api.extract_structured_data_from_text",
-        return_value=TEST_LLM_OUTPUT,
-    )
-
-    request_data = {
-        "text": TEST_TEXT,
-        "json_schema": TEST_SCHEMA,
-        "llamacpp_model_file": "/path/to/model.gguf",
-        "temperature": 0.7,
-        "max_tokens": 2048,
-    }
-
-    response = client.post("/extract", json=request_data)
-
-    assert response.status_code == _HTTP_200_OK
-    response_data = response.json()
-    assert response_data["data"] == TEST_LLM_OUTPUT
-    assert response_data["validated"] is True
-
-    # Verify create_llm_instance was called with correct parameters
-    mock_create_llm_instance.assert_called_once()
-    call_kwargs = mock_create_llm_instance.call_args[1]
-
-    # Check that llamacpp provider was selected
-    assert call_kwargs["provider"] == "llamacpp"
-    assert call_kwargs["llamacpp_model_file_path"] == "/path/to/model.gguf"
-    assert call_kwargs["temperature"] == TEST_TEMPERATURE
-    assert call_kwargs["max_tokens"] == TEST_MAX_TOKENS
 
 
 def test_extract_endpoint_with_no_model_specified(

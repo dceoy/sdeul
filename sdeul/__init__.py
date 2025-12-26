@@ -2,7 +2,7 @@
 
 This package provides functionality for extracting structured JSON data from
 unstructured text using various Language Learning Models (LLMs) including
-OpenAI, Google, Groq, Amazon Bedrock, Ollama, and local models via llama.cpp.
+OpenAI, Google, Groq, Amazon Bedrock, and Ollama.
 
 The package includes:
 - CLI interface for data extraction and JSON validation

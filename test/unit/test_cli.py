@@ -97,7 +97,6 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
             "schema.json",
             "input.txt",
         ],
-        ["extract", "--llamacpp-model-file=llm.gguf", "schema.json", "input.txt"],
         ["extract", "--ollama-model=llama3.1", "schema.json", "input.txt"],
         [
             "extract",
@@ -108,14 +107,11 @@ def test_main_with_version_option(runner: CliRunner, mocker: MockerFixture) -> N
         ],
         [
             "extract",
-            "--llamacpp-model-file=llm.gguf",
             "--temperature=0.5",
             "--top-p=0.2",
             "--max-tokens=4000",
             "--n-ctx=512",
             "--seed=42",
-            "--n-batch=4",
-            "--n-gpu-layers=2",
             "schema.json",
             "input.txt",
         ],

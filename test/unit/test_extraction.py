@@ -25,7 +25,6 @@ from .conftest import TEST_LLM_OUTPUT, TEST_SCHEMA, TEST_TEXT
 def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     text_file_path = "input.txt"
     json_schema_file_path = "schema.json"
-    llamacpp_model_file_path = "model.gguf"
     output_json_file_path = None
     compact_json = False
     skip_validation = False
@@ -37,13 +36,6 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
     n_ctx = 8192
     max_tokens = 8192
     seed = -1
-    n_batch = 8
-    n_threads = 2
-    n_gpu_layers = -1
-    f16_kv = True
-    use_mlock = False
-    use_mmap = True
-    token_wise_streaming = False
     timeout = None
     max_retries = 2
     ollama_base_url = "http://localhost:11434"
@@ -72,7 +64,6 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         text_file_path=text_file_path,
         json_schema_file_path=json_schema_file_path,
         ollama_base_url=ollama_base_url,
-        llamacpp_model_file_path=llamacpp_model_file_path,
         output_json_file_path=output_json_file_path,
         compact_json=compact_json,
         skip_validation=skip_validation,
@@ -84,13 +75,6 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         n_ctx=n_ctx,
         max_tokens=max_tokens,
         seed=seed,
-        n_batch=n_batch,
-        n_threads=n_threads,
-        n_gpu_layers=n_gpu_layers,
-        f16_kv=f16_kv,
-        use_mlock=use_mlock,
-        use_mmap=use_mmap,
-        token_wise_streaming=token_wise_streaming,
         timeout=timeout,
         max_retries=max_retries,
     )
@@ -98,7 +82,6 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         model_name=None,
         provider=None,
         ollama_base_url=ollama_base_url,
-        llamacpp_model_file_path=llamacpp_model_file_path,
         cerebras_api_key=None,
         groq_api_key=None,
         google_api_key=None,
@@ -115,13 +98,6 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         n_ctx=n_ctx,
         max_tokens=max_tokens,
         seed=seed,
-        n_batch=n_batch,
-        n_threads=n_threads,
-        n_gpu_layers=n_gpu_layers,
-        f16_kv=f16_kv,
-        use_mlock=use_mlock,
-        use_mmap=use_mmap,
-        token_wise_streaming=token_wise_streaming,
         timeout=timeout,
         max_retries=max_retries,
         aws_credentials_profile_name=None,
@@ -402,7 +378,6 @@ def test_extract_json_from_text_file_with_config_and_terminology(
         ({"groq_model": "mixtral-8x7b"}, "groq"),
         ({"bedrock_model": "anthropic.claude-v2"}, "bedrock"),
         ({"ollama_model": "llama3"}, "ollama"),
-        ({"llamacpp_model_file": "/path/to/model.gguf"}, "llamacpp"),
     ],
 )
 def test_extract_json_from_text_file_with_config_providers(

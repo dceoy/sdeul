@@ -25,7 +25,6 @@ from . import __version__
 from .api import run_server
 from .config import (
     ExtractConfig,
-    LlamaCppConfig,
     LLMConfig,
     ModelConfig,
     ProcessingConfig,
@@ -36,9 +35,6 @@ from .constants import (
     DEFAULT_API_RELOAD,
     DEFAULT_CONTEXT_WINDOW,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_N_BATCH,
-    DEFAULT_N_GPU_LAYERS,
-    DEFAULT_N_THREADS,
     DEFAULT_REPEAT_LAST_N,
     DEFAULT_REPEAT_PENALTY,
     DEFAULT_SEED,
@@ -81,7 +77,7 @@ def main(
 
     sdeul is a command-line tool for extracting structured JSON data from
     unstructured text using various Language Learning Models including
-    OpenAI, Google, Groq, Amazon Bedrock, Ollama, and local models.
+    OpenAI, Google, Groq, Amazon Bedrock, and Ollama.
 
     Args:
         version (bool): Show version information and exit.
@@ -140,18 +136,6 @@ def extract(
         default=DEFAULT_SEED,
         help="Set the random seed.",
     ),
-    n_batch: int = typer.Option(
-        default=DEFAULT_N_BATCH,
-        help="Set the number of batch tokens.",
-    ),
-    n_threads: int = typer.Option(
-        default=DEFAULT_N_THREADS,
-        help="Set the number of threads to use.",
-    ),
-    n_gpu_layers: int = typer.Option(
-        default=DEFAULT_N_GPU_LAYERS,
-        help="Set the number of GPU layers.",
-    ),
     openai_model: str | None = typer.Option(
         default=None,
         envvar="OPENAI_MODEL",
@@ -191,11 +175,6 @@ def extract(
         default=None,
         envvar="OLLAMA_BASE_URL",
         help="Override the Ollama base URL.",
-    ),
-    llamacpp_model_file: str | None = typer.Option(
-        default=None,
-        envvar="LLAMACPP_MODEL_FILE",
-        help="Use the model GGUF file for llama.cpp.",
     ),
     openai_api_key: str | None = typer.Option(
         default=None,
@@ -252,22 +231,6 @@ def extract(
         envvar="BEDROCK_ENDPOINT_URL",
         help="Custom Bedrock endpoint URL.",
     ),
-    f16_kv: bool = typer.Option(
-        default=True,
-        help="Use half-precision for key/value cache (llama.cpp only).",
-    ),
-    use_mlock: bool = typer.Option(
-        default=False,
-        help="Force system to keep model in RAM (llama.cpp only).",
-    ),
-    use_mmap: bool = typer.Option(
-        default=True,
-        help="Use memory mapping for model (llama.cpp only).",
-    ),
-    token_wise_streaming: bool = typer.Option(
-        default=False,
-        help="Enable token-wise streaming output (llama.cpp only).",
-    ),
     timeout: int | None = typer.Option(
         default=None,
         help="API request timeout in seconds.",
@@ -307,9 +270,6 @@ def extract(
         n_ctx (int): Size of the token context window.
         max_tokens (int): Maximum number of tokens to generate.
         seed (int): Random seed for reproducible output (-1 for random).
-        n_batch (int): Number of tokens to process in parallel (llama.cpp only).
-        n_threads (int): Number of CPU threads to use (llama.cpp only).
-        n_gpu_layers (int): Number of layers to offload to GPU (llama.cpp only).
         openai_model (str | None): OpenAI model to use.
         google_model (str | None): Google model to use.
         anthropic_model (str | None): Anthropic model to use.
@@ -318,8 +278,6 @@ def extract(
         bedrock_model (str | None): Amazon Bedrock model ID to use.
         ollama_model (str | None): Ollama model to use.
         ollama_base_url (str | None): Custom Ollama API base URL.
-        llamacpp_model_file (str | None): Path to local GGUF model file for
-            llama.cpp.
         openai_api_key (str | None): OpenAI API key (overrides environment
             variable).
         openai_api_base (str | None): Custom OpenAI API base URL.
@@ -335,11 +293,6 @@ def extract(
         aws_credentials_profile (str | None): AWS profile name for Bedrock access.
         aws_region (str | None): AWS region for Bedrock service.
         bedrock_endpoint_url (str | None): Custom Bedrock endpoint URL.
-        f16_kv (bool): Use half-precision for key/value cache (llama.cpp only).
-        use_mlock (bool): Force system to keep model in RAM (llama.cpp only).
-        use_mmap (bool): Use memory mapping for model (llama.cpp only).
-        token_wise_streaming (bool): Enable token-wise streaming output
-            (llama.cpp only).
         timeout (int | None): API request timeout in seconds.
         max_retries (int): Maximum number of API request retries.
         debug (bool): Enable debug logging level.
@@ -352,23 +305,13 @@ def extract(
         temperature=temperature,
         top_p=top_p,
         top_k=top_k,
+        repeat_penalty=repeat_penalty,
+        repeat_last_n=repeat_last_n,
+        n_ctx=n_ctx,
         max_tokens=max_tokens,
         seed=seed,
         timeout=timeout,
         max_retries=max_retries,
-    )
-
-    llamacpp_config = LlamaCppConfig(
-        repeat_penalty=repeat_penalty,
-        repeat_last_n=repeat_last_n,
-        n_ctx=n_ctx,
-        n_batch=n_batch,
-        n_threads=n_threads,
-        n_gpu_layers=n_gpu_layers,
-        f16_kv=f16_kv,
-        use_mlock=use_mlock,
-        use_mmap=use_mmap,
-        token_wise_streaming=token_wise_streaming,
     )
 
     model_config = ModelConfig(
@@ -379,7 +322,6 @@ def extract(
         groq_model=groq_model,
         bedrock_model=bedrock_model,
         ollama_model=ollama_model,
-        llamacpp_model_file=llamacpp_model_file,
         ollama_base_url=ollama_base_url,
         openai_api_base=openai_api_base,
         anthropic_api_base=anthropic_api_base,
@@ -405,7 +347,6 @@ def extract(
 
     config = ExtractConfig(
         llm=llm_config,
-        llamacpp=llamacpp_config,
         model=model_config,
         processing=processing_config,
     )

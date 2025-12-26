@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import logging
-from multiprocessing import cpu_count
 from typing import TYPE_CHECKING, Any, cast
 
 from jsonschema import validate
@@ -22,29 +21,21 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from .config import (
     ExtractConfig,
-    LlamaCppConfig,
     LLMConfig,
     ModelConfig,
     ProcessingConfig,
 )
 from .constants import (
     DEFAULT_CONTEXT_WINDOW,
-    DEFAULT_F16_KV,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_N_BATCH,
-    DEFAULT_N_GPU_LAYERS,
-    DEFAULT_N_THREADS,
     DEFAULT_REPEAT_LAST_N,
     DEFAULT_REPEAT_PENALTY,
     DEFAULT_SEED,
     DEFAULT_TEMPERATURE,
     DEFAULT_TIMEOUT,
-    DEFAULT_TOKEN_WISE_STREAMING,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    DEFAULT_USE_MLOCK,
-    DEFAULT_USE_MMAP,
     SYSTEM_PROMPT_BASE,
     SYSTEM_PROMPT_WITH_TERMINOLOGY,
     USER_PROMPT_TEMPLATE_BASE,
@@ -69,7 +60,6 @@ def extract_json_from_text_file(
     model_name: str | None = None,
     provider: str | None = None,
     ollama_base_url: str | None = None,
-    llamacpp_model_file_path: str | None = None,
     cerebras_api_key: str | None = None,
     groq_api_key: str | None = None,
     google_api_key: str | None = None,
@@ -90,13 +80,6 @@ def extract_json_from_text_file(
     n_ctx: int = DEFAULT_CONTEXT_WINDOW,
     max_tokens: int = DEFAULT_MAX_TOKENS,
     seed: int = DEFAULT_SEED,
-    n_batch: int = DEFAULT_N_BATCH,
-    n_threads: int = DEFAULT_N_THREADS,
-    n_gpu_layers: int = DEFAULT_N_GPU_LAYERS,
-    f16_kv: bool = DEFAULT_F16_KV,
-    use_mlock: bool = DEFAULT_USE_MLOCK,
-    use_mmap: bool = DEFAULT_USE_MMAP,
-    token_wise_streaming: bool = DEFAULT_TOKEN_WISE_STREAMING,
     timeout: int | None = DEFAULT_TIMEOUT,
     max_retries: int = DEFAULT_MAX_RETRIES,
     aws_credentials_profile_name: str | None = None,
@@ -116,11 +99,9 @@ def extract_json_from_text_file(
             output structure.
         model_name (str | None): Name or ID of the model to use.
         provider (str | None): LLM provider to use (openai, google, anthropic,
-            cerebras, groq, bedrock, ollama, llamacpp). If not specified, will be
+            cerebras, groq, bedrock, ollama). If not specified, will be
             inferred from API keys and environment.
         ollama_base_url (str | None): Custom Ollama API base URL.
-        llamacpp_model_file_path (str | None): Path to local GGUF model file
-            for llama.cpp.
         cerebras_api_key (str | None): Cerebras API key (overrides environment
             variable).
         groq_api_key (str | None): Groq API key (overrides environment
@@ -151,14 +132,6 @@ def extract_json_from_text_file(
         n_ctx (int): Token context window size.
         max_tokens (int): Maximum number of tokens to generate.
         seed (int): Random seed for reproducible output (-1 for random).
-        n_batch (int): Number of tokens to process in parallel (llama.cpp only).
-        n_threads (int): Number of CPU threads to use (llama.cpp only).
-        n_gpu_layers (int): Number of layers to offload to GPU (llama.cpp only).
-        f16_kv (bool): Use half-precision for key/value cache (llama.cpp only).
-        use_mlock (bool): Force system to keep model in RAM (llama.cpp only).
-        use_mmap (bool): Keep the model loaded in RAM (llama.cpp only).
-        token_wise_streaming (bool): Enable token-wise streaming output
-            (llama.cpp only).
         timeout (int | None): API request timeout in seconds.
         max_retries (int): Maximum number of API request retries.
         aws_credentials_profile_name (str | None): AWS credentials profile name
@@ -171,28 +144,18 @@ def extract_json_from_text_file(
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
+            repeat_penalty=repeat_penalty,
+            repeat_last_n=repeat_last_n,
+            n_ctx=n_ctx,
             max_tokens=max_tokens,
             seed=seed,
             timeout=timeout,
             max_retries=max_retries,
         ),
-        llamacpp=LlamaCppConfig(
-            repeat_penalty=repeat_penalty,
-            repeat_last_n=repeat_last_n,
-            n_ctx=n_ctx,
-            n_batch=n_batch,
-            n_threads=(n_threads if n_threads > 0 else cpu_count()),
-            n_gpu_layers=n_gpu_layers,
-            f16_kv=f16_kv,
-            use_mlock=use_mlock,
-            use_mmap=use_mmap,
-            token_wise_streaming=token_wise_streaming,
-        ),
         model=ModelConfig(
             model_name=model_name,
             provider=provider,
             ollama_base_url=ollama_base_url,
-            llamacpp_model_file=llamacpp_model_file_path,
             openai_api_key=openai_api_key,
             openai_api_base=openai_api_base,
             openai_organization=openai_organization,
@@ -263,8 +226,6 @@ def _resolve_model_selection(model: ModelConfig) -> tuple[str | None, str | None
     for provider, model_name in legacy_order:
         if model_name:
             return model_name, provider
-    if model.llamacpp_model_file:
-        return None, "llamacpp"
     return None, None
 
 
@@ -367,7 +328,6 @@ def extract_json_from_text_file_with_config(
         model_name=model_name,
         provider=provider,
         ollama_base_url=config.model.ollama_base_url,
-        llamacpp_model_file_path=config.model.llamacpp_model_file,
         cerebras_api_key=config.model.cerebras_api_key,
         groq_api_key=config.model.groq_api_key,
         google_api_key=config.model.google_api_key,
@@ -384,17 +344,9 @@ def extract_json_from_text_file_with_config(
         seed=config.llm.seed,
         timeout=config.llm.timeout,
         max_retries=config.llm.max_retries,
-        # LlamaCpp parameters
-        repeat_penalty=config.llamacpp.repeat_penalty,
-        repeat_last_n=config.llamacpp.repeat_last_n,
-        n_ctx=config.llamacpp.n_ctx,
-        n_batch=config.llamacpp.n_batch,
-        n_threads=config.llamacpp.n_threads,
-        n_gpu_layers=config.llamacpp.n_gpu_layers,
-        f16_kv=config.llamacpp.f16_kv,
-        use_mlock=config.llamacpp.use_mlock,
-        use_mmap=config.llamacpp.use_mmap,
-        token_wise_streaming=config.llamacpp.token_wise_streaming,
+        repeat_penalty=config.llm.repeat_penalty,
+        repeat_last_n=config.llm.repeat_last_n,
+        n_ctx=config.llm.n_ctx,
         # AWS parameters
         aws_credentials_profile_name=config.model.aws_credentials_profile,
         aws_region=config.model.aws_region,

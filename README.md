@@ -38,10 +38,6 @@ $ pip install -U sdeul
         test/data/medication_history.schema.json \
         test/data/patient_medication_record.txt
 
-    # Use a Llama.cpp GGUF model file
-    $ sdeul extract --llamacpp-model-file='local_llm.gguf' \
-        test/data/medication_history.schema.json \
-        test/data/patient_medication_record.txt
     ```
 
     Expected output:

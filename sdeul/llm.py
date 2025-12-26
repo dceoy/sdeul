@@ -2,56 +2,42 @@
 """Functions for Language Learning Model (LLM) integration and management.
 
 This module provides functionality for creating and managing various LLM instances
-including OpenAI, Google Generative AI, Groq, Amazon Bedrock, Ollama, and local
-models via llama.cpp. It also includes custom output parsers for JSON extraction.
+including OpenAI, Google Generative AI, Groq, Amazon Bedrock, and Ollama. It also
+includes custom output parsers for JSON extraction.
 
 Classes:
     JsonCodeOutputParser: Custom parser for extracting JSON from LLM responses
 
 Functions:
     create_llm_instance: Factory function for creating LLM instances
-    _read_llm_file: Helper function for loading local llama.cpp models
-    _llama_log_callback: Callback function for llama.cpp logging
 """
 
-import ctypes
 import json
 import logging
 import os
-import sys
 from typing import Any
 
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrockConverse
 from langchain_cerebras import ChatCerebras
-from langchain_community.llms import LlamaCpp
-from langchain_core.callbacks import CallbackManager, StreamingStdOutCallbackHandler
 from langchain_core.exceptions import OutputParserException
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
-from llama_cpp import llama_log_callback, llama_log_set
 
 from .constants import (
     DEFAULT_CONTEXT_WINDOW,
-    DEFAULT_F16_KV,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_N_BATCH,
-    DEFAULT_N_GPU_LAYERS,
-    DEFAULT_N_THREADS,
     DEFAULT_REPEAT_LAST_N,
     DEFAULT_REPEAT_PENALTY,
     DEFAULT_SEED,
     DEFAULT_TEMPERATURE,
     DEFAULT_TIMEOUT,
-    DEFAULT_TOKEN_WISE_STREAMING,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    DEFAULT_USE_MLOCK,
-    DEFAULT_USE_MMAP,
 )
 from .utility import has_aws_credentials, override_env_vars
 
@@ -128,7 +114,6 @@ def _infer_provider(
     *,
     provider: str | None,
     ollama_base_url: str | None,
-    llamacpp_model_file_path: str | None,
     cerebras_api_key: str | None,
     groq_api_key: str | None,
     google_api_key: str | None,
@@ -139,7 +124,6 @@ def _infer_provider(
         return provider
 
     checks = (
-        ("llamacpp", lambda: bool(llamacpp_model_file_path)),
         ("ollama", lambda: bool(os.environ.get("OLLAMA_BASE_URL") or ollama_base_url)),
         (
             "cerebras",
@@ -183,37 +167,6 @@ def _create_ollama_llm(
         repeat_last_n=kwargs["repeat_last_n"],
         num_ctx=kwargs["n_ctx"],
         seed=kwargs["seed"],
-    )
-
-
-def _create_llamacpp_llm(
-    model_file_path: str,
-    **kwargs: Any,  # noqa: ANN401
-) -> LlamaCpp:
-    """Create a LlamaCpp LLM instance.
-
-    Returns:
-        LlamaCpp: Configured LlamaCpp LLM instance.
-    """
-    logger = logging.getLogger(_create_llamacpp_llm.__name__)
-    logger.info("Use local LLM: %s", model_file_path)
-    return _read_llm_file(
-        path=model_file_path,
-        temperature=kwargs["temperature"],
-        top_p=kwargs["top_p"],
-        top_k=kwargs["top_k"],
-        repeat_penalty=kwargs["repeat_penalty"],
-        last_n_tokens_size=kwargs["repeat_last_n"],
-        n_ctx=kwargs["n_ctx"],
-        max_tokens=kwargs["max_tokens"],
-        seed=kwargs["seed"],
-        n_batch=kwargs["n_batch"],
-        n_threads=kwargs["n_threads"],
-        n_gpu_layers=kwargs["n_gpu_layers"],
-        f16_kv=kwargs["f16_kv"],
-        use_mlock=kwargs["use_mlock"],
-        use_mmap=kwargs["use_mmap"],
-        token_wise_streaming=kwargs["token_wise_streaming"],
     )
 
 
@@ -363,7 +316,6 @@ def create_llm_instance(
     model_name: str | None = None,
     provider: str | None = None,
     ollama_base_url: str | None = None,
-    llamacpp_model_file_path: str | None = None,
     cerebras_api_key: str | None = None,
     groq_api_key: str | None = None,
     google_api_key: str | None = None,
@@ -380,13 +332,6 @@ def create_llm_instance(
     n_ctx: int = DEFAULT_CONTEXT_WINDOW,
     max_tokens: int = DEFAULT_MAX_TOKENS,
     seed: int = DEFAULT_SEED,
-    n_batch: int = DEFAULT_N_BATCH,
-    n_threads: int | None = DEFAULT_N_THREADS,
-    n_gpu_layers: int | None = DEFAULT_N_GPU_LAYERS,
-    f16_kv: bool = DEFAULT_F16_KV,
-    use_mlock: bool = DEFAULT_USE_MLOCK,
-    use_mmap: bool = DEFAULT_USE_MMAP,
-    token_wise_streaming: bool = DEFAULT_TOKEN_WISE_STREAMING,
     timeout: int | None = DEFAULT_TIMEOUT,
     max_retries: int = DEFAULT_MAX_RETRIES,
     aws_credentials_profile_name: str | None = None,
@@ -394,7 +339,6 @@ def create_llm_instance(
     bedrock_endpoint_base_url: str | None = None,
 ) -> (
     ChatOllama
-    | LlamaCpp
     | ChatCerebras
     | ChatGroq
     | ChatBedrockConverse
@@ -407,10 +351,9 @@ def create_llm_instance(
     Args:
         model_name (str | None): Name or ID of the model to use.
         provider (str | None): LLM provider to use (openai, google, anthropic,
-            cerebras, groq, bedrock, ollama, llamacpp). If not specified, will be
+            cerebras, groq, bedrock, ollama). If not specified, will be
             inferred from API keys and environment.
         ollama_base_url (str | None): Base URL for the Ollama API.
-        llamacpp_model_file_path (str | None): Path to the llama.cpp model file.
         cerebras_api_key (str | None): API key for Cerebras.
         groq_api_key (str | None): API key for Groq.
         google_api_key (str | None): API key for Google Generative AI.
@@ -428,15 +371,6 @@ def create_llm_instance(
         n_ctx (int): Token context window size.
         max_tokens (int): Maximum number of tokens to generate.
         seed (int): Random seed for reproducibility.
-        n_batch (int): Number of tokens to process in parallel for llama.cpp.
-        n_threads (int | None): Number of threads to use for llama.cpp.
-        n_gpu_layers (int | None): Number of GPU layers to use for llama.cpp.
-        f16_kv (bool): Whether to use half-precision for key/value cache
-            of llama.cpp.
-        use_mlock (bool): Whether to force the system to keep the model in RAM
-            for llama.cpp.
-        use_mmap (bool): Whether to keep the model loaded in RAM for llama.cpp.
-        token_wise_streaming (bool): Whether to enable token-wise streaming.
         timeout (int | None): Timeout for the API calls in seconds.
         max_retries (int): Maximum number of retries for API calls.
         aws_credentials_profile_name (str | None): AWS credentials profile name.
@@ -445,7 +379,7 @@ def create_llm_instance(
             endpoint.
 
     Returns:
-        ChatOllama | LlamaCpp | ChatCerebras | ChatGroq | ChatBedrockConverse |
+        ChatOllama | ChatCerebras | ChatGroq | ChatBedrockConverse |
         ChatGoogleGenerativeAI | ChatAnthropic | ChatOpenAI: An instance of the
         selected LLM.
 
@@ -471,13 +405,6 @@ def create_llm_instance(
         "n_ctx": n_ctx,
         "max_tokens": max_tokens,
         "seed": seed,
-        "n_batch": n_batch,
-        "n_threads": n_threads,
-        "n_gpu_layers": n_gpu_layers,
-        "f16_kv": f16_kv,
-        "use_mlock": use_mlock,
-        "use_mmap": use_mmap,
-        "token_wise_streaming": token_wise_streaming,
         "timeout": timeout,
         "max_retries": max_retries,
     }
@@ -485,7 +412,6 @@ def create_llm_instance(
     provider = _infer_provider(
         provider=provider,
         ollama_base_url=ollama_base_url,
-        llamacpp_model_file_path=llamacpp_model_file_path,
         cerebras_api_key=cerebras_api_key,
         groq_api_key=groq_api_key,
         google_api_key=google_api_key,
@@ -500,13 +426,6 @@ def create_llm_instance(
             model_name,
             "Model name is required when using Ollama.",
             {"base_url": ollama_base_url},
-        ),
-        "llamacpp": (
-            _create_llamacpp_llm,
-            "model_file_path",
-            llamacpp_model_file_path,
-            "Model file path is required when using llama.cpp.",
-            {},
         ),
         "cerebras": (
             _create_cerebras_llm,
@@ -574,91 +493,3 @@ def create_llm_instance(
         **provider_kwargs,
         **llm_kwargs,
     )
-
-
-def _read_llm_file(
-    path: str,
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    repeat_penalty: float = DEFAULT_REPEAT_PENALTY,
-    last_n_tokens_size: int = DEFAULT_REPEAT_LAST_N,
-    n_ctx: int = DEFAULT_CONTEXT_WINDOW,
-    max_tokens: int = DEFAULT_MAX_TOKENS,
-    seed: int = DEFAULT_SEED,
-    n_batch: int = DEFAULT_N_BATCH,
-    n_threads: int | None = DEFAULT_N_THREADS,
-    n_gpu_layers: int | None = DEFAULT_N_GPU_LAYERS,
-    f16_kv: bool = DEFAULT_F16_KV,
-    use_mlock: bool = DEFAULT_USE_MLOCK,
-    use_mmap: bool = DEFAULT_USE_MMAP,
-    token_wise_streaming: bool = DEFAULT_TOKEN_WISE_STREAMING,
-) -> LlamaCpp:
-    """Load a local LLM model file using llama.cpp.
-
-    Args:
-        path (str): Path to the model file (GGUF format).
-        temperature (float): Sampling temperature for randomness in generation.
-        top_p (float): Top-p value for nucleus sampling.
-        top_k (int): Top-k value for sampling.
-        repeat_penalty (float): Penalty applied to repeated tokens.
-        last_n_tokens_size (int): Number of tokens to consider for repeat penalty.
-        n_ctx (int): Token context window size.
-        max_tokens (int): Maximum number of tokens to generate.
-        seed (int): Random seed for reproducible generation.
-        n_batch (int): Number of tokens to process in parallel.
-        n_threads (int | None): Number of threads to use for processing.
-        n_gpu_layers (int | None): Number of layers to offload to GPU.
-        f16_kv (bool): Whether to use half-precision for key/value cache.
-        use_mlock (bool): Whether to force system to keep model in RAM.
-        use_mmap (bool): Whether to keep the model loaded in RAM.
-        token_wise_streaming (bool): Whether to enable token-wise streaming
-            output.
-
-    Returns:
-        LlamaCpp: Configured LlamaCpp model instance.
-    """
-    logger = logging.getLogger(_read_llm_file.__name__)
-    llama_log_set(_llama_log_callback, ctypes.c_void_p(0))
-    logger.info("Read the model file: %s", path)
-    llm = LlamaCpp(
-        model_path=path,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        repeat_penalty=repeat_penalty,
-        last_n_tokens_size=last_n_tokens_size,
-        n_ctx=n_ctx,
-        max_tokens=max_tokens,
-        seed=seed,
-        n_batch=n_batch,
-        n_threads=n_threads,
-        n_gpu_layers=n_gpu_layers,
-        f16_kv=f16_kv,
-        use_mlock=use_mlock,
-        use_mmap=use_mmap,
-        verbose=(token_wise_streaming or logger.level <= logging.DEBUG),
-        callback_manager=(
-            CallbackManager([StreamingStdOutCallbackHandler()])
-            if token_wise_streaming
-            else None
-        ),
-    )
-    logger.debug("llm: %s", llm)
-    return llm
-
-
-@llama_log_callback
-def _llama_log_callback(level: int, text: bytes, user_data: ctypes.c_void_p) -> None:  # noqa: ARG001
-    """Callback function for handling llama.cpp logging output.
-
-    This function is used as a callback for llama.cpp to redirect its log
-    messages to stderr when debug logging is enabled.
-
-    Args:
-        level (int): Log level from llama.cpp (unused).
-        text (bytes): Log message as bytes.
-        user_data (ctypes.c_void_p): User data pointer (unused).
-    """
-    if logging.root.level < logging.WARNING:
-        print(text.decode("utf-8"), end="", flush=True, file=sys.stderr)  # noqa: T201

@@ -18,29 +18,18 @@ from jsonschema import ValidationError as JsonSchemaValidationError
 from jsonschema import validate
 from pydantic import BaseModel, Field
 
-from .config import (
-    LlamaCppConfig,
-    LLMConfig,
-    ModelConfig,
-)
+from .config import LLMConfig, ModelConfig
 from .constants import (
     DEFAULT_CONTEXT_WINDOW,
-    DEFAULT_F16_KV,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_N_BATCH,
-    DEFAULT_N_GPU_LAYERS,
-    DEFAULT_N_THREADS,
     DEFAULT_REPEAT_LAST_N,
     DEFAULT_REPEAT_PENALTY,
     DEFAULT_SEED,
     DEFAULT_TEMPERATURE,
     DEFAULT_TIMEOUT,
-    DEFAULT_TOKEN_WISE_STREAMING,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    DEFAULT_USE_MLOCK,
-    DEFAULT_USE_MMAP,
 )
 from .extraction import extract_structured_data_from_text
 from .llm import create_llm_instance
@@ -116,35 +105,6 @@ class ExtractRequest(BaseModel):
         default=DEFAULT_SEED,
         description="Random seed (-1 for random)",
     )
-    n_batch: int = Field(
-        default=DEFAULT_N_BATCH,
-        ge=1,
-        description="Batch size for processing",
-    )
-    n_threads: int = Field(
-        default=DEFAULT_N_THREADS,
-        description="Number of threads (-1 for auto)",
-    )
-    n_gpu_layers: int = Field(
-        default=DEFAULT_N_GPU_LAYERS,
-        description="GPU layers to use (-1 for auto)",
-    )
-    f16_kv: bool = Field(
-        default=DEFAULT_F16_KV,
-        description="Use half-precision for key/value cache",
-    )
-    use_mlock: bool = Field(
-        default=DEFAULT_USE_MLOCK,
-        description="Force model to stay in RAM",
-    )
-    use_mmap: bool = Field(
-        default=DEFAULT_USE_MMAP,
-        description="Use memory mapping for model",
-    )
-    token_wise_streaming: bool = Field(
-        default=DEFAULT_TOKEN_WISE_STREAMING,
-        description="Enable token-wise streaming",
-    )
     timeout: int | None = Field(
         default=DEFAULT_TIMEOUT,
         description="Request timeout in seconds",
@@ -196,11 +156,6 @@ class ExtractRequest(BaseModel):
 
     ollama_model: str | None = Field(default=None, description="Ollama model name")
     ollama_base_url: str | None = Field(default=None, description="Ollama base URL")
-
-    llamacpp_model_file: str | None = Field(
-        default=None,
-        description="Path to GGUF model file",
-    )
 
 
 class ExtractResponse(BaseModel):
@@ -260,23 +215,13 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             temperature=request.temperature,
             top_p=request.top_p,
             top_k=request.top_k,
+            repeat_penalty=request.repeat_penalty,
+            repeat_last_n=request.repeat_last_n,
+            n_ctx=request.n_ctx,
             max_tokens=request.max_tokens,
             seed=request.seed,
             timeout=request.timeout,
             max_retries=request.max_retries,
-        )
-
-        llamacpp_config = LlamaCppConfig(
-            repeat_penalty=request.repeat_penalty,
-            repeat_last_n=request.repeat_last_n,
-            n_ctx=request.n_ctx,
-            n_batch=request.n_batch,
-            n_threads=request.n_threads,
-            n_gpu_layers=request.n_gpu_layers,
-            f16_kv=request.f16_kv,
-            use_mlock=request.use_mlock,
-            use_mmap=request.use_mmap,
-            token_wise_streaming=request.token_wise_streaming,
         )
 
         model_config = ModelConfig(
@@ -287,7 +232,6 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             groq_model=request.groq_model,
             bedrock_model=request.bedrock_model,
             ollama_model=request.ollama_model,
-            llamacpp_model_file=request.llamacpp_model_file,
             ollama_base_url=request.ollama_base_url,
             openai_api_base=request.openai_api_base,
             anthropic_api_base=request.anthropic_api_base,
@@ -329,14 +273,11 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             provider = "bedrock"
         elif request.ollama_model:
             provider = "ollama"
-        elif request.llamacpp_model_file:
-            provider = "llamacpp"
 
         llm = create_llm_instance(
             model_name=model_name,
             provider=provider,
             ollama_base_url=model_config.ollama_base_url,
-            llamacpp_model_file_path=model_config.llamacpp_model_file,
             cerebras_api_key=model_config.cerebras_api_key,
             groq_api_key=model_config.groq_api_key,
             google_api_key=model_config.google_api_key,
@@ -348,18 +289,11 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             temperature=llm_config.temperature,
             top_p=llm_config.top_p,
             top_k=llm_config.top_k,
-            repeat_penalty=llamacpp_config.repeat_penalty,
-            repeat_last_n=llamacpp_config.repeat_last_n,
-            n_ctx=llamacpp_config.n_ctx,
+            repeat_penalty=llm_config.repeat_penalty,
+            repeat_last_n=llm_config.repeat_last_n,
+            n_ctx=llm_config.n_ctx,
             max_tokens=llm_config.max_tokens,
             seed=llm_config.seed,
-            n_batch=llamacpp_config.n_batch,
-            n_threads=llamacpp_config.n_threads,
-            n_gpu_layers=llamacpp_config.n_gpu_layers,
-            f16_kv=llamacpp_config.f16_kv,
-            use_mlock=llamacpp_config.use_mlock,
-            use_mmap=llamacpp_config.use_mmap,
-            token_wise_streaming=llamacpp_config.token_wise_streaming,
             timeout=llm_config.timeout,
             max_retries=llm_config.max_retries,
             aws_credentials_profile_name=model_config.aws_credentials_profile,
