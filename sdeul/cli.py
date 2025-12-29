@@ -176,6 +176,11 @@ def extract(
         envvar="OLLAMA_BASE_URL",
         help="Override the Ollama base URL.",
     ),
+    ollama_keep_alive: str | None = typer.Option(
+        default=None,
+        envvar="OLLAMA_KEEP_ALIVE",
+        help="Control how long Ollama keeps the model loaded in memory (e.g., '5m', '10m').",
+    ),
     openai_api_key: str | None = typer.Option(
         default=None,
         envvar="OPENAI_API_KEY",
@@ -278,6 +283,9 @@ def extract(
         bedrock_model (str | None): Amazon Bedrock model ID to use.
         ollama_model (str | None): Ollama model to use.
         ollama_base_url (str | None): Custom Ollama API base URL.
+        ollama_keep_alive (str | None): Controls how long Ollama keeps the model
+            loaded in memory. Can be a duration string (e.g., "5m", "10m") or
+            an integer (seconds).
         openai_api_key (str | None): OpenAI API key (overrides environment
             variable).
         openai_api_base (str | None): Custom OpenAI API base URL.
@@ -323,6 +331,7 @@ def extract(
         bedrock_model=bedrock_model,
         ollama_model=ollama_model,
         ollama_base_url=ollama_base_url,
+        ollama_keep_alive=ollama_keep_alive,
         openai_api_base=openai_api_base,
         anthropic_api_base=anthropic_api_base,
         bedrock_endpoint_url=bedrock_endpoint_url,

@@ -142,3 +142,6 @@ DEFAULT_API_RELOAD = True
 # Timeout and Retry Defaults
 DEFAULT_TIMEOUT = None
 DEFAULT_MAX_RETRIES = 2
+
+# Ollama-specific Defaults
+DEFAULT_OLLAMA_KEEP_ALIVE = None  # Use Ollama's default behavior

@@ -68,6 +68,7 @@ class ModelConfig:
 
     # Base URLs and endpoints
     ollama_base_url: str | None = None
+    ollama_keep_alive: str | int | None = None
     openai_api_base: str | None = None
     anthropic_api_base: str | None = None
     bedrock_endpoint_url: str | None = None
