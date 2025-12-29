@@ -119,8 +119,7 @@ def read_text_file(path: str) -> str:
     """
     logger = logging.getLogger(read_text_file.__name__)
     logger.info("Read a text file: %s", path)
-    with Path(path).open(mode="r", encoding="utf-8") as f:
-        data = f.read()
+    data = Path(path).read_text(encoding="utf-8")
     logger.debug("data: %s", data)
     return data
 
@@ -137,8 +136,7 @@ def write_file(path: str, data: str) -> None:
     """
     logger = logging.getLogger(write_file.__name__)
     logger.info("Write data in a file: %s", path)
-    with Path(path).open(mode="w", encoding="utf-8") as f:
-        f.write(data)
+    Path(path).write_text(data, encoding="utf-8")
 
 
 def has_aws_credentials() -> bool:
@@ -176,7 +174,7 @@ def override_env_vars(**kwargs: str | None) -> None:
     logger = logging.getLogger(override_env_vars.__name__)
     for k, v in kwargs.items():
         if v is not None:
-            logger.info("Override the environment variable: %s=%s", k, v)
+            logger.info("Override the environment variable: %s", k)
             os.environ[k] = v
         else:
             logger.info("Skip to override environment variable: %s", k)

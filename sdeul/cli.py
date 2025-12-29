@@ -392,7 +392,7 @@ def validate(
     Exit Codes:
         0: All files are valid
         N: N files failed validation (where N > 0)
-    """
+    """  # noqa: DOC102
     configure_logging(debug=debug, info=info)
     validate_json_files_using_json_schema(
         json_schema_file_path=json_schema_file,
