@@ -158,6 +158,8 @@ def _create_ollama_llm(
         keep_alive: Controls how long to keep the model loaded in memory.
             Can be a duration string (e.g., "5m", "10m") or an integer
             (seconds). None uses Ollama's default behavior.
+        **kwargs: Additional parameters including temperature, top_p, top_k,
+            repeat_penalty, repeat_last_n, num_ctx, and seed.
 
     Returns:
         ChatOllama: Configured Ollama LLM instance.

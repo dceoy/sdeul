@@ -179,7 +179,10 @@ def extract(
     ollama_keep_alive: str | None = typer.Option(
         default=None,
         envvar="OLLAMA_KEEP_ALIVE",
-        help="Control how long Ollama keeps the model loaded in memory (e.g., '5m', '10m').",
+        help=(
+            "Control how long Ollama keeps the model loaded in memory "
+            "(e.g., '5m', '10m')."
+        ),
     ),
     openai_api_key: str | None = typer.Option(
         default=None,

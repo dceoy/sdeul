@@ -82,6 +82,7 @@ def test_extract_json_from_text_file(mocker: MockerFixture) -> None:
         model_name=None,
         provider=None,
         ollama_base_url=ollama_base_url,
+        ollama_keep_alive=None,
         cerebras_api_key=None,
         groq_api_key=None,
         google_api_key=None,
