@@ -156,6 +156,13 @@ class ExtractRequest(BaseModel):
 
     ollama_model: str | None = Field(default=None, description="Ollama model name")
     ollama_base_url: str | None = Field(default=None, description="Ollama base URL")
+    ollama_keep_alive: str | int | None = Field(
+        default=None,
+        description=(
+            "Duration to keep Ollama model loaded in memory "
+            "(e.g., '5m', '10m', or -1 for indefinite)"
+        ),
+    )
 
 
 class ExtractResponse(BaseModel):
@@ -233,6 +240,7 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             bedrock_model=request.bedrock_model,
             ollama_model=request.ollama_model,
             ollama_base_url=request.ollama_base_url,
+            ollama_keep_alive=request.ollama_keep_alive,
             openai_api_base=request.openai_api_base,
             anthropic_api_base=request.anthropic_api_base,
             bedrock_endpoint_url=request.bedrock_endpoint_url,
@@ -278,6 +286,7 @@ async def extract_data(request: ExtractRequest) -> ExtractResponse:
             model_name=model_name,
             provider=provider,
             ollama_base_url=model_config.ollama_base_url,
+            ollama_keep_alive=model_config.ollama_keep_alive,
             cerebras_api_key=model_config.cerebras_api_key,
             groq_api_key=model_config.groq_api_key,
             google_api_key=model_config.google_api_key,

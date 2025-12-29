@@ -147,6 +147,7 @@ def _infer_provider(
 def _create_ollama_llm(
     model_name: str,
     base_url: str | None,
+    keep_alive: str | int | None = None,
     **kwargs: Any,  # noqa: ANN401
 ) -> ChatOllama:
     """Create an Ollama LLM instance.
@@ -157,6 +158,7 @@ def _create_ollama_llm(
     logger = logging.getLogger(_create_ollama_llm.__name__)
     logger.info("Use Ollama: %s", model_name)
     logger.info("Ollama base URL: %s", base_url)
+    logger.info("Ollama keep_alive: %s", keep_alive)
     return ChatOllama(
         model=model_name,
         base_url=base_url,
@@ -167,6 +169,7 @@ def _create_ollama_llm(
         repeat_last_n=kwargs["repeat_last_n"],
         num_ctx=kwargs["n_ctx"],
         seed=kwargs["seed"],
+        keep_alive=keep_alive,
     )
 
 
@@ -316,6 +319,7 @@ def create_llm_instance(
     model_name: str | None = None,
     provider: str | None = None,
     ollama_base_url: str | None = None,
+    ollama_keep_alive: str | int | None = None,
     cerebras_api_key: str | None = None,
     groq_api_key: str | None = None,
     google_api_key: str | None = None,
@@ -354,6 +358,9 @@ def create_llm_instance(
             cerebras, groq, bedrock, ollama). If not specified, will be
             inferred from API keys and environment.
         ollama_base_url (str | None): Base URL for the Ollama API.
+        ollama_keep_alive (str | int | None): Duration to keep model loaded
+            in memory. Can be a duration string (e.g., "5m", "10m") or integer
+            (seconds). Use -1 to keep loaded indefinitely.
         cerebras_api_key (str | None): API key for Cerebras.
         groq_api_key (str | None): API key for Groq.
         google_api_key (str | None): API key for Google Generative AI.
@@ -425,7 +432,7 @@ def create_llm_instance(
             "model_name",
             model_name,
             "Model name is required when using Ollama.",
-            {"base_url": ollama_base_url},
+            {"base_url": ollama_base_url, "keep_alive": ollama_keep_alive},
         ),
         "cerebras": (
             _create_cerebras_llm,

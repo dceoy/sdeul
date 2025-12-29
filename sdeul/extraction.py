@@ -328,6 +328,7 @@ def extract_json_from_text_file_with_config(
         model_name=model_name,
         provider=provider,
         ollama_base_url=config.model.ollama_base_url,
+        ollama_keep_alive=config.model.ollama_keep_alive,
         cerebras_api_key=config.model.cerebras_api_key,
         groq_api_key=config.model.groq_api_key,
         google_api_key=config.model.google_api_key,

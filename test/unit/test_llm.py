@@ -359,6 +359,7 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
     model_name = "dummy-ollama-model"
     provider = "ollama"
     ollama_base_url = "http://localhost:11434"
+    ollama_keep_alive = "5m"
     temperature = 0.0
     top_p = 0.95
     top_k = 64
@@ -374,6 +375,7 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
         model_name=model_name,
         provider=provider,
         ollama_base_url=ollama_base_url,
+        ollama_keep_alive=ollama_keep_alive,
         temperature=temperature,
         top_p=top_p,
         top_k=top_k,
@@ -393,6 +395,7 @@ def test_create_llm_instance_with_ollama(mocker: MockerFixture) -> None:
         repeat_last_n=repeat_last_n,
         num_ctx=n_ctx,
         seed=seed,
+        keep_alive=ollama_keep_alive,
     )
 
 
