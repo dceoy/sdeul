@@ -71,7 +71,7 @@ defaults:
     working-directory: .
 jobs:
   unit-tests:
-    uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-test.yml@main
+    uses: dceoy/gh-actions-for-devops/.github/workflows/python-package-test.yml@main  # zizmor: ignore[unpinned-uses]
     with:
       package-path: .
       uv-version: ${{ inputs.uv-version }}
