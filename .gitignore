@@ -166,6 +166,3 @@ junit/
 
 # LLM
 test/model
-
-# Serena MCP
-.serena/
